@@ -1,0 +1,1127 @@
+[
+  {
+    "team": "T1",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 495,
+      "blue_side": {
+        "games": 246,
+        "win_rate": 71.5
+      },
+      "red_side": {
+        "games": 249,
+        "win_rate": 55.0
+      }
+    }
+  },
+  {
+    "team": "Dplus KIA",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 481,
+      "blue_side": {
+        "games": 215,
+        "win_rate": 58.6
+      },
+      "red_side": {
+        "games": 266,
+        "win_rate": 52.6
+      }
+    }
+  },
+  {
+    "team": "Hanwha Life Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 467,
+      "blue_side": {
+        "games": 219,
+        "win_rate": 68.5
+      },
+      "red_side": {
+        "games": 248,
+        "win_rate": 62.9
+      }
+    }
+  },
+  {
+    "team": "Fnatic",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 443,
+      "blue_side": {
+        "games": 214,
+        "win_rate": 67.8
+      },
+      "red_side": {
+        "games": 229,
+        "win_rate": 55.0
+      }
+    }
+  },
+  {
+    "team": "G2 Esports",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 438,
+      "blue_side": {
+        "games": 236,
+        "win_rate": 78.0
+      },
+      "red_side": {
+        "games": 202,
+        "win_rate": 66.3
+      }
+    }
+  },
+  {
+    "team": "KT Rolster",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 423,
+      "blue_side": {
+        "games": 232,
+        "win_rate": 44.0
+      },
+      "red_side": {
+        "games": 191,
+        "win_rate": 47.6
+      }
+    }
+  },
+  {
+    "team": "Anyone's Legend",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 375,
+      "blue_side": {
+        "games": 175,
+        "win_rate": 74.9
+      },
+      "red_side": {
+        "games": 200,
+        "win_rate": 55.5
+      }
+    }
+  },
+  {
+    "team": "100 Thieves",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 369,
+      "blue_side": {
+        "games": 190,
+        "win_rate": 47.4
+      },
+      "red_side": {
+        "games": 179,
+        "win_rate": 61.5
+      }
+    }
+  },
+  {
+    "team": "FlyQuest",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 367,
+      "blue_side": {
+        "games": 165,
+        "win_rate": 80.6
+      },
+      "red_side": {
+        "games": 202,
+        "win_rate": 67.3
+      }
+    }
+  },
+  {
+    "team": "Beijing JDG Intel Esports",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 354,
+      "blue_side": {
+        "games": 175,
+        "win_rate": 61.7
+      },
+      "red_side": {
+        "games": 179,
+        "win_rate": 41.3
+      }
+    }
+  },
+  {
+    "team": "Invictus Gaming",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 353,
+      "blue_side": {
+        "games": 172,
+        "win_rate": 53.5
+      },
+      "red_side": {
+        "games": 181,
+        "win_rate": 56.4
+      }
+    }
+  },
+  {
+    "team": "OKSavingsBank BRION",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 353,
+      "blue_side": {
+        "games": 191,
+        "win_rate": 36.6
+      },
+      "red_side": {
+        "games": 162,
+        "win_rate": 26.5
+      }
+    }
+  },
+  {
+    "team": "Team BDS",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 353,
+      "blue_side": {
+        "games": 150,
+        "win_rate": 56.7
+      },
+      "red_side": {
+        "games": 203,
+        "win_rate": 44.8
+      }
+    }
+  },
+  {
+    "team": "DRX",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 351,
+      "blue_side": {
+        "games": 201,
+        "win_rate": 37.3
+      },
+      "red_side": {
+        "games": 150,
+        "win_rate": 31.3
+      }
+    }
+  },
+  {
+    "team": "Shenzhen NINJAS IN PYJAMAS",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 348,
+      "blue_side": {
+        "games": 159,
+        "win_rate": 59.7
+      },
+      "red_side": {
+        "games": 189,
+        "win_rate": 43.4
+      }
+    }
+  },
+  {
+    "team": "Karmine Corp",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 348,
+      "blue_side": {
+        "games": 187,
+        "win_rate": 61.5
+      },
+      "red_side": {
+        "games": 161,
+        "win_rate": 44.7
+      }
+    }
+  },
+  {
+    "team": "BILIBILI GAMING DREAMSMART",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 340,
+      "blue_side": {
+        "games": 152,
+        "win_rate": 67.1
+      },
+      "red_side": {
+        "games": 188,
+        "win_rate": 64.4
+      }
+    }
+  },
+  {
+    "team": "BNK FearX",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 314,
+      "blue_side": {
+        "games": 165,
+        "win_rate": 43.0
+      },
+      "red_side": {
+        "games": 149,
+        "win_rate": 39.6
+      }
+    }
+  },
+  {
+    "team": "TopEsports",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 297,
+      "blue_side": {
+        "games": 135,
+        "win_rate": 80.0
+      },
+      "red_side": {
+        "games": 162,
+        "win_rate": 59.9
+      }
+    }
+  },
+  {
+    "team": "GIANTX",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 295,
+      "blue_side": {
+        "games": 141,
+        "win_rate": 48.9
+      },
+      "red_side": {
+        "games": 154,
+        "win_rate": 34.4
+      }
+    }
+  },
+  {
+    "team": "Xi'an Team WE",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 292,
+      "blue_side": {
+        "games": 155,
+        "win_rate": 47.1
+      },
+      "red_side": {
+        "games": 137,
+        "win_rate": 25.5
+      }
+    }
+  },
+  {
+    "team": "Gen.G Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 286,
+      "blue_side": {
+        "games": 113,
+        "win_rate": 75.2
+      },
+      "red_side": {
+        "games": 173,
+        "win_rate": 69.9
+      }
+    }
+  },
+  {
+    "team": "FunPlus Phoenix",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 280,
+      "blue_side": {
+        "games": 149,
+        "win_rate": 34.2
+      },
+      "red_side": {
+        "games": 131,
+        "win_rate": 35.1
+      }
+    }
+  },
+  {
+    "team": "Team Vitality",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 279,
+      "blue_side": {
+        "games": 131,
+        "win_rate": 47.3
+      },
+      "red_side": {
+        "games": 148,
+        "win_rate": 41.9
+      }
+    }
+  },
+  {
+    "team": "Team Heretics",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 278,
+      "blue_side": {
+        "games": 145,
+        "win_rate": 45.5
+      },
+      "red_side": {
+        "games": 133,
+        "win_rate": 30.8
+      }
+    }
+  },
+  {
+    "team": "WeiboGaming Faw Audi",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 274,
+      "blue_side": {
+        "games": 140,
+        "win_rate": 57.9
+      },
+      "red_side": {
+        "games": 134,
+        "win_rate": 37.3
+      }
+    }
+  },
+  {
+    "team": "Shopify Rebellion",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 273,
+      "blue_side": {
+        "games": 119,
+        "win_rate": 45.4
+      },
+      "red_side": {
+        "games": 154,
+        "win_rate": 33.1
+      }
+    }
+  },
+  {
+    "team": "NONGSHIM RED FORCE",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 262,
+      "blue_side": {
+        "games": 144,
+        "win_rate": 35.4
+      },
+      "red_side": {
+        "games": 118,
+        "win_rate": 42.4
+      }
+    }
+  },
+  {
+    "team": "SK Gaming",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 253,
+      "blue_side": {
+        "games": 119,
+        "win_rate": 32.8
+      },
+      "red_side": {
+        "games": 134,
+        "win_rate": 41.0
+      }
+    }
+  },
+  {
+    "team": "Dignitas",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 249,
+      "blue_side": {
+        "games": 127,
+        "win_rate": 35.4
+      },
+      "red_side": {
+        "games": 122,
+        "win_rate": 34.4
+      }
+    }
+  },
+  {
+    "team": "Ultra Prime",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 242,
+      "blue_side": {
+        "games": 137,
+        "win_rate": 39.4
+      },
+      "red_side": {
+        "games": 105,
+        "win_rate": 33.3
+      }
+    }
+  },
+  {
+    "team": "Movistar KOI",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 235,
+      "blue_side": {
+        "games": 127,
+        "win_rate": 66.9
+      },
+      "red_side": {
+        "games": 108,
+        "win_rate": 49.1
+      }
+    }
+  },
+  {
+    "team": "Suzhou LNG Ninebot Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 224,
+      "blue_side": {
+        "games": 119,
+        "win_rate": 36.1
+      },
+      "red_side": {
+        "games": 105,
+        "win_rate": 41.0
+      }
+    }
+  },
+  {
+    "team": "SHANGHAI EDWARD GAMING HYCAN",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 217,
+      "blue_side": {
+        "games": 111,
+        "win_rate": 46.8
+      },
+      "red_side": {
+        "games": 106,
+        "win_rate": 53.8
+      }
+    }
+  },
+  {
+    "team": "Team Liquid Honda",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 208,
+      "blue_side": {
+        "games": 104,
+        "win_rate": 74.0
+      },
+      "red_side": {
+        "games": 104,
+        "win_rate": 70.2
+      }
+    }
+  },
+  {
+    "team": "DN FREECS",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 197,
+      "blue_side": {
+        "games": 118,
+        "win_rate": 31.4
+      },
+      "red_side": {
+        "games": 79,
+        "win_rate": 15.2
+      }
+    }
+  },
+  {
+    "team": "THUNDERTALKGAMING",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 190,
+      "blue_side": {
+        "games": 101,
+        "win_rate": 40.6
+      },
+      "red_side": {
+        "games": 89,
+        "win_rate": 39.3
+      }
+    }
+  },
+  {
+    "team": "RED Kalunga",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 189,
+      "blue_side": {
+        "games": 75,
+        "win_rate": 64.0
+      },
+      "red_side": {
+        "games": 114,
+        "win_rate": 42.1
+      }
+    }
+  },
+  {
+    "team": "Vivo Keyd Stars",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 186,
+      "blue_side": {
+        "games": 99,
+        "win_rate": 60.6
+      },
+      "red_side": {
+        "games": 87,
+        "win_rate": 48.3
+      }
+    }
+  },
+  {
+    "team": "Cloud9 Kia",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 184,
+      "blue_side": {
+        "games": 101,
+        "win_rate": 68.3
+      },
+      "red_side": {
+        "games": 83,
+        "win_rate": 62.7
+      }
+    }
+  },
+  {
+    "team": "Pain Gaming",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 183,
+      "blue_side": {
+        "games": 90,
+        "win_rate": 56.7
+      },
+      "red_side": {
+        "games": 93,
+        "win_rate": 51.6
+      }
+    }
+  },
+  {
+    "team": "Gen.G",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 178,
+      "blue_side": {
+        "games": 85,
+        "win_rate": 77.6
+      },
+      "red_side": {
+        "games": 93,
+        "win_rate": 88.2
+      }
+    }
+  },
+  {
+    "team": "Rogue",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 174,
+      "blue_side": {
+        "games": 93,
+        "win_rate": 25.8
+      },
+      "red_side": {
+        "games": 81,
+        "win_rate": 18.5
+      }
+    }
+  },
+  {
+    "team": "LOUD",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 171,
+      "blue_side": {
+        "games": 93,
+        "win_rate": 54.8
+      },
+      "red_side": {
+        "games": 78,
+        "win_rate": 50.0
+      }
+    }
+  },
+  {
+    "team": "Oh My God",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 157,
+      "blue_side": {
+        "games": 76,
+        "win_rate": 27.6
+      },
+      "red_side": {
+        "games": 81,
+        "win_rate": 37.0
+      }
+    }
+  },
+  {
+    "team": "FURIA",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 155,
+      "blue_side": {
+        "games": 73,
+        "win_rate": 43.8
+      },
+      "red_side": {
+        "games": 82,
+        "win_rate": 63.4
+      }
+    }
+  },
+  {
+    "team": "KWANGDONG FREECS",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 147,
+      "blue_side": {
+        "games": 51,
+        "win_rate": 47.1
+      },
+      "red_side": {
+        "games": 96,
+        "win_rate": 50.0
+      }
+    }
+  },
+  {
+    "team": "Hangzhou LGD Gaming",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 145,
+      "blue_side": {
+        "games": 81,
+        "win_rate": 34.6
+      },
+      "red_side": {
+        "games": 64,
+        "win_rate": 51.6
+      }
+    }
+  },
+  {
+    "team": "WeiboGaming TapTap",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 138,
+      "blue_side": {
+        "games": 67,
+        "win_rate": 67.2
+      },
+      "red_side": {
+        "games": 71,
+        "win_rate": 31.0
+      }
+    }
+  },
+  {
+    "team": "NongShim REDFORCE",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 135,
+      "blue_side": {
+        "games": 66,
+        "win_rate": 27.3
+      },
+      "red_side": {
+        "games": 69,
+        "win_rate": 34.8
+      }
+    }
+  },
+  {
+    "team": "Royal Never Give Up",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 134,
+      "blue_side": {
+        "games": 58,
+        "win_rate": 17.2
+      },
+      "red_side": {
+        "games": 76,
+        "win_rate": 30.3
+      }
+    }
+  },
+  {
+    "team": "Cloud9",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 126,
+      "blue_side": {
+        "games": 60,
+        "win_rate": 58.3
+      },
+      "red_side": {
+        "games": 66,
+        "win_rate": 56.1
+      }
+    }
+  },
+  {
+    "team": "Team Liquid",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 124,
+      "blue_side": {
+        "games": 73,
+        "win_rate": 42.5
+      },
+      "red_side": {
+        "games": 51,
+        "win_rate": 29.4
+      }
+    }
+  },
+  {
+    "team": "MAD Lions KOI",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 118,
+      "blue_side": {
+        "games": 48,
+        "win_rate": 39.6
+      },
+      "red_side": {
+        "games": 70,
+        "win_rate": 37.1
+      }
+    }
+  },
+  {
+    "team": "Disguised",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 111,
+      "blue_side": {
+        "games": 60,
+        "win_rate": 30.0
+      },
+      "red_side": {
+        "games": 51,
+        "win_rate": 23.5
+      }
+    }
+  },
+  {
+    "team": "Isurus Estral",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 110,
+      "blue_side": {
+        "games": 61,
+        "win_rate": 49.2
+      },
+      "red_side": {
+        "games": 49,
+        "win_rate": 53.1
+      }
+    }
+  },
+  {
+    "team": "Top Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 107,
+      "blue_side": {
+        "games": 56,
+        "win_rate": 76.8
+      },
+      "red_side": {
+        "games": 51,
+        "win_rate": 72.5
+      }
+    }
+  },
+  {
+    "team": "LYON",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 99,
+      "blue_side": {
+        "games": 60,
+        "win_rate": 35.0
+      },
+      "red_side": {
+        "games": 39,
+        "win_rate": 30.8
+      }
+    }
+  },
+  {
+    "team": "LEVIAT\u00c1N",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 90,
+      "blue_side": {
+        "games": 48,
+        "win_rate": 37.5
+      },
+      "red_side": {
+        "games": 42,
+        "win_rate": 28.6
+      }
+    }
+  },
+  {
+    "team": "MAD Lions",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 84,
+      "blue_side": {
+        "games": 55,
+        "win_rate": 50.9
+      },
+      "red_side": {
+        "games": 29,
+        "win_rate": 41.4
+      }
+    }
+  },
+  {
+    "team": "Fluxo W7M",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 84,
+      "blue_side": {
+        "games": 51,
+        "win_rate": 5.9
+      },
+      "red_side": {
+        "games": 33,
+        "win_rate": 27.3
+      }
+    }
+  },
+  {
+    "team": "Immortals Progressive",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 81,
+      "blue_side": {
+        "games": 33,
+        "win_rate": 27.3
+      },
+      "red_side": {
+        "games": 48,
+        "win_rate": 18.8
+      }
+    }
+  },
+  {
+    "team": "LGD Gaming",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 80,
+      "blue_side": {
+        "games": 44,
+        "win_rate": 31.8
+      },
+      "red_side": {
+        "games": 36,
+        "win_rate": 47.2
+      }
+    }
+  },
+  {
+    "team": "Rare Atom",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 78,
+      "blue_side": {
+        "games": 47,
+        "win_rate": 53.2
+      },
+      "red_side": {
+        "games": 31,
+        "win_rate": 41.9
+      }
+    }
+  },
+  {
+    "team": "FearX",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 75,
+      "blue_side": {
+        "games": 36,
+        "win_rate": 41.7
+      },
+      "red_side": {
+        "games": 39,
+        "win_rate": 15.4
+      }
+    }
+  },
+  {
+    "team": "THUNDER TALK GAMING",
+    "preference": "RED_SIDE_HEAVY",
+    "stats": {
+      "total_games": 73,
+      "blue_side": {
+        "games": 36,
+        "win_rate": 44.4
+      },
+      "red_side": {
+        "games": 37,
+        "win_rate": 62.2
+      }
+    }
+  },
+  {
+    "team": "NRG Kia",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 72,
+      "blue_side": {
+        "games": 36,
+        "win_rate": 41.7
+      },
+      "red_side": {
+        "games": 36,
+        "win_rate": 25.0
+      }
+    }
+  },
+  {
+    "team": "Beijing JDG Intel Esports Club",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 50,
+      "blue_side": {
+        "games": 28,
+        "win_rate": 82.1
+      },
+      "red_side": {
+        "games": 22,
+        "win_rate": 77.3
+      }
+    }
+  },
+  {
+    "team": "NRG",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 46,
+      "blue_side": {
+        "games": 25,
+        "win_rate": 44.0
+      },
+      "red_side": {
+        "games": 21,
+        "win_rate": 52.4
+      }
+    }
+  },
+  {
+    "team": "Isurus",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 39,
+      "blue_side": {
+        "games": 15,
+        "win_rate": 60.0
+      },
+      "red_side": {
+        "games": 24,
+        "win_rate": 25.0
+      }
+    }
+  },
+  {
+    "team": "Bilibili Gaming",
+    "preference": "BLUE_SIDE_HEAVY",
+    "stats": {
+      "total_games": 28,
+      "blue_side": {
+        "games": 15,
+        "win_rate": 100.0
+      },
+      "red_side": {
+        "games": 13,
+        "win_rate": 84.6
+      }
+    }
+  },
+  {
+    "team": "Leviat\u00e1n Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 27,
+      "blue_side": {
+        "games": 12,
+        "win_rate": 50.0
+      },
+      "red_side": {
+        "games": 15,
+        "win_rate": 60.0
+      }
+    }
+  },
+  {
+    "team": "Natus Vincere",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 24,
+      "blue_side": {
+        "games": 15,
+        "win_rate": 0.0
+      },
+      "red_side": {
+        "games": 9,
+        "win_rate": 0.0
+      }
+    }
+  },
+  {
+    "team": "Suzhou LNG Esports",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 6,
+      "blue_side": {
+        "games": 3,
+        "win_rate": 100.0
+      },
+      "red_side": {
+        "games": 3,
+        "win_rate": 100.0
+      }
+    }
+  },
+  {
+    "team": "Fluxo",
+    "preference": "BALANCED",
+    "stats": {
+      "total_games": 6,
+      "blue_side": {
+        "games": 3,
+        "win_rate": 0.0
+      },
+      "red_side": {
+        "games": 3,
+        "win_rate": 0.0
+      }
+    }
+  }
+]

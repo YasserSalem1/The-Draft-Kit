@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowLeft, Download, FileText, ChevronRight, TrendingUp, Target, Shield, Zap, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import sideData from '@/lib/data/side_preference_report_FULL.json';
 
 export default function ReportsPage() {
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -27,7 +28,44 @@ export default function ReportsPage() {
             setReportData(null);
         }
     };
+    // ... (old handleSelectTeam code)
 
+    // --- Add the following code here ---
+    
+    // 1. Find the selected team in the JSON data
+    // We use selectedTeam.name because this is the value stored in the file (e.g., "T1")
+    // 1. Smart search logic
+const teamStats = selectedTeam 
+    ? sideData.find(t => {
+        // Exact match (e.g., T1 === T1)
+        if (t.team === selectedTeam.name) return true;
+        
+        // JSON team name is longer (e.g., "Suzhou LNG Esports" contains "LNG Esports")
+        if (t.team.includes(selectedTeam.name)) return true;
+        
+        // Dropdown team name is longer (e.g., "GAM Esports" contains "GAM")
+        if (selectedTeam.name.includes(t.team)) return true;
+
+        return false;
+    }) 
+    : null;
+
+
+    // 2. Compute win rates, defaulting to zero if no data is found
+    const blueWR = teamStats ? teamStats.stats.blue_side.win_rate : 0;
+    const redWR = teamStats ? teamStats.stats.red_side.win_rate : 0;
+    
+    // Calculate the overall average win rate
+    const totalWR = teamStats 
+        ? Math.round((blueWR + redWR) / 2) 
+        : 0;
+        
+    // Determine side preference
+    const isBlueHeavy = teamStats?.preference.includes('BLUE');
+    const isRedHeavy = teamStats?.preference.includes('RED');
+    // -------------------------------
+
+    
     return (
         <main className="min-h-screen bg-background text-foreground flex flex-col p-6 md:p-12 relative overflow-hidden">
 
@@ -118,31 +156,61 @@ export default function ReportsPage() {
                             {/* Stats Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                                {/* Win Rate Card */}
+                                
+                                {/* Win Rate Card - Dynamic Version */}
                                 <div className="esport-card p-6 flex flex-col justify-between h-full bg-surface-light/20">
                                     <div>
                                         <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <TrendingUp className="w-4 h-4 text-green-400" /> Win Rates
+                                            <TrendingUp className={`w-4 h-4 ${totalWR >= 50 ? 'text-green-400' : 'text-red-400'}`} /> 
+                                            Win Rates
                                         </h3>
+                                        
+                                        {/* Overall win rate */}
                                         <div className="flex items-end justify-between mb-2">
-                                            <span className="text-5xl font-black text-white">68%</span>
-                                            <span className="text-green-400 font-bold mb-1">+4.2%</span>
+                                            <span className="text-5xl font-black text-white">{totalWR}%</span>
+                                            
+                                            {/* Display side preference (Blue / Red) */}
+                                            {teamStats && (
+                                                <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
+                                                    isBlueHeavy ? 'bg-blue-500/20 text-blue-300' : 
+                                                    isRedHeavy ? 'bg-red-500/20 text-red-300' : 
+                                                    'bg-gray-700 text-gray-400'
+                                                }`}>
+                                                    {teamStats.preference.replace('_', ' ')}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="w-full bg-surface-light h-2 rounded-full overflow-hidden mb-6">
-                                            <div className="bg-green-500 h-full w-[68%]" />
+
+                                        {/* Progress bar */}
+                                        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-6 flex">
+                                            {/* Blue side portion */}
+                                            <div
+                                                className="bg-blue-500 h-full transition-all duration-500"
+                                                style={{ width: `${blueWR}%` }}
+                                            />
+                                            {/* Red side can fill the remaining space or remain as background */}
                                         </div>
                                     </div>
+
+                                    {/* Blue and Red side details */}
                                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                                         <div>
-                                            <div className="text-xs text-gray-500 uppercase font-bold">Blue Side</div>
-                                            <div className="text-xl font-bold text-primary">72%</div>
+                                            <div className="text-xs text-blue-400 uppercase font-bold mb-1">Blue Side</div>
+                                            <div className="text-xl font-bold text-white">{blueWR}%</div>
+                                            <div className="text-[10px] text-gray-500">
+                                                {teamStats?.stats.blue_side.games || 0} Games
+                                            </div>
                                         </div>
                                         <div>
-                                            <div className="text-xs text-gray-500 uppercase font-bold">Red Side</div>
-                                            <div className="text-xl font-bold text-red-400">54%</div>
+                                            <div className="text-xs text-red-400 uppercase font-bold mb-1">Red Side</div>
+                                            <div className="text-xl font-bold text-white">{redWR}%</div>
+                                            <div className="text-[10px] text-gray-500">
+                                                {teamStats?.stats.red_side.games || 0} Games
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+
 
                                 {/* Overview / Strategy */}
                                 <div className="esport-card p-6 md:col-span-2 bg-surface-light/20">
