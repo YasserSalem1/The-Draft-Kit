@@ -1,54 +1,95 @@
 'use client';
 
 import { useState } from 'react';
-import { TEAMS, Team } from '@/lib/data/teams';
-import { SCOUTING_DATA, ScoutingReportData } from '@/lib/data/scouting';
+import { getScoutingReport, ScoutingReportData } from '@/lib/data/scouting';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Download, FileText, ChevronRight, TrendingUp, Target, Shield, Zap, Search } from 'lucide-react';
+import { ArrowLeft, Download, FileText, TrendingUp, Target, Shield, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import sideData from '@/lib/data/side_preference_report_FULL.json';
+import { LEAGUES, League } from '@/lib/data/leagues';
+import LeagueCard from '../../components/LeagueCard';
+import TournamentSelector from '../../components/TournamentSelector';
+import TeamSelector from '../../components/TeamSelector';
+import ReportDisplay from '../../components/ReportDisplay';
 
 export default function ReportsPage() {
-    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [selectedLeague, setSelectedLeague] = useState<League | null>(null);
+    const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
+    const [selectedTournamentName, setSelectedTournamentName] = useState<string | null>(null);
+    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+    const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [reportData, setReportData] = useState<ScoutingReportData | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSelectTeam = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const teamId = e.target.value;
-        const team = TEAMS.find(t => t.id === teamId);
-        setSelectedTeam(team || null);
+    const handleSelectLeague = (league: League) => {
+        setSelectedLeague(league);
+        setSelectedTournamentId(null);
+        setSelectedTournamentName(null);
+        setSelectedTeamId(null);
+        setSelectedTeamName(null);
+        setReportData(null);
+        setError(null);
+    };
 
-        // Mock fetching scouting data - in real app this would be an API call
-        if (team) {
-            // For demo, we just use 't1' data if key matches, else default to 't1' or 'geng' for variety if avail
-            // or just hardcode checking if data exists in SCOUTING_DATA
-            const key = team.id as keyof typeof SCOUTING_DATA;
-            setReportData(SCOUTING_DATA[key] || SCOUTING_DATA['t1']); // Fallback to T1 data for demo
-        } else {
+    const handleSelectTournament = (tournamentId: string, tournamentName: string) => {
+        setSelectedTournamentId(tournamentId);
+        setSelectedTournamentName(tournamentName);
+        setSelectedTeamId(null);
+        setSelectedTeamName(null);
+        setReportData(null);
+        setError(null);
+    };
+
+    const handleSelectTeam = async (teamId: string, teamName: string) => {
+        setSelectedTeamId(teamId);
+        setSelectedTeamName(teamName);
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getScoutingReport(teamId, selectedTournamentId!); // Fetch live data
+            if ('message' in data) {
+                setError(data.message);
+                setReportData(null);
+            } else {
+                setReportData(data);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch report');
             setReportData(null);
+        } finally {
+            setLoading(false);
         }
     };
-    // ... (old handleSelectTeam code)
+    const currentSelectionStage = !selectedLeague
+        ? 'league'
+        : !selectedTournamentId
+        ? 'tournament'
+        : !selectedTeamId
+        ? 'team'
+        : 'report';
 
-    // --- Add the following code here ---
-    
+    if (loading) return <div className="flex justify-center items-center h-screen text-xl text-white">Loading report...</div>;
+    if (error) return <div className="flex justify-center items-center h-screen text-xl text-red-600">Error: {error}</div>;
+
     // 1. Find the selected team in the JSON data
-    // We use selectedTeam.name because this is the value stored in the file (e.g., "T1")
+    // We use selectedTeamName because this is the value stored in the file (e.g., "T1")
     // 1. Smart search logic
-const teamStats = selectedTeam 
-    ? sideData.find(t => {
-        // Exact match (e.g., T1 === T1)
-        if (t.team === selectedTeam.name) return true;
-        
-        // JSON team name is longer (e.g., "Suzhou LNG Esports" contains "LNG Esports")
-        if (t.team.includes(selectedTeam.name)) return true;
-        
-        // Dropdown team name is longer (e.g., "GAM Esports" contains "GAM")
-        if (selectedTeam.name.includes(t.team)) return true;
+    const teamStats = selectedTeamName
+        ? sideData.find(t => {
+            // Exact match (e.g., T1 === T1)
+            if (t.team === selectedTeamName) return true;
 
-        return false;
-    }) 
-    : null;
+            // JSON team name is longer (e.g., "Suzhou LNG Esports" contains "LNG Esports")
+            if (t.team.includes(selectedTeamName)) return true;
+
+            // Dropdown team name is longer (e.g., "GAM Esports" contains "GAM")
+            if (selectedTeamName.includes(t.team)) return true;
+
+            return false;
+        })
+        : null;
 
 
     // 2. Compute win rates, defaulting to zero if no data is found
@@ -78,47 +119,132 @@ const teamStats = selectedTeam
             <div className="max-w-7xl w-full mx-auto relative z-10 space-y-12">
 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-white/5 pb-8">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2">
+                <div className="border-b border-white/5 pb-8 mb-8">
+                    <div className="mb-8">
+                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-3">
                             <span className="text-primary">Team</span> Intelligence
                         </h1>
-                        <p className="text-gray-400 max-w-xl">
+                        <p className="text-gray-400 max-w-2xl text-lg">
                             Generate deep-dive analytical reports on team performance, draft tendencies, and strategic priorities.
                         </p>
                     </div>
 
-                    {/* Team Selector */}
-                    <div className="w-full md:w-auto relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 group-hover:text-primary transition-colors" />
-                        <select
-                            onChange={handleSelectTeam}
-                            value={selectedTeam?.id || ''}
-                            className="w-full md:w-80 bg-surface-light border border-white/10 rounded-xl py-3 pl-10 pr-4 appearance-none outline-none focus:border-primary/50 transition-all font-bold text-gray-200 cursor-pointer hover:bg-white/5"
-                        >
-                            <option value="">Select Team for Analysis...</option>
-                            {TEAMS.map(t => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Breadcrumb Navigation */}
+                    {(selectedLeague || selectedTournamentName || selectedTeamName) && (
+                        <div className="flex items-center gap-2 mb-6 flex-wrap">
+                            {selectedLeague && (
+                                <>
+                                    <button
+                                        onClick={() => handleSelectLeague(selectedLeague)}
+                                        className="px-4 py-2 bg-primary/20 text-primary rounded-lg font-semibold hover:bg-primary/30 transition-colors"
+                                    >
+                                        {selectedLeague.name}
+                                    </button>
+                                    {selectedTournamentName && <span className="text-gray-500">→</span>}
+                                </>
+                            )}
+                            {selectedTournamentName && (
+                                <>
+                                    <span className="px-4 py-2 bg-surface-light/50 text-gray-300 rounded-lg font-medium">
+                                        {selectedTournamentName}
+                                    </span>
+                                    {selectedTeamName && <span className="text-gray-500">→</span>}
+                                </>
+                            )}
+                            {selectedTeamName && (
+                                <span className="px-4 py-2 bg-surface-light/50 text-gray-300 rounded-lg font-medium">
+                                    {selectedTeamName}
+                                </span>
+                            )}
+                            {(selectedLeague || selectedTournamentName || selectedTeamName) && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedLeague(null);
+                                        setSelectedTournamentId(null);
+                                        setSelectedTournamentName(null);
+                                        setSelectedTeamId(null);
+                                        setSelectedTeamName(null);
+                                        setReportData(null);
+                                    }}
+                                    className="ml-auto px-4 py-2 text-gray-400 hover:text-white text-sm font-medium"
+                                >
+                                    Reset
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Dynamic Selector based on stage */}
+                    {currentSelectionStage === 'league' && (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key="league-selector"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className="w-full"
+                            >
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-white mb-2">Select a League</h2>
+                                    <p className="text-gray-400 text-sm">Choose a league to browse tournaments</p>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                                    {LEAGUES.map((league) => (
+                                        <LeagueCard
+                                            key={league.id}
+                                            league={league}
+                                            onSelect={handleSelectLeague}
+                                            isSelected={selectedLeague?.id === league.id}
+                                        />
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </AnimatePresence>
+                    )}
+
+                    {currentSelectionStage === 'tournament' && selectedLeague && (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key="tournament-selector"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className="w-full"
+                            >
+                                <TournamentSelector
+                                    regionName={selectedLeague.regionName}
+                                    onSelectTournament={handleSelectTournament}
+                                />
+                            </motion.div>
+                        </AnimatePresence>
+                    )}
+
+                    {currentSelectionStage === 'team' && selectedTournamentId && (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key="team-selector"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className="w-full"
+                            >
+                                <TeamSelector
+                                    tournamentId={selectedTournamentId}
+                                    onSelectTeam={handleSelectTeam}
+                                />
+                            </motion.div>
+                        </AnimatePresence>
+                    )}
                 </div>
 
-                {/* Content Area */}
+                {/* Content Area - Report Display */}
                 <AnimatePresence mode="wait">
-                    {!selectedTeam ? (
+                    {currentSelectionStage === 'report' && reportData ? (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center py-24 text-gray-600 space-y-4 border border-dashed border-white/5 rounded-3xl"
-                        >
-                            <Target className="w-16 h-16 opacity-20" />
-                            <p className="text-lg font-medium">Select a team above to generate report</p>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key={selectedTeam.id}
+                            key="report-display"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
@@ -130,13 +256,14 @@ const teamStats = selectedTeam
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                                     <div className="flex items-center gap-6">
+                                        {/* Simplified Team Logo/Name Display */}
                                         <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center border border-white/10 shadow-lg">
-                                            <span className="text-3xl font-bold">{selectedTeam.shortName}</span>
+                                            <span className="text-3xl font-bold">{selectedTeamName?.substring(0,2).toUpperCase()}</span>
                                         </div>
                                         <div>
-                                            <h2 className="text-3xl font-bold text-white mb-2">{selectedTeam.name}</h2>
+                                            <h2 className="text-3xl font-bold text-white mb-2">{selectedTeamName}</h2>
                                             <div className="flex items-center gap-2">
-                                                <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest rounded border border-primary/20">LCK</span>
+                                                <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest rounded border border-primary/20">{selectedLeague?.name || 'N/A'}</span>
                                                 <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-widest rounded border border-green-500/10">Active</span>
                                             </div>
                                         </div>
@@ -146,166 +273,42 @@ const teamStats = selectedTeam
                                         <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-colors border border-white/5">
                                             <FileText className="w-4 h-4" /> Save Report
                                         </button>
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/25">
-                                            <Download className="w-4 h-4" /> Download PDF
-                                        </button>
+                                        <Link href={`/drafts?teamId=${selectedTeamId}&tournamentId=${selectedTournamentId}`} className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/25">
+                                            <Download className="w-4 h-4" /> View Draft History
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Report Display Component */}
+                            <ReportDisplay report={reportData} />
 
-                                
-                                {/* Win Rate Card - Dynamic Version */}
-                                <div className="esport-card p-6 flex flex-col justify-between h-full bg-surface-light/20">
-                                    <div>
-                                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <TrendingUp className={`w-4 h-4 ${totalWR >= 50 ? 'text-green-400' : 'text-red-400'}`} /> 
-                                            Win Rates
-                                        </h3>
-                                        
-                                        {/* Overall win rate */}
-                                        <div className="flex items-end justify-between mb-2">
-                                            <span className="text-5xl font-black text-white">{totalWR}%</span>
-                                            
-                                            {/* Display side preference (Blue / Red) */}
-                                            {teamStats && (
-                                                <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
-                                                    isBlueHeavy ? 'bg-blue-500/20 text-blue-300' : 
-                                                    isRedHeavy ? 'bg-red-500/20 text-red-300' : 
-                                                    'bg-gray-700 text-gray-400'
-                                                }`}>
-                                                    {teamStats.preference.replace('_', ' ')}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Progress bar */}
-                                        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-6 flex">
-                                            {/* Blue side portion */}
-                                            <div
-                                                className="bg-blue-500 h-full transition-all duration-500"
-                                                style={{ width: `${blueWR}%` }}
-                                            />
-                                            {/* Red side can fill the remaining space or remain as background */}
-                                        </div>
-                                    </div>
-
-                                    {/* Blue and Red side details */}
-                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                                        <div>
-                                            <div className="text-xs text-blue-400 uppercase font-bold mb-1">Blue Side</div>
-                                            <div className="text-xl font-bold text-white">{blueWR}%</div>
-                                            <div className="text-[10px] text-gray-500">
-                                                {teamStats?.stats.blue_side.games || 0} Games
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-red-400 uppercase font-bold mb-1">Red Side</div>
-                                            <div className="text-xl font-bold text-white">{redWR}%</div>
-                                            <div className="text-[10px] text-gray-500">
-                                                {teamStats?.stats.red_side.games || 0} Games
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                {/* Overview / Strategy */}
-                                <div className="esport-card p-6 md:col-span-2 bg-surface-light/20">
-                                    <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <Shield className="w-4 h-4 text-purple-400" /> Strategic Identity
-                                    </h3>
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h4 className="text-white font-bold mb-2">Overview</h4>
-                                            <p className="text-gray-400 leading-relaxed text-sm">
-                                                {reportData?.overview || "No data available."}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <h4 className="text-white font-bold mb-3">Key Priorities</h4>
-                                            <div className="flex flex-wrap gap-2">
-                                                {reportData?.strategies?.map((strat, i) => (
-                                                    <span key={i} className="px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-xs text-gray-300">
-                                                        {strat}
-                                                    </span>
-                                                )) || <span className="text-gray-500 text-sm">No strategies recorded.</span>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col items-center justify-center py-32 space-y-6"
+                        >
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"></div>
+                                <Target className="relative w-24 h-24 text-primary/40" />
                             </div>
-
-                            {/* Report Sections Row */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                                {/* Player Tendencies */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                                        <Zap className="w-5 h-5 text-yellow-400" /> Player Tendencies
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {reportData?.tendencies?.map((item, i) => (
-                                            <div key={i} className="flex items-center gap-4 p-4 bg-surface-light/30 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
-                                                <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center font-bold text-gray-500 text-xs border border-white/5">
-                                                    {item.role[0]}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between mb-1">
-                                                        <span className="font-bold text-white">{item.name}</span>
-                                                        <span className="text-xs text-gray-500 font-bold uppercase">{item.role}</span>
-                                                    </div>
-                                                    <div className="text-sm text-gray-400">{item.tendency}</div>
-                                                </div>
-                                            </div>
-                                        )) || <div className="text-gray-500">No player data.</div>}
-                                    </div>
-                                </div>
-
-                                {/* Draft Preferences & Bans */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                                        <Target className="w-5 h-5 text-red-400" /> Priority Picks & Bans
-                                    </h3>
-
-                                    <div className="p-6 bg-surface-light/30 border border-white/5 rounded-xl">
-                                        <h4 className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Highest Priority Picks</h4>
-                                        <div className="space-y-3">
-                                            {reportData?.famousPicks?.map((pick, i) => (
-                                                <div key={i} className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded bg-gray-800" /> {/* Avatar Placeholder */}
-                                                        <span className="font-medium text-gray-200">{pick.name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 w-32">
-                                                        <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-primary" style={{ width: `${pick.rate}%` }} />
-                                                        </div>
-                                                        <span className="text-xs font-mono text-gray-400 w-8">{pick.rate}%</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6 bg-surface-light/30 border border-white/5 rounded-xl">
-                                        <h4 className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Common Bans Against</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {reportData?.popularBans?.map((ban, i) => (
-                                                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                                    <span className="text-red-300 font-medium text-sm">{ban.name}</span>
-                                                    <span className="text-red-500/50 text-xs font-mono">{ban.rate}%</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div className="text-center space-y-2">
+                                <p className="text-xl font-bold text-gray-300">
+                                    {currentSelectionStage === 'league' && "Select a league to begin"
+                                    || currentSelectionStage === 'tournament' && "Select a tournament to continue"
+                                    || currentSelectionStage === 'team' && "Select a team to generate the report"
+                                    || "Select options above to generate report"}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    {currentSelectionStage === 'league' && "Choose from the available leagues above"
+                                    || currentSelectionStage === 'tournament' && "Pick a tournament from the cards above"
+                                    || currentSelectionStage === 'team' && "Browse teams and select one to analyze"
+                                    || "Follow the steps above to generate your report"}
+                                </p>
                             </div>
-
                         </motion.div>
                     )}
                 </AnimatePresence>
