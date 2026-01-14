@@ -33,6 +33,7 @@ export interface ScoutingReportData {
   tendencies?: { name: string; role: string; tendency: string }[];
   famousPicks?: { name: string; rate: number }[];
   popularBans?: { name: string; rate: number }[];
+  insight?: string;
 }
 
 // Main analysis function (mimicking run_analysis from Scouting.py)
@@ -300,7 +301,55 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
         { name: "Lucian", rate: 70 },
         { name: "Thresh", rate: 65 },
     ],
+    insight: "Focus on early objective control and lane priority to disrupt their rhythm.",
   };
 
   return reportData;
 }
+
+export const SCOUTING_DATA = {
+  t1: {
+    overview: "Fast-paced, objective-focused playstyle with high mechanical skill.",
+    strategies: ["Early Dragon Priority", "Lane Dominance", "1-3-1 Split Push"],
+    tendencies: [
+      { name: "Zeus", role: "Top", tendency: "High resource carry top" },
+      { name: "Oner", role: "Jungle", tendency: "Proactive pathing" },
+      { name: "Faker", role: "Mid", tendency: "Playmaking & Control" },
+      { name: "Gumayusi", role: "ADC", tendency: "Safe & Reliable" },
+      { name: "Keria", role: "Support", tendency: "Unique picks & Roaming" }
+    ],
+    famousPicks: [
+      { name: "Lee Sin", rate: 75 },
+      { name: "Azir", rate: 60 },
+      { name: "Jayce", rate: 55 }
+    ],
+    popularBans: [
+      { name: "Renekton", rate: 80 },
+      { name: "Lucian", rate: 70 },
+      { name: "Nidalee", rate: 65 }
+    ],
+    insight: "Control the early vision around objectives to neutralize their proactive pathing."
+  },
+  geng: {
+    overview: "Methodical, late-game scaling focused with exceptional teamfighting.",
+    strategies: ["Cross-map trades", "Vision Control", "Late Game Front-to-Back"],
+    tendencies: [
+      { name: "Kiin", role: "Top", tendency: "Versatile & Solid" },
+      { name: "Canyon", role: "Jungle", tendency: "Carry Jungle potential" },
+      { name: "Chovy", role: "Mid", tendency: "Extreme CS & Pressure" },
+      { name: "Peyz", role: "ADC", tendency: "Primary carry threat" },
+      { name: "Lehends", role: "Support", tendency: "Vision & Peeling" }
+    ],
+    famousPicks: [
+      { name: "Tristana", rate: 70 },
+      { name: "Corki", rate: 65 },
+      { name: "Sejuani", rate: 60 }
+    ],
+    popularBans: [
+      { name: "Maokai", rate: 75 },
+      { name: "Vi", rate: 65 },
+      { name: "Taliyah", rate: 60 }
+    ],
+    insight: "Force favorable skirmishes before they reach their 3-item power spikes."
+  }
+};

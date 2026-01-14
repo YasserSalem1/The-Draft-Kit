@@ -82,24 +82,8 @@ function DraftPageContent() {
     const blueTeamId = searchParams.get('blue');
     const redTeamId = searchParams.get('red');
 
-    const [viewMode, setViewMode] = useState<ViewMode>('DRAFT');
-    const [aiMode, setAiMode] = useState(false);
-    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string } | null>(null);
-
     const blueTeam = TEAMS.find(t => t.id === blueTeamId) || TEAMS[0];
-    const redTeam = TEAMS.find(t => t.id === redTeamId) || TEAMS[1];
-
-    // Removed duplicate useDraft call
-
-    const handlePlayerClick = (player: Player, team: typeof blueTeam) => {
-        setSelectedPlayer(player);
-        setSelectedTeamMeta({ name: team.name, color: team.color });
-    };
-
-    const handleInitializeDraft = () => {
-        startDraft();
-    };
+    const redTeam = TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]);
 
     const { startDraft, resetDraft, currentStep: draftStep, blueBans, redBans, bluePicks, redPicks, currentStep, isStarted } = useDraft();
     const {
@@ -115,6 +99,27 @@ function DraftPageContent() {
         removeAlternative,
     } = useSeries();
 
+    const [viewMode, setViewMode] = useState<ViewMode>('DRAFT');
+    const [aiMode, setAiMode] = useState(false);
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string } | null>(null);
+
+    useEffect(() => {
+        const formatParam = searchParams.get('format');
+        if (formatParam && (formatParam === 'BO1' || formatParam === 'BO3' || formatParam === 'BO5')) {
+            initializeSeries(formatParam as any);
+        }
+    }, [searchParams, initializeSeries]);
+
+    const handlePlayerClick = (player: Player, team: typeof blueTeam) => {
+        setSelectedPlayer(player);
+        setSelectedTeamMeta({ name: team.name, color: team.color });
+    };
+
+    const handleInitializeDraft = () => {
+        startDraft();
+    };
+
     const [altAddSide, setAltAddSide] = useState<'blue' | 'red' | null>(null);
 
     // Determine active turn for highlighting
@@ -122,20 +127,17 @@ function DraftPageContent() {
     const isRedTurn = currentStep?.side === 'red';
     const isPickPhase = currentStep?.action === 'PICK';
     const currentPickIndex = currentStep?.index;
+
     // Helper to get current full draft state for saving
     const getCurrentState = () => ({
         isStarted: true,
         currentStepIndex: 20, // max
-        blueBans: blueBans, redBans: redBans, bluePicks: bluePicks, redPicks: redPicks,
+        blueBans: blueBans,
+        redBans: redBans,
+        bluePicks: bluePicks,
+        redPicks: redPicks,
         unavailableChampionIds: new Set([...blueBans, ...redBans, ...bluePicks, ...redPicks].filter(c => c).map(c => c!.id))
     });
-
-    useEffect(() => {
-        const formatParam = searchParams.get('format');
-        if (formatParam && (formatParam === 'BO1' || formatParam === 'BO3' || formatParam === 'BO5')) {
-            initializeSeries(formatParam as any);
-        }
-    }, [searchParams]);
 
     const handleSaveSeries = (pendingGame?: { draftState: any, winner: 'blue' | 'red' | null }) => {
         const finalGames = pendingGame
@@ -347,12 +349,14 @@ function DraftPageContent() {
                                     {currentStep.side} {currentStep.action}
                                 </span>
                             ) : (
-                                !isStarted && !isSeriesComplete && <button
-                                    onClick={handleInitializeDraft}
-                                    className="px-6 py-2 bg-white text-black font-bold uppercase text-xs tracking-widest rounded-full hover:scale-105 transition-transform mt-2"
-                                >
-                                    Initialize Draft
-                                </button>
+                                !isStarted && !isSeriesComplete && (
+                                    <button
+                                        onClick={handleInitializeDraft}
+                                        className="px-6 py-2 bg-white text-black font-bold uppercase text-xs tracking-widest rounded-full hover:scale-105 transition-transform mt-2"
+                                    >
+                                        Initialize Draft
+                                    </button>
+                                )
                             )}
                         </div>
 
