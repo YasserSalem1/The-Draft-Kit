@@ -1,27 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { TeamSelector } from '@/components/features/TeamSelector';
 import { TEAMS, Team } from '@/lib/data/teams';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Trophy, ChevronDown, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
-export default function DraftSetup() {
+function DraftSetupContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     const [blueTeam, setBlueTeam] = useState<Team | null>(null);
     const [redTeam, setRedTeam] = useState<Team | null>(null);
     const [format, setFormat] = useState<'BO1' | 'BO3' | 'BO5'>('BO1');
 
+    useEffect(() => {
+        const blueId = searchParams.get('blue');
+        const redId = searchParams.get('red');
+
+        if (blueId) {
+            const team = TEAMS.find(t => t.id === blueId);
+            if (team) setBlueTeam(team);
+        }
+
+        if (redId) {
+            const team = TEAMS.find(t => t.id === redId);
+            if (team) setRedTeam(team);
+        }
+    }, [searchParams]);
+
     const handleStartDraft = () => {
         if (blueTeam && redTeam) {
-            const query = new URLSearchParams({
+            const params = new URLSearchParams({
                 blue: blueTeam.id,
                 red: redTeam.id,
                 format: format,
             });
-            router.push(`/draft?${query.toString()}`);
+
+            const folderId = searchParams.get('folderId');
+            if (folderId) {
+                params.set('folderId', folderId);
+            }
+
+            router.push(`/draft?${params.toString()}`);
         }
     };
 
@@ -124,5 +147,13 @@ export default function DraftSetup() {
                 <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[120px]" />
             </div>
         </main>
+    );
+}
+
+export default function DraftSetup() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#090A0F] flex items-center justify-center text-white">Loading...</div>}>
+            <DraftSetupContent />
+        </Suspense>
     );
 }

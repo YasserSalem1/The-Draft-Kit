@@ -6,6 +6,8 @@ export interface DraftFolder {
     id: string;
     name: string;
     createdAt: number;
+    teamAId?: string;
+    teamBId?: string;
 }
 
 export interface SavedSeries {
@@ -101,17 +103,29 @@ export const getFolders = (): DraftFolder[] => {
     }
 };
 
-export const createFolder = (name: string) => {
+export const createFolder = (name: string, teamAId?: string, teamBId?: string) => {
     if (typeof window === 'undefined') return;
     const folders = getFolders();
     const newFolder: DraftFolder = {
         id: crypto.randomUUID(),
         name,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        teamAId,
+        teamBId
     };
     folders.push(newFolder);
     localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
     return newFolder;
+};
+
+export const updateFolder = (id: string, updates: Partial<DraftFolder>) => {
+    if (typeof window === 'undefined') return;
+    const folders = getFolders();
+    const index = folders.findIndex(f => f.id === id);
+    if (index !== -1) {
+        folders[index] = { ...folders[index], ...updates };
+        localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
+    }
 };
 
 export const deleteFolder = (id: string) => {
@@ -137,13 +151,7 @@ export const deleteFolder = (id: string) => {
 };
 
 export const renameFolder = (id: string, newName: string) => {
-    if (typeof window === 'undefined') return;
-    const folders = getFolders();
-    const folder = folders.find(f => f.id === id);
-    if (folder) {
-        folder.name = newName;
-        localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
-    }
+    updateFolder(id, { name: newName });
 };
 
 // --- Series ---
@@ -169,18 +177,11 @@ export const getSavedSeries = (): SavedSeries[] => {
     if (typeof window === 'undefined') return [MOCK_SERIES];
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        const history = stored ? JSON.parse(stored) : [];
-
-        // Ensure mock series is always present for demo if history is empty
-        if (history.length === 0) return [MOCK_SERIES];
-
-        const hasMock = history.some((s: SavedSeries) => s.id === MOCK_SERIES.id);
-        if (!hasMock) {
-            // Check if we should add it. For now, yes, to ensure there's data to see.
-            return [...history, MOCK_SERIES];
+        if (stored === null) {
+            // First time load: return Mock Series
+            return [MOCK_SERIES];
         }
-
-        return history;
+        return stored ? JSON.parse(stored) : [];
     } catch (e) {
         console.error("Failed to load drafts", e);
         return [MOCK_SERIES];

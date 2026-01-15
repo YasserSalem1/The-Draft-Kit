@@ -11,34 +11,34 @@ interface AIAssistantButtonProps {
 
 export function AIAssistantButton({ isActive, onClick }: AIAssistantButtonProps) {
     return (
-        <div className="flex justify-center my-4 relative z-50">
+        <div className="flex justify-center relative z-50">
             <motion.button
                 onClick={onClick}
                 layout
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                    "relative overflow-hidden flex items-center gap-4 px-8 h-[68px] rounded-2xl transition-all duration-500 group",
+                    "relative overflow-hidden flex items-center gap-4 px-8 h-[60px] rounded-full transition-all duration-500 group border",
                     isActive
-                        ? "bg-red-500/10 border border-red-500/50 hover:bg-red-500/20 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
-                        : "bg-gradient-to-r from-primary/90 to-blue-600/90 hover:from-primary hover:to-blue-500 text-white shadow-[0_0_25px_rgba(59,130,246,0.4)] border border-white/20"
+                        ? "bg-black/80 border-red-500 text-red-500 shadow-[0_0_30px_rgba(239,68,68,0.4)]"
+                        : "bg-[#0f172a] border-[#a855f7]/50 text-white shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] hover:border-[#a855f7]"
                 )}
             >
-                {/* Pulsing Ring Effect (Only when not active) */}
+                {/* Gradient Stroke / Border Effect */}
                 {!isActive && (
-                    <span className="absolute inset-0 rounded-2xl border border-white/40 animate-ping opacity-20" />
+                    <div className="absolute inset-0 rounded-full p-[1px] bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50 group-hover:opacity-100 transition-opacity -z-10" />
                 )}
 
-                {/* Glow Background */}
+                {/* Animated Background Gradient */}
                 <div className={cn(
-                    "absolute inset-0 bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                    isActive ? "bg-red-500/20" : "bg-white/20"
+                    "absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-700",
+                    isActive ? "from-red-900 to-black" : "from-blue-600 via-purple-600 to-pink-600"
                 )} />
 
                 {/* Icon Box */}
                 <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center relative z-10 transition-colors",
-                    isActive ? "bg-red-500 text-white" : "bg-white/20 backdrop-blur-sm text-white"
+                    "w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors shadow-lg",
+                    isActive ? "bg-red-500 text-white" : "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-purple-500/20"
                 )}>
                     <AnimatePresence mode='wait'>
                         {isActive ? (
@@ -56,8 +56,10 @@ export function AIAssistantButton({ isActive, onClick }: AIAssistantButtonProps)
                                 initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.5, opacity: 0 }}
+                                className="relative"
                             >
-                                <Bot className="w-6 h-6 fill-current" />
+                                <Bot className="w-5 h-5 fill-current" />
+                                <div className="absolute inset-0 animate-ping opacity-50 bg-white rounded-full" />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -65,17 +67,15 @@ export function AIAssistantButton({ isActive, onClick }: AIAssistantButtonProps)
 
                 {/* Text Content */}
                 <div className="flex flex-col items-start relative z-10 text-left">
-                    <span className={cn(
-                        "text-lg font-bold tracking-wide uppercase",
-                        isActive ? "text-red-500" : "text-white"
-                    )}>
-                        {isActive ? "Exit AI Mode" : "AI Draft Assistant"}
-                    </span>
-                    {!isActive && (
-                        <span className="text-[10px] font-medium text-white/80 uppercase tracking-wider">
-                            Analyze draft & recommend best pick
+                    <div className="flex items-center gap-2">
+                        <span className={cn(
+                            "text-base font-black tracking-wider uppercase",
+                            isActive ? "text-red-500" : "bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent"
+                        )}>
+                            {isActive ? "Close Intelligence" : "Intelligence"}
                         </span>
-                    )}
+                        {!isActive && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gradient-to-r from-purple-500 to-pink-600 text-white uppercase tracking-widest">Pro</span>}
+                    </div>
                 </div>
             </motion.button>
         </div>

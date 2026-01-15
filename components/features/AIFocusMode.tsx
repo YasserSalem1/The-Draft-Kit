@@ -23,7 +23,7 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
     // Get Draft State
     const {
         blueBans, redBans, bluePicks, redPicks,
-        currentStep, currentStepIndex, selectChampion
+        currentStep, currentStepIndex, selectChampion, isStarted
     } = useDraft();
 
     useEffect(() => {
@@ -38,6 +38,9 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
 
     // Fetch Predictions from Python Server
     const fetchPredictions = async () => {
+        // Don't fetch if draft is complete
+        if (!currentStep) return;
+
         setLoading(true);
         setError(null);
         try {
@@ -99,43 +102,9 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute inset-0 z-20 bg-black/80 backdrop-blur-md flex flex-col p-6 overflow-y-auto custom-scrollbar"
+            className="absolute inset-0 z-20 bg-black/80 backdrop-blur-md flex flex-col p-6 h-full"
         >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8 border-b border-primary/20 pb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                        <Bot className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-white tracking-widest uppercase">AI Draft Assistant</h2>
-                        <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] animate-pulse">
-                            {loading ? "Thinking..." : "Live Recommendations"}
-                        </p>
-                    </div>
-                </div>
 
-                {/* Winrate Impact */}
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={fetchPredictions}
-                        disabled={loading}
-                        className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
-                    >
-                        <RefreshCw className={cn("w-5 h-5 text-gray-400", loading && "animate-spin")} />
-                    </button>
-
-                    <div className="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-xl border border-white/10">
-                        <div className="text-right">
-                            <div className="text-xs text-primary font-bold uppercase">Confidence</div>
-                            <div className="text-2xl font-bold text-primary flex items-center gap-1">
-                                <TrendingUp className="w-5 h-5" />
-                                {recommendations[0]?.winRate || 0}%
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Error Message */}
             {error && (
@@ -145,69 +114,106 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
                 </div>
             )}
 
-            {/* Recommendations Grid */}
-            <h3 className="text-gray-400 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-primary" />
-                Strategic Recommendations
-            </h3>
 
-            {recommendations.length === 0 && !loading && !error && (
+
+            {recommendations.length === 0 && !loading && !error && !((isStarted && !currentStep)) && (
                 <div className="text-center text-gray-500 py-10">
                     No recommendations available for this step.
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {recommendations.map((rec, i) => (
-                    <motion.div
-                        key={rec.championName}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 * i }}
-                        className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-primary/50 transition-colors group relative cursor-pointer hover:bg-white/10 active:scale-95"
-                        onClick={() => handleRecommendationClick(rec)}
-                    >
-                        {/* Rank Badge */}
-                        <div className="absolute top-0 right-0 bg-white/10 px-3 py-1 rounded-bl-xl text-xs font-bold text-white z-10 backdrop-blur-sm">
-                            #{i + 1}
-                        </div>
+            {/* Drafted State */}
+            {/* Drafted State or Loading or List */}
+            {(isStarted && !currentStep) ? (
+                <div className="flex-1 flex flex-col items-center justify-start pt-32 animate-in fade-in zoom-in duration-500 space-y-4">
+                    <h2 className="text-5xl font-black text-white uppercase italic tracking-tighter glow-text text-center">
+                        Drafted
+                    </h2>
+                    <div className="text-center text-gray-500">
+                        No recommendations available for this step.
+                    </div>
+                </div>
+            ) : loading ? (
+                <div className="flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300 space-y-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+                        <BrainCircuit className="w-20 h-20 text-primary relative z-10 animate-pulse" />
+                    </div>
+                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter animate-pulse text-center">
+                        Generating Recommendation...
+                    </h2>
+                </div>
+            ) : (
+                <div className="flex flex-col h-full">
+                    {/* New Header */}
+                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter glow-text text-center mb-4 shrink-0">
+                        <span className="text-primary">Intelligence</span> Recommendation
+                    </h2>
 
-                        <div className="p-4 flex flex-col gap-4 h-full">
-                            {/* Champ Header */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-lg bg-black overflow-hidden border border-white/20 group-hover:border-primary transition-colors relative">
-                                    {getChampImage(rec.championName) && (
-                                        <img
-                                            src={getChampImage(rec.championName)}
-                                            alt={rec.championName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    )}
-                                </div>
-                                <div className="min-w-0">
-                                    <h4 className="text-lg font-bold text-white truncate">{rec.championName}</h4>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase">{rec.role}</p>
-                                </div>
-                            </div>
+                    {/* Recommendations List */}
+                    {recommendations.length > 0 ? (
+                        <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-2 min-h-0 pb-2">
+                            {recommendations.map((rec, i) => (
+                                <motion.div
+                                    key={rec.championName}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.1 * i }}
+                                    className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:border-primary/50 transition-all duration-300 group relative cursor-pointer hover:bg-white/10 active:scale-[0.99] flex items-stretch flex-1 min-h-[60px]" // Reduced border radius and added min-height constraint
+                                    onClick={() => handleRecommendationClick(rec)}
+                                >
+                                    {/* Champ Image & Info - Larger Loading Art */}
+                                    <div className="w-48 relative border-r border-white/5 bg-black/20 group-hover:bg-black/40 transition-colors shrink-0">
+                                        {getChampImage(rec.championName) && (
+                                            <img
+                                                src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${rec.championName.replace(/[^a-zA-Z0-9]/g, '')}_0.jpg`}
+                                                alt={rec.championName}
+                                                className="absolute inset-0 w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                                        <div className="absolute inset-x-0 bottom-0 p-3">
+                                            <h4 className="text-xl font-black text-white truncate shadow-black drop-shadow-lg leading-none uppercase italic tracking-tighter">{rec.championName}</h4>
+                                        </div>
+                                    </div>
 
-                            {/* Reasoning */}
-                            <div className="flex-1 bg-black/20 rounded-lg p-3 space-y-2">
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                                    <BrainCircuit className="w-3 h-3" /> AI Analysis
-                                </div>
-                                <ul className="space-y-1">
-                                    {rec.reasoning.map((r: string, idx: number) => (
-                                        <li key={idx} className="text-[10px] text-gray-300 flex items-start gap-1.5 leading-snug">
-                                            <span className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                                            {r}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+                                    {/* Reasoning Content - Cleaner & Smaller */}
+                                    <div className="flex-1 p-3 flex flex-col justify-between overflow-hidden">
+                                        <p className="text-xs text-gray-300 leading-snug font-light line-clamp-3 mb-2">
+                                            {Array.isArray(rec.reasoning) && rec.reasoning.length > 0
+                                                ? rec.reasoning.join('. ')
+                                                : "Top strategic fit for current draft state."}
+                                        </p>
+
+                                        {/* Lookahead / Next Pick Preview */}
+                                        {rec.opponentResponses && rec.opponentResponses.length > 0 && (
+                                            <div className="mt-auto pt-2 border-t border-white/5">
+                                                <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Potential Response</div>
+                                                <div className="flex items-center gap-1">
+                                                    {rec.opponentResponses.slice(0, 5).map((opName: string) => (
+                                                        <div key={opName} className="w-6 h-6 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/50" title={opName}>
+                                                            <img
+                                                                src={getChampImage(opName)}
+                                                                alt={opName}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </motion.div>
+                            ))}
                         </div>
-                    </motion.div>
-                ))}
-            </div>
+                    ) : (
+                        <div className="text-center text-gray-500 py-10">
+                            No recommendations available.
+                        </div>
+                    )}
+                </div>
+            )}
         </motion.div>
     );
 }

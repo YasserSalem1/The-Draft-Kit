@@ -21,7 +21,7 @@ export function BanSlot({ champion, isActive, side }: BanSlotProps) {
     return (
         <div
             className={cn(
-                "relative w-10 h-10 md:w-12 md:h-12 rounded border transition-all duration-300 overflow-hidden",
+                "relative w-9 h-9 sm:w-10 sm:h-10 rounded border transition-all duration-300 overflow-hidden",
                 isActive ? (side === 'blue' ? "border-primary ring-2 ring-primary/30" : "border-red-500 ring-2 ring-red-500/30") : "border-white/10 bg-black/40",
             )}
         >

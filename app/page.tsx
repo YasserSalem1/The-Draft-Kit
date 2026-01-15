@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { BarChart2, Gamepad2, LayoutGrid, ArrowRight } from 'lucide-react';
+import { BarChart2, Gamepad2, LayoutGrid, ArrowRight, MessageCircle } from 'lucide-react';
 
 const HubCard = ({ href, icon: Icon, title, description, colorClass }: {
   href: string;
@@ -71,7 +71,7 @@ export default function HubPage() {
           className="flex flex-col gap-12 items-center"
         >
           {/* Main Action Buttons */}
-          <div className="flex flex-col md:flex-row gap-8 w-full justify-center">
+          <div className="flex flex-col md:flex-row gap-8 w-full justify-center flex-wrap">
             <Link href="/reports" className="group relative w-full md:w-[28rem] h-80 bg-surface-light/30 border border-white/5 rounded-[2rem] overflow-hidden hover:border-blue-500/50 transition-all duration-300 hover:scale-[1.02] flex flex-col items-center justify-center shadow-2xl shadow-blue-900/10">
               <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors" />
               <BarChart2 className="w-20 h-20 text-gray-400 group-hover:text-blue-500 transition-colors mb-6" />
@@ -84,6 +84,16 @@ export default function HubPage() {
               <span className="text-4xl font-black text-white group-hover:text-purple-400 transition-colors uppercase tracking-widest">Draft</span>
             </Link>
           </div>
+
+          {/* Drafting Agent Button */}
+          <Link href="/drafting-agent" className="group relative w-full md:w-[42rem] h-40 bg-surface-light/30 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/50 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-6 shadow-2xl shadow-amber-900/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-amber-500/5 group-hover:from-amber-500/10 group-hover:via-orange-500/10 group-hover:to-amber-500/10 transition-colors" />
+            <MessageCircle className="w-14 h-14 text-gray-400 group-hover:text-amber-500 transition-colors" />
+            <div className="flex flex-col items-start">
+              <span className="text-2xl font-black text-white group-hover:text-amber-400 transition-colors uppercase tracking-widest">Drafting Agent</span>
+              <span className="text-sm text-gray-500 group-hover:text-amber-300/70 transition-colors">Brainstorm drafts with AI voice assistant</span>
+            </div>
+          </Link>
 
           {/* Library Button (Small, Bottom Middle) */}
           <Link href="/library">
@@ -98,9 +108,7 @@ export default function HubPage() {
         </motion.div>
       </div>
 
-      <footer className="absolute bottom-6 text-gray-600 text-xs font-mono uppercase tracking-widest">
-        System V2.0 // R&D Dept
-      </footer>
+
     </main>
   );
 }

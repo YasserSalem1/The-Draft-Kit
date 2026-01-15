@@ -113,15 +113,19 @@ export function SeriesProvider({ children }: { children: ReactNode }) {
     return state.blueWins >= needed || state.redWins >= needed;
   }, [state.format, state.blueWins, state.redWins]);
 
-  const value: SeriesContextType = {
+  const actions = useMemo(() => ({
+    initializeSeries: (format: SeriesFormat) => dispatch({ type: 'INIT', format }),
+    completeGame: (winner: Winner, draftState: DraftState) => dispatch({ type: 'COMPLETE_GAME', winner, draftState }),
+    resetSeries: () => dispatch({ type: 'RESET' }),
+    addAlternative: (side: 'blue' | 'red', champion: Champion) => dispatch({ type: 'ADD_ALT', side, champion }),
+    removeAlternative: (side: 'blue' | 'red', championId: string) => dispatch({ type: 'REMOVE_ALT', side, championId }),
+  }), []);
+
+  const value: SeriesContextType = useMemo(() => ({
     ...state,
     isSeriesComplete,
-    initializeSeries: (format: SeriesFormat) => dispatch({ type: 'INIT', format }),
-    completeGame: (winner, draftState) => dispatch({ type: 'COMPLETE_GAME', winner, draftState }),
-    resetSeries: () => dispatch({ type: 'RESET' }),
-    addAlternative: (side, champion) => dispatch({ type: 'ADD_ALT', side, champion }),
-    removeAlternative: (side, championId) => dispatch({ type: 'REMOVE_ALT', side, championId }),
-  };
+    ...actions
+  }), [state, isSeriesComplete, actions]);
 
   return <SeriesContext.Provider value={value}>{children}</SeriesContext.Provider>;
 }

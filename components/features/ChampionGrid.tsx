@@ -22,6 +22,7 @@ export function ChampionGrid({
     const [version, setVersion] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [activeRole, setActiveRole] = useState('All');
 
     useEffect(() => {
@@ -77,51 +78,50 @@ export function ChampionGrid({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
 
             {/* Controls */}
-            <div className="p-4 border-b border-white/5 flex flex-col gap-4 relative z-20 bg-[#0C0E14]/95 backdrop-blur-sm">
+            <div className="px-2 py-1 border-b border-white/5 flex flex-col gap-4 relative z-20 bg-[#0C0E14]/95 backdrop-blur-sm">
                 <div className="flex items-center justify-between gap-4">
                     {/* Collapsible Search */}
-                    <div className="relative flex items-center">
-                        <AnimatePresence mode="wait">
-                            {!search && (
-                                <motion.button
-                                    initial={{ width: 40, opacity: 0 }}
-                                    animate={{ width: 40, opacity: 1 }}
-                                    exit={{ width: 0, opacity: 0 }}
-                                    onClick={() => document.getElementById('champ-search')?.focus()}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10"
-                                >
-                                    <Search className="w-4 h-4" />
-                                </motion.button>
-                            )}
-                        </AnimatePresence>
-
-                        <motion.div
-                            className="relative"
-                            animate={{ width: search ? 300 : 200 }}
-                        >
+                    <div className={cn("relative flex items-center h-8 transition-all duration-300 ease-in-out", isSearchOpen || search ? "w-full md:w-[220px]" : "w-8 shrink-0")}>
+                        <div className={cn("relative w-full h-full transition-all duration-300", isSearchOpen || search ? "opacity-100 scale-100" : "opacity-0 scale-95 absolute pointer-events-none")}>
+                            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-primary" />
                             <input
                                 id="champ-search"
                                 type="text"
                                 placeholder="Search..."
-                                className="w-full bg-black/40 border border-white/10 rounded-full pl-4 pr-10 py-2.5 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+                                className="w-full h-full bg-white/5 border border-white/5 rounded-full pl-9 pr-8 text-[11px] font-bold tracking-wide text-white focus:bg-white/10 focus:border-primary/50 focus:outline-none transition-all shadow-inner placeholder:text-gray-600"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
+                                onBlur={() => !search && setIsSearchOpen(false)}
                             />
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                        </motion.div>
+                            <button
+                                onClick={() => { setSearch(''); setIsSearchOpen(false); }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+
+                        {(!isSearchOpen && !search) && (
+                            <button
+                                onClick={() => { setIsSearchOpen(true); setTimeout(() => document.getElementById('champ-search')?.focus(), 50); }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/5 absolute inset-0 z-10"
+                            >
+                                <Search className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                     </div>
 
                     {/* Role Filters */}
-                    <div className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+                    <div className="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth mask-linear-fade">
                         {ROLES.map(role => (
                             <button
                                 key={role}
                                 onClick={() => setActiveRole(role)}
                                 className={cn(
-                                    "px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-300 whitespace-nowrap border flex items-center gap-2",
+                                    "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap border flex items-center gap-2",
                                     activeRole === role
-                                        ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(59,130,246,0.3)] scale-105"
-                                        : "bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white hover:bg-white/10"
+                                        ? "bg-primary text-white border-primary shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+                                        : "bg-white/5 text-gray-500 border-white/5 hover:border-white/10 hover:text-gray-300 hover:bg-white/5"
                                 )}
                             >
                                 {role}
@@ -133,7 +133,7 @@ export function ChampionGrid({
 
             {/* Grid */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
                     <AnimatePresence>
                         {filteredChampions.map((champ) => {
                             const isUnavailable = unavailableChampionIds.has(champ.id);

@@ -17,46 +17,47 @@ import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
-    Calendar,
     Trash2,
-    Folder,
+    Folder as FolderIcon,
     Plus,
     Search,
-    MoreVertical,
-    FolderOpen,
-    LayoutGrid,
-    FileQuestion,
     Edit2,
-    Check,
-    X,
-    Filter
+    FileQuestion,
+    X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
+import { getLatestVersion, getChampionIconUrl } from '@/lib/api/ddragon';
+import { TeamLogo } from '@/components/ui/TeamLogo';
+import { CreateFolderModal } from '@/components/features/CreateFolderModal';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 type SortOption = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
 export default function LibraryPage() {
     const [history, setHistory] = useState<SavedSeries[]>([]);
     const [folders, setFolders] = useState<DraftFolder[]>([]);
-    const [currentFolderId, setCurrentFolderId] = useState<string | null>(null); // null = All
+    const [currentFolderId, setCurrentFolderId] = useState<string | null>(null); // null = Root (Grid View)
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
+    const [ddragonVersion, setDdragonVersion] = useState<string>('');
+    const [previewGameIndices, setPreviewGameIndices] = useState<Record<string, number>>({});
 
-    // Collapsible sections by format
-    const [collapsed, setCollapsed] = useState<Record<'BO1' | 'BO3' | 'BO5', boolean>>({ BO1: false, BO3: false, BO5: false });
+    // Modals
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ type: 'folder' | 'series' | null, id: string | null }>({ type: null, id: null });
 
-    // Folder Editing State
-    const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-    const [newFolderName, setNewFolderName] = useState('');
+    // Editing State (Folder/Series)
     const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
-
-    // Series Editing State
     const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
-    const [editingSeriesName, setEditingSeriesName] = useState('');
+    const [editingName, setEditingName] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+    const currentFolder = useMemo(() => folders.find(f => f.id === currentFolderId), [folders, currentFolderId]);
+
+    // Derived Data
     useEffect(() => {
         refreshData();
+        getLatestVersion().then(setDdragonVersion);
     }, []);
 
     const refreshData = () => {
@@ -66,31 +67,33 @@ export default function LibraryPage() {
 
     // --- Actions ---
 
+    const handleCreateFolder = (name: string, teamAId?: string, teamBId?: string) => {
+        createFolder(name, teamAId, teamBId);
+        refreshData();
+    };
+
     const handleDeleteSeries = (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this draft?')) {
-            deleteSeries(id);
-            refreshData();
-        }
-    };
-
-    const handleCreateFolder = () => {
-        if (!newFolderName.trim()) return;
-        createFolder(newFolderName.trim());
-        setNewFolderName('');
-        setIsCreatingFolder(false);
-        refreshData();
+        setDeleteConfirmation({ type: 'series', id });
     };
 
     const handleDeleteFolder = (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('Delete folder? Drafts inside will be moved to Unfiled.')) {
-            deleteFolder(id);
-            if (currentFolderId === id) setCurrentFolderId(null);
+        setDeleteConfirmation({ type: 'folder', id });
+    };
+
+    const confirmDelete = () => {
+        if (deleteConfirmation.type === 'series' && deleteConfirmation.id) {
+            deleteSeries(deleteConfirmation.id);
+            refreshData();
+        } else if (deleteConfirmation.type === 'folder' && deleteConfirmation.id) {
+            deleteFolder(deleteConfirmation.id);
+            if (currentFolderId === deleteConfirmation.id) setCurrentFolderId(null);
             refreshData();
         }
+        setDeleteConfirmation({ type: null, id: null });
     };
 
     const handleRenameFolder = (id: string, name: string) => {
@@ -100,7 +103,7 @@ export default function LibraryPage() {
     };
 
     const handleUpdateSeriesName = (id: string) => {
-        updateSeries(id, { name: editingSeriesName });
+        updateSeries(id, { name: editingName });
         setEditingSeriesId(null);
         refreshData();
     };
@@ -110,19 +113,26 @@ export default function LibraryPage() {
         refreshData();
     };
 
-    // --- Filtering & Sorting ---
+    const handleGamePreviewClick = (e: React.MouseEvent, seriesId: string, gameIndex: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setPreviewGameIndices(prev => ({ ...prev, [seriesId]: gameIndex }));
+    };
+
+    // --- Filtering ---
 
     const filteredSeries = useMemo(() => {
+        if (!currentFolderId && currentFolderId !== 'unfiled') return []; // In root view, we used to show folders. Series are only shown inside folders or 'unfiled'
+
         let data = [...history];
 
-        // 1. Filter by Folder
         if (currentFolderId === 'unfiled') {
             data = data.filter(s => !s.folderId);
         } else if (currentFolderId) {
             data = data.filter(s => s.folderId === currentFolderId);
         }
 
-        // 2. Search
+        // Search within folder
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             data = data.filter(s => {
@@ -138,7 +148,7 @@ export default function LibraryPage() {
             });
         }
 
-        // 3. Sort
+        // Sort
         data.sort((a, b) => {
             switch (sortBy) {
                 case 'newest': return b.timestamp - a.timestamp;
@@ -152,7 +162,7 @@ export default function LibraryPage() {
         return data;
     }, [history, currentFolderId, searchQuery, sortBy]);
 
-    // Group filtered items by Series format for sectioned rendering
+    // Grouping for Series View
     const groupedByFormat = useMemo(() => {
         const groups: Record<'BO1' | 'BO3' | 'BO5', SavedSeries[]> = { BO1: [], BO3: [], BO5: [] };
         for (const s of filteredSeries) {
@@ -161,288 +171,421 @@ export default function LibraryPage() {
         return groups;
     }, [filteredSeries]);
 
-    return (
-        <div className="flex  min-h-screen bg-[#090A0F] text-white">
-            {/* Sidebar */}
-            <aside className="w-64 bg-black/20 border-r border-white/5 flex flex-col p-4">
-                <div className="mb-6">
-                    <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest">
-                        <ArrowLeft className="w-4 h-4" /> Home
-                    </Link>
+
+    // Root View: Folders + Unfiled Statistic
+    const renderRootView = () => {
+        const unfiledCount = history.filter(s => !s.folderId).length;
+
+        // 1. Filter Folders
+        let validFolders = folders.filter(f => {
+            if (!searchQuery) return true;
+            const q = searchQuery.toLowerCase();
+            const teamA = TEAMS.find(t => t.id === f.teamAId);
+            const teamB = TEAMS.find(t => t.id === f.teamBId);
+            return (
+                f.name.toLowerCase().includes(q) ||
+                teamA?.name.toLowerCase().includes(q) ||
+                teamB?.name.toLowerCase().includes(q) ||
+                teamA?.shortName.toLowerCase().includes(q) ||
+                teamB?.shortName.toLowerCase().includes(q)
+            );
+        });
+
+        // 2. Sort Folders
+        validFolders.sort((a, b) => {
+            switch (sortBy) {
+                case 'newest': return b.createdAt - a.createdAt;
+                case 'oldest': return a.createdAt - b.createdAt;
+                case 'name-asc': return a.name.localeCompare(b.name);
+                case 'name-desc': return b.name.localeCompare(a.name);
+                default: return 0;
+            }
+        });
+
+        // 3. Handle Unfiled
+        let showUnfiled = unfiledCount > 0;
+        if (searchQuery && showUnfiled) {
+            showUnfiled = "unfiled drafts".includes(searchQuery.toLowerCase());
+        }
+
+        const allItems = [
+            ...(showUnfiled ? [{ id: 'unfiled', name: 'Unfiled Drafts', isUnfiled: true }] : []),
+            ...validFolders
+        ];
+
+        if (allItems.length === 0 && searchQuery) {
+            return (
+                <div className="text-center py-20 opacity-50">
+                    <Search className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                    <h3 className="text-xl font-bold text-gray-400">No folders found</h3>
+                    <p className="text-sm text-gray-600 mt-2">Try adjusting your search query</p>
                 </div>
+            )
+        }
 
-                <div className="space-y-2 mb-8">
-                    <SidebarItem
-                        active={currentFolderId === null}
-                        icon={LayoutGrid}
-                        label="All Drafts"
-                        count={history.length}
-                        onClick={() => setCurrentFolderId(null)}
-                    />
-                    <SidebarItem
-                        active={currentFolderId === 'unfiled'}
-                        icon={FileQuestion}
-                        label="Unfiled"
-                        count={history.filter(s => !s.folderId).length}
-                        onClick={() => setCurrentFolderId('unfiled')}
-                    />
-                </div>
-
-                <div className="flex items-center justify-between group text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">
-                    <span>Folders</span>
-                    <button
-                        onClick={() => setIsCreatingFolder(true)}
-                        className="hover:text-white transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                    </button>
-                </div>
-
-                <div className="space-y-1 flex-1 overflow-y-auto">
-                    {isCreatingFolder && (
-                        <div className="px-3 py-2 bg-white/5 rounded border border-primary/50 flex items-center gap-2 mb-2">
-                            <input
-                                autoFocus
-                                className="bg-transparent border-none outline-none text-sm w-full"
-                                placeholder="Name..."
-                                value={newFolderName}
-                                onChange={e => setNewFolderName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleCreateFolder()}
-                            />
-                            <button onClick={handleCreateFolder}><Check className="w-3 h-3 text-green-500" /></button>
-                            <button onClick={() => setIsCreatingFolder(false)}><X className="w-3 h-3 text-red-500" /></button>
-                        </div>
-                    )}
-
-                    {folders.map(folder => (
-                        <div key={folder.id} className={cn(
-                            "group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all",
-                            currentFolderId === folder.id ? "bg-primary/20 text-primary" : "hover:bg-white/5 text-gray-400 hover:text-gray-200"
-                        )}>
-                            {editingFolderId === folder.id ? (
-                                <div className="flex items-center gap-2 w-full">
-                                    <input
-                                        autoFocus
-                                        className="bg-black/50 border border-white/20 rounded px-1 py-0.5 text-xs w-full"
-                                        defaultValue={folder.name}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleRenameFolder(folder.id, e.currentTarget.value);
-                                        }}
-                                        onBlur={(e) => handleRenameFolder(folder.id, e.target.value)}
-                                    />
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {allItems.map(folder => {
+                    // Logic for Unfiled Card
+                    if ('isUnfiled' in folder) {
+                        return (
+                            <div
+                                key="unfiled"
+                                onClick={() => setCurrentFolderId('unfiled')}
+                                className="group relative aspect-[4/3] bg-black/40 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                                        <FileQuestion className="w-8 h-8 text-gray-500 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-bold text-gray-300 group-hover:text-white">Unfiled Drafts</h3>
+                                        <p className="text-sm text-gray-500">{unfiledCount} series</p>
+                                    </div>
                                 </div>
-                            ) : (
-                                <>
-                                    <div
-                                        className="flex items-center gap-2 flex-1 truncate"
-                                        onClick={() => setCurrentFolderId(folder.id)}
-                                    >
-                                        <Folder className={cn("w-4 h-4", currentFolderId === folder.id && "fill-current")} />
-                                        <span className="text-sm truncate">{folder.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => setEditingFolderId(folder.id)} className="p-1 hover:bg-white/10 rounded">
-                                            <Edit2 className="w-3 h-3" />
-                                        </button>
-                                        <button onClick={(e) => handleDeleteFolder(e, folder.id)} className="p-1 hover:bg-red-500/20 hover:text-red-400 rounded">
-                                            <Trash2 className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </aside>
+                            </div>
+                        );
+                    }
 
-            {/* Main Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
-                <div className="max-w-6xl mx-auto space-y-6">
-                    {/* Header Toolbar */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
-                        <h1 className="text-2xl font-bold tracking-tight">
-                            {currentFolderId === null ? 'All Drafts' :
-                                currentFolderId === 'unfiled' ? 'Unfiled Drafts' :
-                                    folders.find(f => f.id === currentFolderId)?.name || 'Folder'}
-                        </h1>
+                    // Standard Folder Card
+                    const teamA = TEAMS.find(t => t.id === (folder as DraftFolder).teamAId);
+                    const teamB = TEAMS.find(t => t.id === (folder as DraftFolder).teamBId);
+                    const draftCount = history.filter(s => s.folderId === folder.id).length;
 
-                        <div className="flex items-center gap-4">
-                            <div className="relative group">
-                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" />
-                                <input
-                                    type="text"
-                                    placeholder="Search details..."
-                                    className="bg-black/40 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm focus:border-primary/50 focus:outline-none w-64 transition-all"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
+                    return (
+                        <div
+                            key={folder.id}
+                            onClick={() => setCurrentFolderId(folder.id)}
+                            className="group relative aspect-[4/3] bg-black/40 border border-white/5 hover:border-primary/30 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5 overflow-hidden"
+                        >
+                            {/* Background logos for atmosphere */}
+                            <div className="absolute inset-x-0 top-0 h-1/2 flex opacity-10 blur-xl pointer-events-none">
+                                <div className="flex-1 bg-current" style={{ backgroundColor: teamA?.color || '#555' }} />
+                                <div className="flex-1 bg-current" style={{ backgroundColor: teamB?.color || '#555' }} />
                             </div>
 
-                            <select
-                                className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-primary/50 focus:outline-none appearance-none cursor-pointer"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="name-asc">Name (A-Z)</option>
-                                <option value="name-desc">Name (Z-A)</option>
-                            </select>
-                        </div>
-                    </div>
+                            {/* Content */}
+                            <div className="absolute inset-0 p-6 flex flex-col justify-between">
+                                {/* Header: Logos */}
+                                <div className="flex justify-center items-center gap-4 mt-2">
+                                    {teamA ? (
+                                        <TeamLogo team={teamA} className="w-12 h-12 text-sm shadow-lg shadow-black/50" />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><FolderIcon className="w-5 h-5 text-gray-700" /></div>
+                                    )}
 
-                    {/* Grouped Sections: BO1 → BO3 → BO5 */}
-                    {(['BO1', 'BO3', 'BO5'] as const).map((fmt) => (
-                        <div key={fmt} className="space-y-4 mb-10">
-                            {groupedByFormat[fmt].length > 0 && (
-                                <button
-                                    onClick={() => setCollapsed(prev => ({ ...prev, [fmt]: !prev[fmt] }))}
-                                    className="w-full flex items-center justify-between text-left bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-lg px-4 py-2"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <ChevronDown
-                                            className={cn(
-                                                'w-4 h-4 transition-transform',
-                                                collapsed[fmt] ? '-rotate-90' : 'rotate-0'
-                                            )}
+                                    <span className="text-xl font-black text-white/20 italic">VS</span>
+
+                                    {teamB ? (
+                                        <TeamLogo team={teamB} className="w-12 h-12 text-sm shadow-lg shadow-black/50" />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><FolderIcon className="w-5 h-5 text-gray-700" /></div>
+                                    )}
+                                </div>
+
+                                {/* Footer: Info */}
+                                <div className="space-y-1 z-10">
+                                    {editingFolderId === folder.id ? (
+                                        <input
+                                            autoFocus
+                                            className="w-full bg-black/50 border border-white/20 rounded px-2 py-1 text-lg font-bold text-white focus:outline-none focus:border-primary/50"
+                                            defaultValue={folder.name}
+                                            onClick={e => e.stopPropagation()}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') handleRenameFolder(folder.id, e.currentTarget.value)
+                                            }}
+                                            onBlur={e => handleRenameFolder(folder.id, e.target.value)}
                                         />
-                                        <span className="text-sm font-bold uppercase tracking-widest text-gray-300">
-                                            {fmt === 'BO1' ? 'Best of 1' : fmt === 'BO3' ? 'Best of 3' : 'Best of 5'}
-                                        </span>
-                                    </div>
-                                    <span className="text-xs font-mono text-gray-500">{groupedByFormat[fmt].length}</span>
+                                    ) : (
+                                        <div className="flex items-center justify-between group/title">
+                                            <h3 className="text-lg font-bold text-white truncate pr-2">{folder.name}</h3>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setEditingFolderId(folder.id); }}
+                                                className="p-1 opacity-0 group-hover/title:opacity-100 hover:bg-white/10 rounded text-gray-500 hover:text-white transition-all"
+                                            >
+                                                <Edit2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{draftCount} Series</p>
+                                </div>
+                            </div>
+
+                            {/* Hover Actions */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={(e) => handleDeleteFolder(e, folder.id)}
+                                    className="p-2 bg-black/50 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-lg backdrop-blur-md transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
-                            )}
+                            </div>
+                        </div>
+                    );
+                })}
 
-                            {!collapsed[fmt] && groupedByFormat[fmt].length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {groupedByFormat[fmt].map((series) => {
-                                        const blueTeam = TEAMS.find(t => t.id === series.blueTeamId) || TEAMS[0];
-                                        const redTeam = TEAMS.find(t => t.id === series.redTeamId) || TEAMS[1];
-                                        const date = new Date(series.timestamp).toLocaleDateString(undefined, {
-                                            month: 'short', day: 'numeric', year: 'numeric'
-                                        });
+                {/* Create New Card - Only show provided not too many results or maybe always useful? */}
+                {/* Actually with toolbar button it is redundant, removing to keep cleaner grid */}
+            </div>
+        )
+    };
 
-                                        return (
-                                            <div key={series.id} className="group relative bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex flex-col">
-                                                <div className="p-6 flex-1">
-                                                    {/* Top Row: Date & Actions */}
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-xs font-mono text-gray-500 uppercase flex items-center gap-2">
-                                                            <Calendar className="w-3 h-3" /> {date}
-                                                        </span>
+    return (
+        <div className="min-h-screen bg-background text-white font-sans selection:bg-primary/30 flex flex-col relative overflow-hidden">
 
-                                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            {/* Move to Folder Dropdown Logic could go here or a simple select */}
-                                                            <select
-                                                                className="bg-black/50 border border-white/10 rounded text-[10px] py-1 px-2 text-gray-400 focus:text-white outline-none"
-                                                                value={series.folderId || ''}
-                                                                onChange={(e) => handleMoveSeries(series.id, e.target.value || undefined)}
-                                                            >
-                                                                <option value="">Move...</option>
-                                                                <option value="">Unfiled</option>
-                                                                {folders.map(f => (
-                                                                    <option key={f.id} value={f.id}>{f.name}</option>
-                                                                ))}
-                                                            </select>
+            {/* Background Ambience */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[150px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]" />
+            </div>
 
-                                                            <button
-                                                                onClick={(e) => handleDeleteSeries(e, series.id)}
-                                                                className="p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
+            <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 z-10">
+                <AnimatePresence mode="wait">
+                    {currentFolderId === null ? (
+                        <motion.div
+                            key="root"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-8"
+                        >
+                            {/* Back to Hub - Relocated */}
+                            <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors group">
+                                <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
+                                    <ArrowLeft className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-bold uppercase tracking-wider">Back to Hub</span>
+                            </Link>
 
-                                                    {/* Series Name / Title */}
-                                                    <div className="mb-6">
-                                                        {editingSeriesId === series.id ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <input
-                                                                    autoFocus
-                                                                    className="bg-black/50 border border-white/20 rounded px-2 py-1 text-sm font-bold w-full"
-                                                                    value={editingSeriesName}
-                                                                    onChange={e => setEditingSeriesName(e.target.value)}
-                                                                    onKeyDown={e => e.key === 'Enter' && handleUpdateSeriesName(series.id)}
-                                                                    onBlur={() => handleUpdateSeriesName(series.id)}
-                                                                />
+                            <div className="flex items-baseline justify-between">
+                                <h1 className="text-3xl font-bold tracking-tight">Matchups</h1>
+                                <p className="text-sm text-gray-500">Select a folder to view drafts</p>
+                            </div>
+
+                            {/* Toolbar: Search & Sort */}
+                            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/40 border border-white/5 p-2 rounded-2xl backdrop-blur-sm">
+                                {/* Search (Collapsible) */}
+                                <div className={cn("relative transition-all duration-300 ease-in-out", isSearchOpen || searchQuery ? "w-full md:w-[300px]" : "w-10")}>
+                                    {isSearchOpen || searchQuery ? (
+                                        <div className="relative w-full">
+                                            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                placeholder="Search..."
+                                                className="w-full bg-white/5 border border-white/5 rounded-xl pl-11 pr-10 py-3 text-sm focus:bg-white/10 focus:border-primary/50 focus:outline-none transition-all placeholder:text-gray-600 font-medium"
+                                                value={searchQuery}
+                                                onChange={e => setSearchQuery(e.target.value)}
+                                                onBlur={() => !searchQuery && setIsSearchOpen(false)}
+                                            />
+                                            <button
+                                                onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsSearchOpen(true)}
+                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            <Search className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
+                                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                                        {(['newest', 'oldest', 'name-asc', 'name-desc'] as const).map((option) => (
+                                            <button
+                                                key={option}
+                                                onClick={() => setSortBy(option)}
+                                                className={cn(
+                                                    "px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+                                                    sortBy === option
+                                                        ? "bg-white text-black shadow-lg"
+                                                        : "text-gray-500 hover:text-white hover:bg-white/5"
+                                                )}
+                                            >
+                                                {option === 'newest' && 'Newest'}
+                                                {option === 'oldest' && 'Oldest'}
+                                                {option === 'name-asc' && 'A-Z'}
+                                                {option === 'name-desc' && 'Z-A'}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setIsCreateModalOpen(true)}
+                                        className="p-3 bg-primary text-black rounded-xl hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/20 shrink-0"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {renderRootView()}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="folder"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="space-y-8"
+                        >
+                            {/* Back to Library - Relocated */}
+                            <button
+                                onClick={() => setCurrentFolderId(null)}
+                                className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors group"
+                            >
+                                <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
+                                    <ArrowLeft className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-bold uppercase tracking-wider">Back to Library</span>
+                            </button>
+
+                            {/* Folder Header */}
+                            <div className="flex items-center justify-between pb-6 border-b border-white/5">
+                                <div className="flex items-center gap-6">
+                                    {currentFolder && (
+                                        <div className="flex items-center gap-3">
+                                            {currentFolder.teamAId && <TeamLogo team={TEAMS.find(t => t.id === currentFolder.teamAId)!} className="w-12 h-12 text-sm" />}
+                                            {(currentFolder.teamAId || currentFolder.teamBId) && <span className="text-2xl font-black text-gray-700 italic">VS</span>}
+                                            {currentFolder.teamBId && <TeamLogo team={TEAMS.find(t => t.id === currentFolder.teamBId)!} className="w-12 h-12 text-sm" />}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h1 className="text-4xl font-bold tracking-tight mb-2">
+                                            {currentFolderId === 'unfiled' ? 'Unfiled Drafts' : currentFolder?.name}
+                                        </h1>
+                                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                                            <span>{filteredSeries.length} Series</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {currentFolderId !== 'unfiled' && (
+                                    <Link
+                                        href={`/draft/new?folderId=${currentFolderId}${currentFolder?.teamAId ? `&blue=${currentFolder.teamAId}` : ''}${currentFolder?.teamBId ? `&red=${currentFolder.teamBId}` : ''}`}
+                                        className="px-6 py-3 bg-primary text-black font-bold uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg hover:shadow-primary/30 hover:scale-105 flex items-center gap-2"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Start Draft
+                                    </Link>
+                                )}
+                            </div>
+
+                            {/* Series List (Reused Logic) */}
+                            {filteredSeries.length === 0 ? (
+                                <div className="text-center py-20 opacity-50">
+                                    <FileQuestion className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                                    <h3 className="text-xl font-bold text-gray-400">No Drafts Yet</h3>
+                                    <p className="text-sm text-gray-600 mt-2">Start a new draft to populate this folder.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-12">
+                                    {(['BO1', 'BO3', 'BO5'] as const).map((fmt) => (
+                                        groupedByFormat[fmt].length > 0 && (
+                                            <div key={fmt} className="space-y-6">
+                                                <div className="flex items-center gap-4">
+                                                    <h3 className="text-xl font-bold text-white opacity-80">{fmt} Matches</h3>
+                                                    <div className="h-px bg-white/5 flex-1" />
+                                                </div>
+
+                                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                                    {groupedByFormat[fmt].map(series => {
+                                                        const blueTeam = TEAMS.find(t => t.id === series.blueTeamId) || TEAMS[0];
+                                                        const redTeam = TEAMS.find(t => t.id === series.redTeamId) || TEAMS[1];
+                                                        const activeGameIndex = previewGameIndices[series.id] !== undefined ? previewGameIndices[series.id] : series.games.length - 1;
+                                                        const activeGame = series.games[activeGameIndex];
+                                                        const bluePicks = activeGame?.draftState.bluePicks || Array(5).fill(null);
+                                                        const redPicks = activeGame?.draftState.redPicks || Array(5).fill(null);
+                                                        const isWinnerBlue = activeGame?.winner === 'blue';
+                                                        const isWinnerRed = activeGame?.winner === 'red';
+
+                                                        return (
+                                                            <div key={series.id} className="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-white/10 rounded-2xl transition-all flex flex-col overflow-hidden hover:shadow-2xl">
+                                                                <Link href={`/review/${series.id}`} className="block flex-1 p-5">
+                                                                    <div className="flex justify-between items-start mb-4">
+                                                                        <div>
+                                                                            <h4 className="font-bold text-lg group-hover:text-primary transition-colors">{series.name || `${blueTeam.shortName} vs ${redTeam.shortName}`}</h4>
+                                                                            <p className="text-xs text-gray-500">{new Date(series.timestamp).toLocaleDateString()} • {series.games.length} Games</p>
+                                                                        </div>
+                                                                        <div className="flex gap-1" onClick={e => e.preventDefault()}>
+                                                                            <button onClick={(e) => handleDeleteSeries(e, series.id)} className="p-1.5 hover:bg-red-500/10 text-gray-600 hover:text-red-500 rounded"><Trash2 className="w-4 h-4" /></button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Teams & Picks */}
+                                                                    <div className="space-y-3">
+                                                                        {/* Blue */}
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={cn("w-10 h-10 rounded bg-[#001240] flex items-center justify-center border", isWinnerBlue ? "border-primary" : "border-white/5")}>
+                                                                                <TeamLogo team={blueTeam} className="w-6 h-6 text-[8px]" />
+                                                                            </div>
+                                                                            <div className="flex-1 grid grid-cols-5 gap-1">
+                                                                                {bluePicks.slice(0, 5).map((p, i) => (
+                                                                                    <div key={i} className="aspect-square bg-white/5 rounded overflow-hidden">
+                                                                                        {p && <img src={getChampionIconUrl(ddragonVersion, p.image.full)} className="w-full h-full object-cover" />}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                        {/* Red */}
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={cn("w-10 h-10 rounded bg-[#2a0a0a] flex items-center justify-center border", isWinnerRed ? "border-red-500" : "border-white/5")}>
+                                                                                <TeamLogo team={redTeam} className="w-6 h-6 text-[8px]" />
+                                                                            </div>
+                                                                            <div className="flex-1 grid grid-cols-5 gap-1">
+                                                                                {redPicks.slice(0, 5).map((p, i) => (
+                                                                                    <div key={i} className="aspect-square bg-white/5 rounded overflow-hidden">
+                                                                                        {p && <img src={getChampionIconUrl(ddragonVersion, p.image.full)} className="w-full h-full object-cover" />}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
                                                             </div>
-                                                        ) : (
-                                                            <div
-                                                                className="flex items-center gap-2 group/title cursor-text"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    setEditingSeriesId(series.id);
-                                                                    setEditingSeriesName(series.name || `${blueTeam.shortName} vs ${redTeam.shortName}`);
-                                                                }}
-                                                            >
-                                                                <h3 className="text-lg font-bold text-white truncate max-w-[200px]">
-                                                                    {series.name || `${blueTeam.shortName} vs ${redTeam.shortName}`}
-                                                                </h3>
-                                                                <Edit2 className="w-3 h-3 text-gray-600 opacity-0 group-hover/title:opacity-100 transition-opacity" />
-                                                            </div>
-                                                        )}
-                                                        {/* Subtitle / Detail */}
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className={cn(
-                                                                "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest border",
-                                                                series.format !== 'BO1' ? "bg-primary/10 text-primary border-primary/20" : "bg-gray-700/50 text-gray-300 border-gray-600/30"
-                                                            )}>
-                                                                {series.format}
-                                                            </span>
-                                                            <span className="text-xs text-gray-500">
-                                                                • {series.games.length} Games
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Team Logos */}
-                                                    <Link href={`/review/${series.id}`} className="block">
-                                                        <div className="flex items-center justify-between bg-black/20 rounded-lg p-3 border border-white/5 hover:border-primary/30 transition-colors">
-                                                            <div className="text-sm font-bold text-gray-300">{blueTeam.shortName}</div>
-                                                            <div className="text-xs text-gray-600 font-bold">VS</div>
-                                                            <div className="text-sm font-bold text-gray-300">{redTeam.shortName}</div>
-                                                        </div>
-                                                    </Link>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
+                                        )
+                                    ))}
                                 </div>
                             )}
-                        </div>
-                    ))}
 
-                    {filteredSeries.length === 0 && (
-                        <div className="py-20 text-center text-gray-500 border border-dashed border-white/10 rounded-xl">
-                            No drafts found.
-                        </div>
+                        </motion.div>
                     )}
-                </div>
+                </AnimatePresence>
             </main>
-        </div>
-    );
-}
 
-function SidebarItem({ active, icon: Icon, label, count, onClick }: {
-    active: boolean; icon: any; label: string; count?: number; onClick: () => void;
-}) {
-    return (
-        <div
-            onClick={onClick}
-            className={cn(
-                "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all",
-                active ? "bg-primary/20 text-primary" : "hover:bg-white/5 text-gray-400 hover:text-gray-200"
-            )}
-        >
-            <div className="flex items-center gap-3">
-                <Icon className={cn("w-4 h-4", active && "text-primary")} />
-                <span className="text-sm font-medium">{label}</span>
-            </div>
-            {count !== undefined && (
-                <span className="text-xs font-mono opacity-50">{count}</span>
-            )}
+            {/* Create Folder Modal */}
+            <CreateFolderModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onCreate={handleCreateFolder}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteConfirmation.type !== null}
+                onClose={() => setDeleteConfirmation({ type: null, id: null })}
+                onConfirm={confirmDelete}
+                title={deleteConfirmation.type === 'folder' ? 'Delete Matchup Folder?' : 'Delete Draft Series?'}
+                description={
+                    deleteConfirmation.type === 'folder'
+                        ? 'This folder will be permanently deleted. Any drafts inside will be moved to "Unfiled".'
+                        : 'This draft series and all its data will be permanently deleted. This action cannot be undone.'
+                }
+                confirmText="Delete"
+                isDestructive
+            />
         </div>
     );
 }
