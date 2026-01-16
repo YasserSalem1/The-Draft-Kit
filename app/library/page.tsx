@@ -336,7 +336,17 @@ export default function LibraryPage() {
         <div className="min-h-screen bg-background text-white font-sans selection:bg-primary/30 flex flex-col relative overflow-hidden">
 
             {/* Background Ambience */}
-            <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/esport.png"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-background/80" />
+                </div>
+
                 <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[150px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]" />
             </div>

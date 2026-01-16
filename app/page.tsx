@@ -109,10 +109,10 @@ export default function HubPage() {
             <Link href="/library">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-3 px-6 py-3 rounded-full bg-surface-light border border-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all cursor-pointer group"
+                className="flex items-center gap-3 px-8 py-4 rounded-full bg-surface-light border border-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all cursor-pointer group"
               >
-                <LayoutGrid className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 transition-colors" />
-                <span className="text-xs font-bold text-gray-300 group-hover:text-emerald-400 uppercase tracking-wider">Open Library</span>
+                <LayoutGrid className="w-5 h-5 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                <span className="text-sm font-bold text-gray-300 group-hover:text-emerald-400 uppercase tracking-wider">Open Library</span>
               </motion.div>
             </Link>
           </motion.div>
