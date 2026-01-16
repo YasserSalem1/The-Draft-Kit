@@ -196,10 +196,10 @@ Keep answers **CONCISE** (1-2 sentences) unless asked for details.
 **GUIDELINES:**
 1. **OVERVIEW:** When the draft is first loaded, give a quick overview of the teams (who is Blue/Red) and the matchup style.
 2. **ALTERNATIVE PICKS:** If a pick is discussed or brought up, YOU MUST provide 4 alternatives in this EXACT format:
-   `[Current Pick] -> [Alt 1], [Alt 2], [Alt 3], [Alt 4]`
+    `[Current Pick] -> [Alt 1], [Alt 2], [Alt 3], [Alt 4]`
    Then provide short reasoning for the alternatives.
 3. **STYLE:** Be direct, professional, and helpful. Do not talk too much.
-4. Suggest only when asked (recomend, suggest or what can be a good pick istead of)
+4. **RECOMMENDATIONS:** If the user explicitly asks for recommendations (e.g., "who should I pick?", "suggest a top laner", "who is good here?"), YOU MUST include the tag `[TRIGGER_RECOMMENDATIONS]` in your response. Do not list champions manually unless providing specific alternatives to a pick.
 
 **CONVERSATION FLOW:**
 1. **START (No Draft Loaded):** Say "Hey coach, Let's review one of your recent Drafts."
@@ -309,6 +309,7 @@ def clean_response(text):
     """Remove action/recommend tags from response for TTS"""
     text = re.sub(r'\[ACTION:[^\]]+\]', '', text)
     text = re.sub(r'\[RECOMMEND:[^\]]+\]', '', text)
+    text = re.sub(r'\[TRIGGER_RECOMMENDATIONS\]', '', text)
     return text.strip()
 
 def get_recommendations_for_step():
@@ -580,10 +581,17 @@ def chat():
             apply_actions(actions)
             print(f"✅ Applied actions: {actions}")
         
-        # Always get recommendations from transformer model (not LLM)
+        # Determine if we should show recommendations
+        show_recommendations = False
+        if '[TRIGGER_RECOMMENDATIONS]' in ai_response:
+            show_recommendations = True
+            print("🚀 Recommendation Trigger Detected!")
+        
+        # ALWAYS fetch transformer recs if triggered or if we have explicit suggestions (to backfill)
         transformer_recs = []
-        if draft_state['phase'] not in ['setup', 'comp_select']:
-            transformer_recs = get_recommendations_for_step()
+        if show_recommendations or explicit_suggestions:
+             if draft_state['phase'] not in ['setup', 'comp_select']:
+                transformer_recs = get_recommendations_for_step()
 
         # If we found explicit suggestions from the Coach (LLM), prioritize them
         final_recommendations = []
@@ -592,10 +600,18 @@ def chat():
         if explicit_suggestions:
             final_recommendations.extend(explicit_suggestions)
         
-        # 2. Add transformer recommendations
-        for champ in transformer_recs:
-             if champ not in final_recommendations:
-                final_recommendations.append(champ)
+        # 2. Add transformer recommendations ONLY if triggered or using as backfill for explicit
+        # Ensure we reach 5 recommendations if possible
+        if len(final_recommendations) < 5:
+             # Even if not triggered, if we have explicit suggestions but < 5, we backfill
+             if not transformer_recs and explicit_suggestions:
+                  transformer_recs = get_recommendations_for_step()
+             
+             for champ in transformer_recs:
+                 if champ not in final_recommendations:
+                    final_recommendations.append(champ)
+                    if len(final_recommendations) >= 5:
+                        break
 
         # 3. APPLY CONTEXT FILTER
         # If we identified a context champion (e.g. "Galio -> ..."), use its class/role to filter
@@ -632,7 +648,12 @@ def chat():
 
         # 4. Limit to 3-5 (Strictly cap at 5)
         # We assume the backfill above (from transformer) provided enough candidates.
-        draft_state['thinking'] = final_recommendations[:5]
+        
+        # KEY CHANGE: Only populate 'thinking' if we actually have intent to show (triggered or explicit)
+        if show_recommendations or explicit_suggestions:
+            draft_state['thinking'] = final_recommendations[:5]
+        else:
+            draft_state['thinking'] = []
         
         if draft_state['phase'] in ['setup', 'comp_select']:
              draft_state['thinking'] = []
