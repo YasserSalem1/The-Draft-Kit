@@ -2,7 +2,7 @@
 
 const CENTRAL_URL = process.env.NEXT_PUBLIC_CENTRAL_DATA_GRAPHQL_URL || "https://api-op.grid.gg/central-data/graphql";
 const LIVE_DATA_FEED_URL = process.env.NEXT_PUBLIC_LIVE_DATA_FEED_GRAPHQL_URL || "https://api-op.grid.gg/live-data-feed/series-state/graphql";
-const API_KEY = process.env.API_KEY || "PpqORbfBqzELQwN2ZGkXY6gXkrw1znxOnXomia21"; // IMPORTANT: Use environment variables in production
+const API_KEY = process.env.API_KEY || ""; // IMPORTANT: Use environment variables in production
 
 interface GraphQLResponse<T> {
   data?: T;

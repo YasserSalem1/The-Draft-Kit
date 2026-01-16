@@ -5,7 +5,11 @@ import time
 import shutil
 import copy
 from collections import defaultdict
+from dotenv import load_dotenv
 
+# Load env from parent directory (Tansformer_Drafting/.env)
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+load_dotenv(env_path)
 
 # --- Configuration ---
 CENTRAL_URL = "https://api-op.grid.gg/central-data/graphql"
@@ -13,7 +17,7 @@ LIVE_URL = "https://api-op.grid.gg/live-data-feed/series-state/graphql"
 
 HEADERS = {
     "Content-Type": "application/json",
-    "x-api-key": "PpqORbfBqzELQwN2ZGkXY6gXkrw1znxOnXomia21"
+    "x-api-key": os.getenv("GRID_API_KEY")
 }
 
 # --- 🧠 CHAMPION CLASS DATABASE (LOAD FROM JSON) ---

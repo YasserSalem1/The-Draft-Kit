@@ -1,11 +1,17 @@
 import requests
 import json
+import os
+from dotenv import load_dotenv
 import time
 
-CENTRAL_URL = "https://api-op.grid.gg/central-data/graphql"
+# Load env from parent directory
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+load_dotenv(env_path)
+
+URL = "https://api-op.grid.gg/central-data/graphql"
 HEADERS = {
     "Content-Type": "application/json",
-    "x-api-key": "PpqORbfBqzELQwN2ZGkXY6gXkrw1znxOnXomia21"
+    "x-api-key": os.getenv("GRID_API_KEY")
 }
 
 def find_msi_brute():
