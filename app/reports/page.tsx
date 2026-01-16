@@ -65,10 +65,10 @@ export default function ReportsPage() {
     const currentSelectionStage = !selectedLeague
         ? 'league'
         : !selectedTournamentId
-        ? 'tournament'
-        : !selectedTeamId
-        ? 'team'
-        : 'report';
+            ? 'tournament'
+            : !selectedTeamId
+                ? 'team'
+                : 'report';
 
     if (loading) return <div className="flex justify-center items-center h-screen text-xl text-white">Loading report...</div>;
     if (error) return <div className="flex justify-center items-center h-screen text-xl text-red-600">Error: {error}</div>;
@@ -95,18 +95,18 @@ export default function ReportsPage() {
     // 2. Compute win rates, defaulting to zero if no data is found
     const blueWR = teamStats ? teamStats.stats.blue_side.win_rate : 0;
     const redWR = teamStats ? teamStats.stats.red_side.win_rate : 0;
-    
+
     // Calculate the overall average win rate
-    const totalWR = teamStats 
-        ? Math.round((blueWR + redWR) / 2) 
+    const totalWR = teamStats
+        ? Math.round((blueWR + redWR) / 2)
         : 0;
-        
+
     // Determine side preference
     const isBlueHeavy = teamStats?.preference.includes('BLUE');
     const isRedHeavy = teamStats?.preference.includes('RED');
     // -------------------------------
 
-    
+
     return (
         <main className="min-h-screen bg-background text-foreground flex flex-col p-6 md:p-12 relative overflow-hidden">
 
@@ -258,7 +258,7 @@ export default function ReportsPage() {
                                     <div className="flex items-center gap-6">
                                         {/* Simplified Team Logo/Name Display */}
                                         <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center border border-white/10 shadow-lg">
-                                            <span className="text-3xl font-bold">{selectedTeamName?.substring(0,2).toUpperCase()}</span>
+                                            <span className="text-3xl font-bold">{selectedTeamName?.substring(0, 2).toUpperCase()}</span>
                                         </div>
                                         <div>
                                             <h2 className="text-3xl font-bold text-white mb-2">{selectedTeamName}</h2>
@@ -298,15 +298,15 @@ export default function ReportsPage() {
                             <div className="text-center space-y-2">
                                 <p className="text-xl font-bold text-gray-300">
                                     {currentSelectionStage === 'league' && "Select a league to begin"
-                                    || currentSelectionStage === 'tournament' && "Select a tournament to continue"
-                                    || currentSelectionStage === 'team' && "Select a team to generate the report"
-                                    || "Select options above to generate report"}
+                                        || currentSelectionStage === 'tournament' && "Select a tournament to continue"
+                                        || currentSelectionStage === 'team' && "Select a team to generate the report"
+                                        || "Select options above to generate report"}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     {currentSelectionStage === 'league' && "Choose from the available leagues above"
-                                    || currentSelectionStage === 'tournament' && "Pick a tournament from the cards above"
-                                    || currentSelectionStage === 'team' && "Browse teams and select one to analyze"
-                                    || "Follow the steps above to generate your report"}
+                                        || currentSelectionStage === 'tournament' && "Pick a tournament from the cards above"
+                                        || currentSelectionStage === 'team' && "Browse teams and select one to analyze"
+                                        || "Follow the steps above to generate your report"}
                                 </p>
                             </div>
                         </motion.div>
@@ -314,8 +314,21 @@ export default function ReportsPage() {
                 </AnimatePresence>
             </div>
 
-            {/* Decorative */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+            {/* Background Ambience */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/esport.png"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-background/80" />
+                </div>
+
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[120px]" />
+            </div>
         </main>
     );
 }

@@ -173,14 +173,14 @@ export function DraftBoard({
                     {/* Recommendations List (Horizontal Icons in Center) */}
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 min-h-0 overflow-hidden w-full">
                         {recommendations.length > 0 && (
-                            <div className="flex items-center justify-center gap-2 mb-1 shrink-0">
-                                <span className={selectedSlot ? "text-green-400 animate-pulse uppercase tracking-widest text-xs font-bold" : "text-amber-400 uppercase tracking-widest text-xs font-bold"}>
+                            <div className="flex items-center justify-center gap-2 mb-2 shrink-0">
+                                <span className={selectedSlot ? "text-green-400 animate-pulse uppercase tracking-widest text-sm font-bold" : "text-amber-400 uppercase tracking-widest text-sm font-bold"}>
                                     {selectedSlot ? "Click to Swap" : "Suggested"}
                                 </span>
                             </div>
                         )}
 
-                        <div className="flex flex-wrap justify-center gap-3 overflow-y-auto w-full px-4">
+                        <div className="flex flex-row flex-wrap justify-center items-center gap-4 overflow-y-auto w-full px-2 h-full content-center">
                             <AnimatePresence>
                                 {recommendations.slice(0, 5).map((champ, idx) => (
                                     <motion.div
@@ -189,18 +189,35 @@ export function DraftBoard({
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: idx * 0.05 }}
                                         className={`
-                                            relative group cursor-pointer w-16 h-16 rounded-lg overflow-hidden 
-                                            border-2 transition-all shrink-0
-                                            ${selectedSlot ? 'border-green-500/50 hover:border-green-400 hover:scale-110 shadow-[0_0_15px_rgba(74,222,128,0.3)]' : 'border-amber-500/50 hover:border-amber-400 bg-black/40 hover:bg-white/10'}
+                                            relative group cursor-pointer w-32 h-[120px] rounded-xl overflow-hidden 
+                                            border transition-all shrink-0 hover:z-10 shadow-2xl
+                                            ${selectedSlot ? 'border-green-500/50 hover:border-green-400 hover:scale-110 shadow-[0_0_20px_rgba(74,222,128,0.4)]' : 'border-amber-500/30 hover:border-amber-400/80 bg-black/40 hover:bg-black/60'}
                                         `}
-                                        title={champ}
                                         onClick={() => handleRecommendationClick(champ)}
                                     >
-                                        <img
-                                            src={getChampionImage(champ, 'icon') || ''}
-                                            alt={champ}
-                                            className="w-full h-full object-cover transform transition-transform"
-                                        />
+                                        {/* Image (Centered Splash/Loading) */}
+                                        <div className="absolute inset-0">
+                                            <img
+                                                src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionId(champ)}_0.jpg`}
+                                                alt={champ}
+                                                className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
+                                                style={{
+                                                    objectPosition: "top center"
+                                                }}
+                                            />
+                                            {/* Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                        </div>
+
+                                        {/* Name Overlay */}
+                                        <div className="absolute bottom-0 left-0 right-0 p-2 flex flex-col items-center">
+                                            <span className={`text-sm font-black uppercase tracking-wider text-center drop-shadow-md ${selectedSlot ? 'text-green-100' : 'text-amber-100'}`}>
+                                                {champ}
+                                            </span>
+                                        </div>
+
+                                        {/* Hover Highlight/Border Effect */}
+                                        <div className={`absolute inset-0 border-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity ${selectedSlot ? 'border-green-400' : 'border-amber-400'}`} />
                                     </motion.div>
                                 ))}
                             </AnimatePresence>

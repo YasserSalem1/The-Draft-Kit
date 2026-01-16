@@ -143,6 +143,16 @@ function DraftSetupContent() {
 
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 pointer-events-none">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/esport.png"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-background/80" />
+                </div>
+
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[120px]" />
             </div>

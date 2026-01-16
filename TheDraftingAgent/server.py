@@ -601,7 +601,36 @@ def chat():
         if context_champion:
              final_recommendations = filter_recommendations_by_context(final_recommendations, context_champion)
         
-        # 4. Limit to 5
+        # --- EXCLUSION FILTER (New) ---
+        # User Constraint: Don't recommend picked/banned champions.
+        # Also exclude the context champion itself if it exists (don't recommend Galio if replacing Galio).
+        
+        invalid_champions = set()
+        
+        # Add all current picks and bans to invalid set
+        for team in ['blue_team', 'red_team']:
+            for p in draft_state[team]['picks']:
+                if p: invalid_champions.add(p.lower())
+            for b in draft_state[team]['bans']:
+                if b: invalid_champions.add(b.lower())
+                
+        if context_champion:
+            invalid_champions.add(context_champion.lower())
+            
+        # Filter the final list
+        filtered_recs = []
+        seen_recs = set()
+        
+        for rec in final_recommendations:
+            rec_clean = rec.strip()
+            if rec_clean.lower() not in invalid_champions and rec_clean not in seen_recs:
+                filtered_recs.append(rec_clean)
+                seen_recs.add(rec_clean)
+        
+        final_recommendations = filtered_recs
+
+        # 4. Limit to 3-5 (Strictly cap at 5)
+        # We assume the backfill above (from transformer) provided enough candidates.
         draft_state['thinking'] = final_recommendations[:5]
         
         if draft_state['phase'] in ['setup', 'comp_select']:
