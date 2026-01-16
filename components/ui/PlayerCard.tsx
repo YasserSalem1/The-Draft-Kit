@@ -64,16 +64,11 @@ export function PlayerCard({ player, teamColor, side, onClick, isSelected, picke
             )}>
                 {/* 1. Player Role & Name Block */}
                 <div className="flex flex-col justify-center gap-1 z-20 drop-shadow-md">
-                    <span className={cn(
-                        "text-[10px] font-black uppercase tracking-[0.2em]",
-                        isBlue ? "text-blue-200" : "text-red-200"
-                    )}>
-                        {player.role}
-                    </span>
+                    {/* Role text removed */}
                     <span className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none truncate max-w-[180px]">
                         {player.name}
                     </span>
-                    {pickedChampion && (
+                    {pickedChampion && pickedChampion.name !== player.name && (
                         <span className={cn(
                             "text-xs font-bold uppercase tracking-wider mt-1",
                             isBlue ? "text-blue-400" : "text-red-400"

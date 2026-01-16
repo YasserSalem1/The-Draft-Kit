@@ -51,6 +51,7 @@ DRAFT_ORDER = [
 ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']
 
 # Common champion recommendations by role
+# Common champion recommendations by role (fallback)
 ROLE_RECOMMENDATIONS = {
     'TOP': ['Garen', 'Darius', 'Aatrox', 'Camille', 'Jax', 'Fiora', 'Ornn', 'K\'Sante', 'Renekton', 'Gnar'],
     'JUNGLE': ['Lee Sin', 'Vi', 'Jarvan IV', 'Elise', 'Viego', 'Rek\'Sai', 'Xin Zhao', 'Hecarim', 'Graves', 'Nidalee'],
@@ -58,6 +59,73 @@ ROLE_RECOMMENDATIONS = {
     'ADC': ['Jinx', 'Kai\'Sa', 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn'],
     'SUPPORT': ['Thresh', 'Nautilus', 'Leona', 'Lulu', 'Karma', 'Renata Glasc', 'Braum', 'Rakan', 'Alistar', 'Milio']
 }
+
+# Load detailed champion data
+try:
+    with open(os.path.join(BASE_DIR, '../champion_role.json'), 'r') as f:
+        CHAMPION_ROLES_DATA = json.load(f)
+    print("✅ Loaded champion_role.json")
+except Exception as e:
+    print(f"⚠️ Failed to load champion_role.json: {e}")
+    CHAMPION_ROLES_DATA = {}
+
+try:
+    with open(os.path.join(BASE_DIR, '../champion_classes.json'), 'r') as f:
+        CHAMPION_CLASSES_DATA = json.load(f)
+    print("✅ Loaded champion_classes.json")
+except Exception as e:
+    print(f"⚠️ Failed to load champion_classes.json: {e}")
+    CHAMPION_CLASSES_DATA = {}
+
+# Flatten for easy lookup: Champion -> Set of Roles/Classes
+CHAMPION_METADATA = {}
+
+def index_champion_data():
+    for role, champs in CHAMPION_ROLES_DATA.items():
+        for champ in champs:
+            if champ not in CHAMPION_METADATA:
+                CHAMPION_METADATA[champ] = {'roles': set(), 'classes': set()}
+            CHAMPION_METADATA[champ]['roles'].add(role.lower())
+    
+    for cls, champs in CHAMPION_CLASSES_DATA.items():
+        for champ in champs:
+            if champ not in CHAMPION_METADATA:
+                CHAMPION_METADATA[champ] = {'roles': set(), 'classes': set()}
+            CHAMPION_METADATA[champ]['classes'].add(cls.lower())
+
+index_champion_data()
+
+def get_champion_context(champion_name):
+    """Return roles and classes for a champion"""
+    data = CHAMPION_METADATA.get(champion_name, {'roles': set(), 'classes': set()})
+    # normalize check
+    if not data['roles'] and not data['classes']:
+        # Try title case if simple lookup failed
+        data = CHAMPION_METADATA.get(champion_name.title(), {'roles': set(), 'classes': set()})
+    return data
+
+def filter_recommendations_by_context(recommendations, context_champ):
+    """Filter list to share at least one role OR class with context_champ"""
+    if not context_champ:
+        return recommendations
+    
+    context = get_champion_context(context_champ)
+    if not context['roles'] and not context['classes']:
+        return recommendations
+        
+    filtered = []
+    for rec in recommendations:
+        rec_context = get_champion_context(rec)
+        
+        # Check for overlap
+        role_match = not context['roles'].isdisjoint(rec_context['roles'])
+        class_match = not context['classes'].isdisjoint(rec_context['classes'])
+        
+        if role_match or class_match:
+            filtered.append(rec)
+            
+    print(f"🔍 Context Filter ({context_champ}): {len(filtered)}/{len(recommendations)} matches.")
+    return filtered if filtered else recommendations # Fallback if too strict
 
 def get_initial_draft_state():
     return {
@@ -115,7 +183,9 @@ def get_role_for_pick_step(step):
 # System Prompt for AI Agent (Draft Guide with Brainstorming)
 # -------------------------------------------------------------------
 
-SYSTEM_PROMPT = """You are **Coach**, a League of Legends draft strategist. Keep answers SHORT (1-2 sentences).
+SYSTEM_PROMPT = """You are **Coach**, a League of Legends draft strategist.
+Your job is to review the draft, provide a quick overview, and answer questions.
+Keep answers **CONCISE** (1-2 sentences) unless asked for details.
 
 **Current Teams:** Blue: {blue_team} | Red: {red_team}
 **Team Comp:** {team_comp}
@@ -123,17 +193,18 @@ SYSTEM_PROMPT = """You are **Coach**, a League of Legends draft strategist. Keep
 **Phase:** {phase}
 **Action:** {current_action}
 
+**GUIDELINES:**
+1. **OVERVIEW:** When the draft is first loaded, give a quick overview of the teams (who is Blue/Red) and the matchup style.
+2. **ALTERNATIVE PICKS:** If a pick is discussed or brought up, YOU MUST provide 4 alternatives in this EXACT format:
+   `[Current Pick] -> [Alt 1], [Alt 2], [Alt 3], [Alt 4]`
+   Then provide short reasoning for the alternatives.
+3. **STYLE:** Be direct, professional, and helpful. Do not talk too much.
+
 **CONVERSATION FLOW:**
-
-1. **NO TEAMS YET:** Say "Hey Coach! What teams are we drafting for today?"
-
-2. **GOT TEAMS, NO COMP:** Say "Got it! Tell me what comp you're thinking - Dive, Poke, Teamfight, Split, or Pick? I'll help you build it."
-
-3. **DRAFTING:** Guide the draft. Ask for their choice. The AI model will provide champion recommendations separately.
-
-4. **LOCK IN (when coach says "lock in X", "confirm X", "let's go X"):** Use [ACTION:BAN:CHAMPION:TEAM] or [ACTION:PICK:CHAMPION:ROLE:TEAM]
-
-**KEEP IT SHORT. Be conversational. Don't list champions - the AI model shows them separately.**"""
+1. **START (No Draft Loaded):** Say "Hey coach, Let's review one of your recent Drafts."
+2. **DRAFT LOADED:** The system will inform you when a draft is loaded. Give the overview immediately.
+3. **QUESTIONS:** Answer questions about the draft.
+"""
 
 # -------------------------------------------------------------------
 # Action Parser
@@ -387,7 +458,6 @@ def chat():
             if draft_state['blue_team']['name'] and draft_state['red_team']['name']:
                 draft_state['phase'] = 'comp_select'
         
-        # Check for comp selection
         if draft_state['phase'] == 'comp_select' and user_message:
             comp_keywords = ['dive', 'poke', 'teamfight', 'split', 'pick', 'engage', 'protect']
             msg_lower = user_message.lower()
@@ -396,6 +466,35 @@ def chat():
                     draft_state['team_comp'] = comp.capitalize()
                     draft_state['phase'] = 'ban_1'
                     break
+
+        # Check for "Lock In" command
+        lock_in_pattern = r"(?:lock in|pick|select)\s+([a-zA-Z'\s]+)"
+        lock_in_match = re.search(lock_in_pattern, user_message, re.IGNORECASE)
+        
+        if lock_in_match:
+            champion_name = lock_in_match.group(1).strip().title()
+            # Simple fuzzy fix for common names or case if needed
+            print(f"🔒 Usage requested Lock In: {champion_name}")
+            
+            side, action_type, _ = get_current_action(draft_state['current_step'])
+            
+            if side and action_type:
+                # Construct an action object
+                action = {
+                    "type": action_type,  # 'ban' or 'pick'
+                    "champion": champion_name,
+                    "team": side
+                }
+                
+                # If it's a pick, we will use the next available slot logic
+                # Role inference is no longer strictly bound by pick order (per user request) for recommendations,
+                # but for placing the pick on the board, we still just need an empty slot.
+                if action_type == 'pick':
+                    current_role = get_role_for_pick_step(draft_state['current_step'])
+                    action['role'] = current_role
+
+                apply_actions([action])
+                print(f"✅ Locked in via voice: {action}")
         
         # Get current action info
         side, action_type, phase_name = get_current_action(draft_state['current_step'])
@@ -445,23 +544,68 @@ def chat():
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=messages,
             temperature=0.7,
-            max_completion_tokens=100
+            max_completion_tokens=250 
         )
         
         ai_response = completion.choices[0].message.content
         
         # Parse actions and recommendations
-        actions, _ = parse_actions(ai_response)  # Ignore LLM recommendations
+        actions, _ = parse_actions(ai_response)  # Ignore LLM recommendations from standard format
         
+        # New: Parse ALTERNATIVE picks format: "[Current Pick] -> [Alt 1], [Alt 2]..."
+        # Regex looks for something that looks like "Name -> List"
+        alt_picks_pattern = r'(?:\[?([\w\s\.\'\-]+)\]?) -> (.*)'
+        match = re.search(alt_picks_pattern, ai_response)
+        
+        explicit_suggestions = []
+        context_champion = None # The champion being replaced/discussed
+
+        if match:
+            # Extract the champion being replaced (LHS)
+            context_champion = match.group(1).strip()
+            
+            # Extract the suggestions (RHS)
+            alts_str = match.group(2).strip()
+            raw_alts = alts_str.split(',')
+            for alt in raw_alts:
+                clean_alt = alt.replace('[', '').replace(']', '').strip()
+                clean_alt = clean_alt.split('\n')[0] 
+                if clean_alt:
+                    explicit_suggestions.append(clean_alt)
+            
+            print(f"💡 Found Alternative Suggestions for {context_champion}: {explicit_suggestions}")
+
         if actions:
             apply_actions(actions)
             print(f"✅ Applied actions: {actions}")
         
         # Always get recommendations from transformer model (not LLM)
+        transformer_recs = []
         if draft_state['phase'] not in ['setup', 'comp_select']:
-            draft_state['thinking'] = get_recommendations_for_step()
-        else:
-            draft_state['thinking'] = []
+            transformer_recs = get_recommendations_for_step()
+
+        # If we found explicit suggestions from the Coach (LLM), prioritize them
+        final_recommendations = []
+        
+        # 1. Start with LLM explicit suggestions
+        if explicit_suggestions:
+            final_recommendations.extend(explicit_suggestions)
+        
+        # 2. Add transformer recommendations
+        for champ in transformer_recs:
+             if champ not in final_recommendations:
+                final_recommendations.append(champ)
+
+        # 3. APPLY CONTEXT FILTER
+        # If we identified a context champion (e.g. "Galio -> ..."), use its class/role to filter
+        if context_champion:
+             final_recommendations = filter_recommendations_by_context(final_recommendations, context_champion)
+        
+        # 4. Limit to 5
+        draft_state['thinking'] = final_recommendations[:5]
+        
+        if draft_state['phase'] in ['setup', 'comp_select']:
+             draft_state['thinking'] = []
         
         clean_text = clean_response(ai_response)
         draft_state['conversation'].append({"role": "assistant", "content": clean_text})
@@ -483,6 +627,40 @@ def chat():
             
     except Exception as e:
         print(f"❌ Chat Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/draft/load', methods=['POST'])
+def load_draft():
+    global draft_state
+    try:
+        data = request.json
+        # Expecting the full draft object
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Reset and load
+        draft_state = get_initial_draft_state()
+        
+        # Populate fields
+        draft_state['blue_team'] = data.get('blue_team', draft_state['blue_team'])
+        draft_state['red_team'] = data.get('red_team', draft_state['red_team'])
+        draft_state['current_step'] = data.get('current_step', 0)
+        draft_state['phase'] = data.get('phase', 'setup')
+        draft_state['team_comp'] = data.get('team_comp', '')
+        
+        # Add a system message to history to indicate load
+        blue_name = draft_state['blue_team']['name']
+        red_name = draft_state['red_team']['name']
+        draft_state['conversation'].append({
+            "role": "system", 
+            "content": f"Draft loaded: {blue_name} (Blue) vs {red_name} (Red). Ready for analysis. Give the overview now."
+        })
+
+        return jsonify({"success": True, "draft_state": draft_state, "message": "Draft loaded successfully"})
+            
+    except Exception as e:
+        print(f"❌ Load Draft Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 

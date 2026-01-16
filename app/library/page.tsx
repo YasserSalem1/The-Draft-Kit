@@ -30,6 +30,7 @@ import { getLatestVersion, getChampionIconUrl } from '@/lib/api/ddragon';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { CreateFolderModal } from '@/components/features/CreateFolderModal';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { SeriesCard } from '@/components/features/Library/SeriesCard';
 
 type SortOption = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
@@ -397,32 +398,13 @@ export default function LibraryPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
-                                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-                                        {(['newest', 'oldest', 'name-asc', 'name-desc'] as const).map((option) => (
-                                            <button
-                                                key={option}
-                                                onClick={() => setSortBy(option)}
-                                                className={cn(
-                                                    "px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
-                                                    sortBy === option
-                                                        ? "bg-white text-black shadow-lg"
-                                                        : "text-gray-500 hover:text-white hover:bg-white/5"
-                                                )}
-                                            >
-                                                {option === 'newest' && 'Newest'}
-                                                {option === 'oldest' && 'Oldest'}
-                                                {option === 'name-asc' && 'A-Z'}
-                                                {option === 'name-desc' && 'Z-A'}
-                                            </button>
-                                        ))}
-                                    </div>
-
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setIsCreateModalOpen(true)}
-                                        className="p-3 bg-primary text-black rounded-xl hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/20 shrink-0"
+                                        className="px-4 py-3 bg-primary text-black font-bold uppercase tracking-wider text-sm rounded-xl hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/20 flex items-center gap-2"
                                     >
                                         <Plus className="w-5 h-5" />
+                                        Create New Folder
                                     </button>
                                 </div>
                             </div>
@@ -496,63 +478,19 @@ export default function LibraryPage() {
                                                     <div className="h-px bg-white/5 flex-1" />
                                                 </div>
 
-                                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                                    {groupedByFormat[fmt].map(series => {
-                                                        const blueTeam = TEAMS.find(t => t.id === series.blueTeamId) || TEAMS[0];
-                                                        const redTeam = TEAMS.find(t => t.id === series.redTeamId) || TEAMS[1];
-                                                        const activeGameIndex = previewGameIndices[series.id] !== undefined ? previewGameIndices[series.id] : series.games.length - 1;
-                                                        const activeGame = series.games[activeGameIndex];
-                                                        const bluePicks = activeGame?.draftState.bluePicks || Array(5).fill(null);
-                                                        const redPicks = activeGame?.draftState.redPicks || Array(5).fill(null);
-                                                        const isWinnerBlue = activeGame?.winner === 'blue';
-                                                        const isWinnerRed = activeGame?.winner === 'red';
-
-                                                        return (
-                                                            <div key={series.id} className="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-white/10 rounded-2xl transition-all flex flex-col overflow-hidden hover:shadow-2xl">
-                                                                <Link href={`/review/${series.id}`} className="block flex-1 p-5">
-                                                                    <div className="flex justify-between items-start mb-4">
-                                                                        <div>
-                                                                            <h4 className="font-bold text-lg group-hover:text-primary transition-colors">{series.name || `${blueTeam.shortName} vs ${redTeam.shortName}`}</h4>
-                                                                            <p className="text-xs text-gray-500">{new Date(series.timestamp).toLocaleDateString()} • {series.games.length} Games</p>
-                                                                        </div>
-                                                                        <div className="flex gap-1" onClick={e => e.preventDefault()}>
-                                                                            <button onClick={(e) => handleDeleteSeries(e, series.id)} className="p-1.5 hover:bg-red-500/10 text-gray-600 hover:text-red-500 rounded"><Trash2 className="w-4 h-4" /></button>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Teams & Picks */}
-                                                                    <div className="space-y-3">
-                                                                        {/* Blue */}
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className={cn("w-10 h-10 rounded bg-[#001240] flex items-center justify-center border", isWinnerBlue ? "border-primary" : "border-white/5")}>
-                                                                                <TeamLogo team={blueTeam} className="w-6 h-6 text-[8px]" />
-                                                                            </div>
-                                                                            <div className="flex-1 grid grid-cols-5 gap-1">
-                                                                                {bluePicks.slice(0, 5).map((p, i) => (
-                                                                                    <div key={i} className="aspect-square bg-white/5 rounded overflow-hidden">
-                                                                                        {p && <img src={getChampionIconUrl(ddragonVersion, p.image.full)} className="w-full h-full object-cover" />}
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                        {/* Red */}
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className={cn("w-10 h-10 rounded bg-[#2a0a0a] flex items-center justify-center border", isWinnerRed ? "border-red-500" : "border-white/5")}>
-                                                                                <TeamLogo team={redTeam} className="w-6 h-6 text-[8px]" />
-                                                                            </div>
-                                                                            <div className="flex-1 grid grid-cols-5 gap-1">
-                                                                                {redPicks.slice(0, 5).map((p, i) => (
-                                                                                    <div key={i} className="aspect-square bg-white/5 rounded overflow-hidden">
-                                                                                        {p && <img src={getChampionIconUrl(ddragonVersion, p.image.full)} className="w-full h-full object-cover" />}
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </Link>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                                    {groupedByFormat[fmt].map(series => (
+                                                        <SeriesCard
+                                                            key={series.id}
+                                                            series={series}
+                                                            ddragonVersion={ddragonVersion}
+                                                            onDelete={(id) => setDeleteConfirmation({ type: 'series', id })}
+                                                            onRename={(id, name) => {
+                                                                updateSeries(id, { name });
+                                                                refreshData();
+                                                            }}
+                                                        />
+                                                    ))}
                                                 </div>
                                             </div>
                                         )
