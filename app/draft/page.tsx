@@ -17,10 +17,11 @@ import { FearlessBanStrip } from '@/components/features/FearlessBanStrip';
 import { AIAssistantButton } from '@/components/features/AIAssistantButton';
 import { AIFocusMode } from '@/components/features/AIFocusMode';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Brain, Cpu, Power } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TeamLogo } from '@/components/ui/TeamLogo';
+import { Champion, getChampions } from '@/lib/api/ddragon';
 
 import { IntelligenceReportButton } from '@/components/features/IntelligenceReportButton';
 import { IntelligenceReportModal } from '@/components/features/IntelligenceReportModal';
@@ -83,7 +84,7 @@ function DraftPageContent() {
     const blueTeam = TEAMS.find(t => t.id === blueTeamId) || TEAMS[0];
     const redTeam = TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]);
 
-    const { startDraft, resetDraft, currentStep: draftStep, blueBans, redBans, bluePicks, redPicks, currentStep, isStarted } = useDraft();
+    const { startDraft, resetDraft, currentStepIndex, selectChampion, unavailableChampionIds, blueBans, redBans, bluePicks, redPicks, currentStep, isStarted } = useDraft();
     const {
         format: currentFormat,
         games,
@@ -99,6 +100,92 @@ function DraftPageContent() {
 
     const [viewMode, setViewMode] = useState<ViewMode>('SCOUTING');
     const [aiMode, setAiMode] = useState(false);
+
+    // AI Auto-Pilot State
+    const [blueAiEnabled, setBlueAiEnabled] = useState(false);
+    const [redAiEnabled, setRedAiEnabled] = useState(false);
+    const [allChampions, setAllChampions] = useState<Champion[]>([]);
+
+    useEffect(() => {
+        getChampions().then(setAllChampions);
+    }, []);
+
+    // AI Auto-Pick Logic
+    useEffect(() => {
+        if (!isStarted || !currentStep || !allChampions.length) return;
+
+        const isBlueTurn = currentStep.side === 'blue';
+        const isRedTurn = currentStep.side === 'red';
+
+        // Only proceed if the active side has AI enabled
+        if ((isBlueTurn && blueAiEnabled) || (isRedTurn && redAiEnabled)) {
+            const executeAiTurn = async () => {
+                try {
+                    // 1. Sync State to Backend
+                    const backendPayload = {
+                        blue_team: {
+                            name: blueTeam.name,
+                            bans: blueBans.map(c => c?.name || null),
+                            picks: bluePicks.map(c => c?.name || null)
+                        },
+                        red_team: {
+                            name: redTeam.name,
+                            bans: redBans.map(c => c?.name || null),
+                            picks: redPicks.map(c => c?.name || null)
+                        },
+                        current_step: currentStepIndex,
+                        phase: currentStepIndex < 6 ? 'ban_1' :
+                            currentStepIndex < 12 ? 'pick_1' :
+                                currentStepIndex < 16 ? 'ban_2' : 'pick_2' // Approximation, server handles fine details
+                    };
+
+                    await fetch('http://localhost:5002/draft/load', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(backendPayload)
+                    });
+
+                    // 2. Get Recommendations
+                    const res = await fetch('http://localhost:5002/recommendations');
+                    const data = await res.json();
+
+                    // Recommendations are strings (Names), need to find Champion object
+                    const recommendations: string[] = data.recommendations || [];
+
+                    // 3. Find first valid pick
+                    // If no recommendations, we might want to pick ANY valid champ as fallback? 
+                    // For now, let's rely on recommendations. 
+                    let validPick: Champion | undefined;
+
+                    for (const name of recommendations) {
+                        const champ = allChampions.find(c => c.name.toLowerCase() === name.toLowerCase());
+                        if (champ && !unavailableChampionIds.has(champ.id)) {
+                            validPick = champ;
+                            break;
+                        }
+                    }
+
+                    // Fallback: Pick highest winrate or just random if strict AI required?
+                    // Let's stick to recommendations for now. If empty, maybe do nothing (human intervention).
+
+                    if (validPick) {
+                        // Small delay for UX
+                        const timer = setTimeout(() => {
+                            selectChampion(validPick!);
+                        }, 1500);
+                        return () => clearTimeout(timer);
+                    } else {
+                        console.warn('AI could not find a valid champion to pick.');
+                    }
+
+                } catch (e) {
+                    console.error('AI Turn Execution Failed:', e);
+                }
+            };
+
+            executeAiTurn();
+        }
+    }, [currentStep, currentStepIndex, isStarted, blueAiEnabled, redAiEnabled, allChampions, unavailableChampionIds, blueTeam, redTeam, blueBans, redBans, bluePicks, redPicks]);
     const [showReport, setShowReport] = useState(false); // Report Modal State
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string } | null>(null);
@@ -231,6 +318,24 @@ function DraftPageContent() {
                                 <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{blueTeam.name}</h2>
                                 <div className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em]">Blue Side</div>
                             </div>
+
+                            <div className="flex-1" />
+                            <div className="flex flex-col items-end gap-1">
+                                <button
+                                    onClick={() => setBlueAiEnabled(!blueAiEnabled)}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all",
+                                        blueAiEnabled
+                                            ? "bg-blue-500 text-white border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                            : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
+                                    )}
+                                >
+                                    <Brain className="w-3 h-3" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                                        {blueAiEnabled ? "AI Active" : "AI Takeover"}
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5">
                             {blueTeam.players.map((p, idx) => (
@@ -353,12 +458,31 @@ function DraftPageContent() {
                     <div className="col-span-3 hidden xl:flex flex-col h-full bg-slate-900/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md transition-colors duration-500"
                         style={{ borderColor: isRedTurn ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255,255,255,0.05)' }}
                     >
-                        <div className="p-4 border-b border-white/5 flex items-center justify-end gap-4 bg-gradient-to-l from-red-900/20 to-transparent">
-                            <div className="text-right">
-                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{redTeam.name}</h2>
-                                <div className="text-[10px] font-bold text-red-500 uppercase tracking-[0.3em]">Red Side</div>
+                        <div className="p-4 border-b border-white/5 flex items-center justify-between gap-4 bg-gradient-to-l from-red-900/20 to-transparent">
+                            <div className="flex flex-col items-start gap-1">
+                                <button
+                                    onClick={() => setRedAiEnabled(!redAiEnabled)}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all",
+                                        redAiEnabled
+                                            ? "bg-red-500 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                                            : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
+                                    )}
+                                >
+                                    <Brain className="w-3 h-3" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                                        {redAiEnabled ? "AI Active" : "AI Takeover"}
+                                    </span>
+                                </button>
                             </div>
-                            <TeamLogo team={redTeam} className="w-12 h-12 rounded-xl shadow-lg" />
+
+                            <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{redTeam.name}</h2>
+                                    <div className="text-[10px] font-bold text-red-500 uppercase tracking-[0.3em]">Red Side</div>
+                                </div>
+                                <TeamLogo team={redTeam} className="w-12 h-12 rounded-xl shadow-lg" />
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5">
                             {redTeam.players.map((p, idx) => (

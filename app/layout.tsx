@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Advanced Drafting & Reporting Intelligence",
 };
 
+import { VoiceGuide } from "@/components/features/VoiceGuide";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +25,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased bg-background text-foreground`}
       >
+        <VoiceGuide />
         {children}
       </body>
     </html>
