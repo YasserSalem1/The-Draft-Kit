@@ -1,0 +1,1905 @@
+[
+    {
+        "game_id": 0,
+        "teams": {
+            "BLUE": "Los Ratones",
+            "RED": "Fnatic Rising"
+        },
+        "winning_team": "Los Ratones",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "2",
+                "champion": "Kalista",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "3",
+                "champion": "Vi",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "4",
+                "champion": "Orianna",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "5",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "6",
+                "champion": "Renekton",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "7",
+                "champion": "Lucian",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "8",
+                "champion": "Nami",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "10",
+                "champion": "Ahri",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "11",
+                "champion": "Milio",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "13",
+                "champion": "Jax",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "14",
+                "champion": "K'Sante",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "15",
+                "champion": "Nocturne",
+                "champion_class": [
+                    "FIGHTER",
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "16",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "18",
+                "champion": "Poppy",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "20",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Los Ratones"
+            }
+        ]
+    },
+    {
+        "game_id": 1,
+        "teams": {
+            "BLUE": "Karmine Corp Blue",
+            "RED": "BDS Academy"
+        },
+        "winning_team": "BDS Academy",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Jayce",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "2",
+                "champion": "Draven",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "3",
+                "champion": "Rell",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "5",
+                "champion": "Alistar",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "6",
+                "champion": "Xin Zhao",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "7",
+                "champion": "Zeri",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "8",
+                "champion": "Lulu",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "9",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "10",
+                "champion": "Syndra",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "11",
+                "champion": "Thresh",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "12",
+                "champion": "Jinx",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "13",
+                "champion": "Fiora",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "15",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "16",
+                "champion": "Gragas",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "17",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "18",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "19",
+                "champion": "Kindred",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Karmine Corp Blue"
+            }
+        ]
+    },
+    {
+        "game_id": 2,
+        "teams": {
+            "BLUE": "Team Heretics Academy",
+            "RED": "SK Gaming Prime"
+        },
+        "winning_team": "SK Gaming Prime",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Neeko",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "2",
+                "champion": "Xayah",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "3",
+                "champion": "Jarvan IV",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "4",
+                "champion": "Aatrox",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "5",
+                "champion": "Braum",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "6",
+                "champion": "Vi",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "7",
+                "champion": "Kai'Sa",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "8",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "10",
+                "champion": "Viktor",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "11",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "12",
+                "champion": "Jinx",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "13",
+                "champion": "Fiora",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "14",
+                "champion": "K'Sante",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "16",
+                "champion": "Poppy",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "17",
+                "champion": "Gwen",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Team Heretics Academy"
+            }
+        ]
+    },
+    {
+        "game_id": 3,
+        "teams": {
+            "BLUE": "Vitality.Bee",
+            "RED": "Movistar Riders"
+        },
+        "winning_team": "Vitality.Bee",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Orianna",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "2",
+                "champion": "Draven",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "3",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "5",
+                "champion": "Alistar",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "6",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "7",
+                "champion": "Zeri",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "8",
+                "champion": "Lulu",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "9",
+                "champion": "Poppy",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "10",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "11",
+                "champion": "Rell",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "15",
+                "champion": "Nocturne",
+                "champion_class": [
+                    "FIGHTER",
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "19",
+                "champion": "Graves",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Vitality.Bee"
+            }
+        ]
+    },
+    {
+        "game_id": 6,
+        "teams": {
+            "BLUE": "Los Ratones",
+            "RED": "SK Gaming Prime"
+        },
+        "winning_team": "Los Ratones",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "2",
+                "champion": "Draven",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "3",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "4",
+                "champion": "Orianna",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "5",
+                "champion": "Rell",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "6",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "7",
+                "champion": "Zeri",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "8",
+                "champion": "Lulu",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "10",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "11",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "14",
+                "champion": "K'Sante",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "15",
+                "champion": "Nocturne",
+                "champion_class": [
+                    "FIGHTER",
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "SK Gaming Prime",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "16",
+                "champion": "Poppy",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "SK Gaming Prime"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "SK Gaming Prime",
+                "played_against_team": "Los Ratones"
+            }
+        ]
+    },
+    {
+        "game_id": 7,
+        "teams": {
+            "BLUE": "Fnatic Rising",
+            "RED": "BDS Academy"
+        },
+        "winning_team": "Fnatic Rising",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Jayce",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "2",
+                "champion": "Kalista",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "3",
+                "champion": "Rumble",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "5",
+                "champion": "Braum",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "6",
+                "champion": "Vi",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "7",
+                "champion": "Kai'Sa",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "8",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "10",
+                "champion": "Viktor",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "11",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "12",
+                "champion": "Jinx",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "19",
+                "champion": "Kindred",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Fnatic Rising"
+            }
+        ]
+    },
+    {
+        "game_id": 10,
+        "teams": {
+            "BLUE": "Karmine Corp Blue",
+            "RED": "Vitality.Bee"
+        },
+        "winning_team": "Vitality.Bee",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Orianna",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "2",
+                "champion": "Kalista",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "3",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "5",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "6",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "7",
+                "champion": "Zeri",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "8",
+                "champion": "Lulu",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "10",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "11",
+                "champion": "Thresh",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Vitality.Bee",
+                "banned_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Karmine Corp Blue",
+                "banned_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Karmine Corp Blue"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Karmine Corp Blue",
+                "played_against_team": "Vitality.Bee"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "Vitality.Bee",
+                "played_against_team": "Karmine Corp Blue"
+            }
+        ]
+    },
+    {
+        "game_id": 11,
+        "teams": {
+            "BLUE": "Movistar Riders",
+            "RED": "Los Ratones"
+        },
+        "winning_team": "Los Ratones",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Jayce",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "2",
+                "champion": "Draven",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "3",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "5",
+                "champion": "Rell",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "6",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "7",
+                "champion": "Kai'Sa",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "8",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "10",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "11",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Los Ratones",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "Los Ratones"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "Los Ratones"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "Los Ratones",
+                "played_against_team": "Movistar Riders"
+            }
+        ]
+    },
+    {
+        "game_id": 14,
+        "teams": {
+            "BLUE": "Fnatic Rising",
+            "RED": "Team Heretics Academy"
+        },
+        "winning_team": "Fnatic Rising",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Azir",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "2",
+                "champion": "Draven",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "3",
+                "champion": "Maokai",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "5",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "6",
+                "champion": "Viego",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "7",
+                "champion": "Zeri",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "8",
+                "champion": "Lulu",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "10",
+                "champion": "Viktor",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "11",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "12",
+                "champion": "Aphelios",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Team Heretics Academy",
+                "banned_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "Fnatic Rising",
+                "banned_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "Fnatic Rising"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Fnatic Rising",
+                "played_against_team": "Team Heretics Academy"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "Team Heretics Academy",
+                "played_against_team": "Fnatic Rising"
+            }
+        ]
+    },
+    {
+        "game_id": 15,
+        "teams": {
+            "BLUE": "BDS Academy",
+            "RED": "Movistar Riders"
+        },
+        "winning_team": "Movistar Riders",
+        "current_draft": [
+            {
+                "step": "1",
+                "champion": "Jayce",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "2",
+                "champion": "Kalista",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "3",
+                "champion": "Rumble",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "4",
+                "champion": "Taliyah",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "5",
+                "champion": "Braum",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "6",
+                "champion": "Vi",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "7",
+                "champion": "Kai'Sa",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "8",
+                "champion": "Nautilus",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "9",
+                "champion": "Wukong",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "10",
+                "champion": "Syndra",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "11",
+                "champion": "Rakan",
+                "champion_class": [
+                    "SUPPORT"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "12",
+                "champion": "Jinx",
+                "champion_class": [
+                    "MARKSMAN"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "13",
+                "champion": "Camille",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "14",
+                "champion": "Ornn",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "15",
+                "champion": "Sylas",
+                "champion_class": [
+                    "MAGE"
+                ],
+                "banned_by_team": "Movistar Riders",
+                "banned_against_team": "BDS Academy"
+            },
+            {
+                "step": "16",
+                "champion": "Sion",
+                "champion_class": [
+                    "TANK"
+                ],
+                "banned_by_team": "BDS Academy",
+                "banned_against_team": "Movistar Riders"
+            },
+            {
+                "step": "17",
+                "champion": "Gnar",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "BDS Academy"
+            },
+            {
+                "step": "18",
+                "champion": "Sejuani",
+                "champion_class": [
+                    "TANK"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "19",
+                "champion": "Lee Sin",
+                "champion_class": [
+                    "FIGHTER"
+                ],
+                "played_by_team": "BDS Academy",
+                "played_against_team": "Movistar Riders"
+            },
+            {
+                "step": "20",
+                "champion": "Akali",
+                "champion_class": [
+                    "ASSASSIN"
+                ],
+                "played_by_team": "Movistar Riders",
+                "played_against_team": "BDS Academy"
+            }
+        ]
+    }
+]
