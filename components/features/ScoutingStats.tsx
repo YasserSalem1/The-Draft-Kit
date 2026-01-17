@@ -9,5 +9,6 @@ interface ScoutingStatsProps {
 }
 
 export function ScoutingStats({ blueTeam, redTeam }: ScoutingStatsProps) {
+    if (!blueTeam || !redTeam) return null;
     return <MatchIntelligenceReport blueTeam={blueTeam} redTeam={redTeam} />;
 }

@@ -18,8 +18,8 @@ const REGIONS: { label: string; value: Region | 'ALL' }[] = [
     { label: 'LCK', value: 'LCK' },
     { label: 'LPL', value: 'LPL' },
     { label: 'LEC', value: 'LEC' },
-    { label: 'America', value: 'LTA North' }, // Focusing on North for now or group them?
-    { label: 'Pacific', value: 'LCP' },
+    { label: 'LTA North', value: 'LTA North' },
+    { label: 'LTA South', value: 'LTA South' },
 ];
 
 export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }: TeamSelectorProps) {
@@ -35,11 +35,7 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
 
             // Region Filter
             if (activeRegion !== 'ALL') {
-                // Handle LTA consolidation if needed, but strict for now
-                if (activeRegion === 'LTA North' && (t.region === 'LTA North' || t.region === 'LTA South')) {
-                    // include both?
-                }
-                else if (t.region !== activeRegion) return false;
+                if (t.region !== activeRegion) return false;
             }
 
             // Search Filter
@@ -92,7 +88,7 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
                                 )}
                             </div>
                             <div>
-                                <h3 className="text-3xl font-bold text-white tracking-widest uppercase">{selectedTeam.name}</h3>
+                                <h3 className="text-3xl font-bold text-white tracking-widest uppercase">{selectedTeam.shortName}</h3>
                                 <div className="flex items-center justify-center gap-2 mt-2">
                                     <span className="px-2 py-0.5 rounded bg-white/10 text-xs font-bold text-gray-300">{selectedTeam.region}</span>
                                     <p className="text-sm text-gray-400">Team {side === 'blue' ? '1' : '2'}</p>
@@ -182,8 +178,8 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <div className="font-bold text-gray-200 group-hover:text-white">{team.name}</div>
-                                                <div className="text-[10px] text-gray-500 uppercase font-bold">{team.region}</div>
+                                                <div className="font-bold text-gray-200 group-hover:text-white">{team.shortName}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase font-bold">{team.name} • {team.region}</div>
                                             </div>
                                             {selectedTeam?.id === team.id && <Check className="w-5 h-5 text-primary" />}
                                         </div>
