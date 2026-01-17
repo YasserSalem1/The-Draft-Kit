@@ -2,17 +2,31 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Player } from '@/lib/data/teams';
-import { X, User, Activity, Zap, Shield, Sword } from 'lucide-react';
+import { X, User, Activity, Zap, Shield, Sword, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ScoutingReportData } from '@/lib/data/scouting';
+import { ChampionIcon } from '@/components/ui/ChampionIcon';
+import { useEffect, useState } from 'react';
+import { getLatestVersion } from '@/lib/api/ddragon';
 
 interface PlayerDetailsPanelProps {
     player: Player | null;
     onClose: () => void;
     teamName: string;
     teamColor: string;
+    report?: ScoutingReportData | null;
 }
 
-export function PlayerDetailsPanel({ player, onClose, teamName, teamColor }: PlayerDetailsPanelProps) {
+export function PlayerDetailsPanel({ player, onClose, teamName, teamColor, report }: PlayerDetailsPanelProps) {
+    const [version, setVersion] = useState<string>('14.23.1');
+
+    useEffect(() => {
+        getLatestVersion().then(setVersion);
+    }, []);
+
+    const playerReport = report?.champion_pools_by_player[player?.nickname || ''];
+    const playerTendency = report?.tendencies?.find(t => t.name === player?.nickname);
+
     return (
         <AnimatePresence>
             {player && (
@@ -58,7 +72,7 @@ export function PlayerDetailsPanel({ player, onClose, teamName, teamColor }: Pla
                                         <Activity className="w-3 h-3" /> LIVE STATS
                                     </span>
                                 </div>
-                                <h2 className="text-4xl font-bold text-white uppercase italic tracking-tighter">{player.name}</h2>
+                                <h2 className="text-4xl font-bold text-white uppercase italic tracking-tighter">{player.nickname || player.name}</h2>
                                 <p className="text-gray-400 font-medium tracking-widest text-sm mt-1">{player.role}</p>
                             </div>
                         </div>
@@ -66,47 +80,68 @@ export function PlayerDetailsPanel({ player, onClose, teamName, teamColor }: Pla
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
 
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                                    <div className="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                                        <Sword className="w-4 h-4" /> KDA Ratio
-                                    </div>
-                                    <div className="text-2xl font-bold text-white">4.5 <span className="text-sm text-gray-500 font-normal">avg</span></div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                                    <div className="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                                        <Zap className="w-4 h-4" /> DPM
-                                    </div>
-                                    <div className="text-2xl font-bold text-white">652 <span className="text-sm text-gray-500 font-normal">/min</span></div>
-                                </div>
-                            </div>
-
-                            {/* Champion Pool */}
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Signature Picks</h3>
-                                <div className="flex gap-4">
-                                    {[1, 2, 3].map(i => (
-                                        <div key={i} className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center relative group cursor-pointer overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <span className="text-xs text-gray-600">Champ {i}</span>
+                            {playerReport ? (
+                                <>
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                                            <div className="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                                <Activity className="w-4 h-4" /> Win Rate
+                                            </div>
+                                            <div className="text-2xl font-bold text-white">
+                                                {playerReport[0]?.WinRate}% <span className="text-sm text-gray-500 font-normal">avg</span>
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                                            <div className="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                                <TrendingUp className="w-4 h-4" /> Avg KDA
+                                            </div>
+                                            <div className="text-2xl font-bold text-white">
+                                                {playerReport[0]?.KDA} <span className="text-sm text-gray-500 font-normal">ratio</span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* AI Analysis Mock */}
-                            <div className="p-6 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Activity className="w-24 h-24" />
+                                    {/* Champion Pool */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Signature Picks</h3>
+                                        <div className="space-y-3">
+                                            {playerReport.slice(0, 5).map((champ) => (
+                                                <div key={champ.Champion} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                                                    <ChampionIcon name={champ.Champion} version={version} size={40} />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-sm text-white">{champ.Champion}</span>
+                                                            <span className="text-xs font-bold text-primary">{champ.WinRate}% WR</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                                                            {champ.Games} Games played • {champ.KDA} KDA
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Player Insight */}
+                                    {playerTendency && (
+                                        <div className="p-6 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                                <Activity className="w-24 h-24" />
+                                            </div>
+                                            <h3 className="text-primary font-bold tracking-widest uppercase mb-2 text-sm">Player Insight</h3>
+                                            <p className="text-gray-300 text-sm leading-relaxed">
+                                                {playerTendency.tendency}
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
+                                    <User className="w-12 h-12 opacity-20" />
+                                    <p className="text-sm font-medium italic">No performance data available for this player.</p>
                                 </div>
-                                <h3 className="text-primary font-bold tracking-widest uppercase mb-2 text-sm">AI Analysis</h3>
-                                <p className="text-gray-300 text-sm leading-relaxed">
-                                    {player.name} prefers aggressive lane dominance. Recommended bans include <b className="text-white">Vi</b> and <b className="text-white">Ahri</b> to neutralize mid-jungle synergy.
-                                    <br /><br />
-                                    <span className="italic text-gray-500 text-xs">Based on last 20 professional matches.</span>
-                                </p>
-                            </div>
+                            )}
 
                         </div>
                     </motion.div>

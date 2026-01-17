@@ -31,13 +31,13 @@ export async function graphqlRequest<T>(
 
     const data: GraphQLResponse<T> = await response.json();
 
-    if (!response.ok) {
-      console.error(`HTTP Error ${response.status}:`, data.errors || data);
-      return { errors: data.errors || [{ message: `HTTP Error ${response.status}` }] };
+    if (data.errors) {
+      console.error(`GraphQL Errors from ${url}:`, JSON.stringify(data.errors, null, 2));
     }
 
-    if (data.errors) {
-      console.error("GraphQL Error:", data.errors);
+    if (!response.ok) {
+      console.error(`HTTP Error ${response.status} from ${url}:`, data.errors || data);
+      return { errors: data.errors || [{ message: `HTTP Error ${response.status}` }] };
     }
 
     return data;

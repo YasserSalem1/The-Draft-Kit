@@ -46,7 +46,13 @@ export interface ScoutingReportData {
 
 // Main analysis function (mimicking run_analysis from Scouting.py)
 export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournamentIds: string | string[] = TOURNAMENT_ID): Promise<ScoutingReportData | { message: string }> {
-  const matchIds = await getMatchIds(teamId, tournamentIds);
+  let matchIds: string[] = [];
+  try {
+    matchIds = await getMatchIds(teamId, tournamentIds);
+  } catch (error: any) {
+    console.error(`[getScoutingReport] Error fetching match IDs:`, error);
+    return { message: `Error fetching match IDs: ${error.message}` };
+  }
 
   if (!matchIds.length) {
     return { message: "No matches found." };

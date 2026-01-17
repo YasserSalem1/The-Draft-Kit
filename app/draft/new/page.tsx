@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { TeamSelector } from '@/components/features/TeamSelector';
 import { TEAMS, Team } from '@/lib/data/teams';
+import { LEAGUES } from '@/lib/data/leagues';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -33,9 +34,14 @@ function DraftSetupContent() {
 
     const handleStartDraft = () => {
         if (blueTeam && redTeam) {
+            const blueLeague = LEAGUES.find(l => l.regionName === blueTeam.region);
+            const redLeague = LEAGUES.find(l => l.regionName === redTeam.region);
+
             const params = new URLSearchParams({
                 blue: blueTeam.id,
                 red: redTeam.id,
+                blueTournament: blueLeague?.parentId || '',
+                redTournament: redLeague?.parentId || '',
                 format: format,
             });
 

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Player } from '@/lib/data/teams';
 import { cn } from '@/lib/utils';
-import { User } from 'lucide-react';
+import { User, X } from 'lucide-react';
 import { Champion, getChampionIconUrl, getLatestVersion } from '@/lib/api/ddragon';
 import { useEffect, useState } from 'react';
 
@@ -12,12 +12,14 @@ interface PlayerCardProps {
     teamColor: string;
     side: 'blue' | 'red';
     onClick?: () => void;
+    onRemove?: () => void;
     isSelected?: boolean;
     pickedChampion?: Champion | null;
     isActiveTurn?: boolean;
+    isLocked?: boolean;
 }
 
-export function PlayerCard({ player, teamColor, side, onClick, isSelected, pickedChampion, isActiveTurn }: PlayerCardProps) {
+export function PlayerCard({ player, teamColor, side, onClick, onRemove, isSelected, pickedChampion, isActiveTurn, isLocked = true }: PlayerCardProps) {
     const [version, setVersion] = useState('');
 
     useEffect(() => {
@@ -25,6 +27,7 @@ export function PlayerCard({ player, teamColor, side, onClick, isSelected, picke
     }, []);
 
     const isBlue = side === 'blue';
+    const isPlaceholder = player.id.includes('placeholder');
 
     return (
         <motion.div
@@ -38,6 +41,22 @@ export function PlayerCard({ player, teamColor, side, onClick, isSelected, picke
             onClick={onClick}
             whileHover={{ scale: 1.01, backgroundColor: 'rgba(255,255,255,0.05)' }}
         >
+            {/* Remove Button (Only during prep phase) */}
+            {!isLocked && !isPlaceholder && onRemove && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                    }}
+                    className={cn(
+                        "absolute top-2 z-30 p-1 rounded-full bg-black/40 hover:bg-red-500/80 text-white transition-all opacity-0 group-hover:opacity-100",
+                        isBlue ? "right-2" : "left-2"
+                    )}
+                >
+                    <X className="w-3 h-3" />
+                </button>
+            )}
+
             {/* FULL CARD CHAMPION BACKGROUND (Broadcast Style) */}
             {pickedChampion && (
                 <div className="absolute inset-0 z-0">

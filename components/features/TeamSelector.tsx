@@ -179,7 +179,7 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-bold text-gray-200 group-hover:text-white">{team.shortName}</div>
-                                                <div className="text-[10px] text-gray-500 uppercase font-bold">{team.name} • {team.region}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase font-bold">{team.region}</div>
                                             </div>
                                             {selectedTeam?.id === team.id && <Check className="w-5 h-5 text-primary" />}
                                         </div>

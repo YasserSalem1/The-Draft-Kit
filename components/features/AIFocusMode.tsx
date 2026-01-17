@@ -52,11 +52,11 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
                 bluePicks,
                 redPicks,
                 blueTeam: {
-                    name: blueTeam.name,
+                    name: blueTeam.shortName || blueTeam.name,
                     players: blueTeam.players
                 },
                 redTeam: {
-                    name: redTeam.name,
+                    name: redTeam.shortName || redTeam.name,
                     players: redTeam.players
                 }
             };

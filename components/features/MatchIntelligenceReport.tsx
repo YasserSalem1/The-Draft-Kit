@@ -70,9 +70,9 @@ export function MatchIntelligenceReport({ blueTeam, redTeam }: MatchIntelligence
 
     if (loading && !strategy) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-gray-400 gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-xs uppercase tracking-widest font-bold">Analyzing Matchup...</p>
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-gray-400 gap-4">
+                <Loader2 className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-xs uppercase tracking-widest font-bold">Summoning Draft Intelligence...</p>
             </div>
         );
     }
@@ -102,7 +102,7 @@ export function MatchIntelligenceReport({ blueTeam, redTeam }: MatchIntelligence
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
                 {/* BLUE TEAM COLUMN */}
                 <div className="space-y-8">
-                    <TeamHeader name={blueTeam.name} side="blue" />
+                    <TeamHeader name={blueTeam.shortName || blueTeam.name} side="blue" />
 
                     <PhaseSection
                         title="Phase 1 Bans"
@@ -140,7 +140,7 @@ export function MatchIntelligenceReport({ blueTeam, redTeam }: MatchIntelligence
 
                 {/* RED TEAM COLUMN */}
                 <div className="space-y-8">
-                    <TeamHeader name={redTeam.name} side="red" />
+                    <TeamHeader name={redTeam.shortName || redTeam.name} side="red" />
 
                     <PhaseSection
                         title="Phase 1 Bans"

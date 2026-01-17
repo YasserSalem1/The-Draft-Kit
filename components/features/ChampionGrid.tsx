@@ -8,8 +8,9 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useDraft } from '@/lib/draft/draft-context';
 import { useSeries } from '@/lib/draft/series-context';
+import championRoles from '@/champion_role.json';
 
-const ROLES = ['All', 'Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support'];
+const ROLES = ['All', 'Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 
 export function ChampionGrid({
     altAddSide,
@@ -53,7 +54,14 @@ export function ChampionGrid({
     const filteredChampions = useMemo(() => {
         return champions.filter(c => {
             const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
-            const matchesRole = activeRole === 'All' || c.tags.includes(activeRole);
+            
+            let matchesRole = activeRole === 'All';
+            if (!matchesRole) {
+                const roleKey = activeRole as keyof typeof championRoles;
+                const roleChamps = championRoles[roleKey] || [];
+                matchesRole = roleChamps.includes(c.name);
+            }
+
             if (altAddSide) {
                 // In alt mode, ignore availability and fearless bans entirely
                 return matchesSearch && matchesRole;

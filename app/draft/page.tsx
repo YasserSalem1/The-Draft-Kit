@@ -17,11 +17,12 @@ import { FearlessBanStrip } from '@/components/features/FearlessBanStrip';
 import { AIAssistantButton } from '@/components/features/AIAssistantButton';
 import { AIFocusMode } from '@/components/features/AIFocusMode';
 import Link from 'next/link';
-import { ArrowLeft, Brain, Cpu, Power } from 'lucide-react';
+import { ArrowLeft, Brain, Cpu, Power, Users, Lock as LockIcon, Loader2, RefreshCw, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { Champion, getChampions } from '@/lib/api/ddragon';
+import { getScoutingReport, ScoutingReportData } from '@/lib/data/scouting';
 
 import { IntelligenceReportButton } from '@/components/features/IntelligenceReportButton';
 import { IntelligenceReportModal } from '@/components/features/IntelligenceReportModal';
@@ -79,10 +80,17 @@ function DraftPageContent() {
     const searchParams = useSearchParams();
     const blueTeamId = searchParams.get('blue');
     const redTeamId = searchParams.get('red');
+    const blueTournamentId = searchParams.get('blueTournament');
+    const redTournamentId = searchParams.get('redTournament');
     const folderId = searchParams.get('folderId'); // Get folderId
 
-    const blueTeam = TEAMS.find(t => t.id === blueTeamId) || TEAMS[0];
-    const redTeam = TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]);
+    const [blueTeam, setBlueTeam] = useState(TEAMS.find(t => t.id === blueTeamId) || TEAMS[0]);
+    const [redTeam, setRedTeam] = useState(TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]));
+    const [blueReport, setBlueReport] = useState<ScoutingReportData | null>(null);
+    const [redReport, setRedReport] = useState<ScoutingReportData | null>(null);
+    const [blueAvailablePlayers, setBlueAvailablePlayers] = useState<Player[]>([]);
+    const [redAvailablePlayers, setRedAvailablePlayers] = useState<Player[]>([]);
+    const [playersLocked, setPlayersLocked] = useState(false);
 
     const { startDraft, resetDraft, currentStepIndex, selectChampion, unavailableChampionIds, blueBans, redBans, bluePicks, redPicks, currentStep, isStarted } = useDraft();
     const {
@@ -109,6 +117,61 @@ function DraftPageContent() {
     useEffect(() => {
         getChampions().then(setAllChampions);
     }, []);
+
+    // Fetch Scouting Reports and Players
+    useEffect(() => {
+        async function fetchReports() {
+            if (blueTeamId) {
+                const report = await getScoutingReport(blueTeamId, blueTournamentId || undefined);
+                if (!('message' in report)) {
+                    setBlueReport(report);
+                    // Extract players from report
+                    const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
+                        id: `blue-available-${playerName}-${i}`,
+                        nickname: playerName,
+                        name: playerName,
+                        role: 'TOP' as any
+                    }));
+                    setBlueAvailablePlayers(allAvailablePlayers);
+
+                    // Initialize team with 5 placeholder slots
+                    const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                    const initialRoster = roles.map(role => ({
+                        id: `blue-placeholder-${role}`,
+                        nickname: `Select ${role}`,
+                        name: `Select ${role}`,
+                        role
+                    }));
+                    setBlueTeam(prev => ({ ...prev, players: initialRoster }));
+                }
+            }
+            if (redTeamId) {
+                const report = await getScoutingReport(redTeamId, redTournamentId || undefined);
+                if (!('message' in report)) {
+                    setRedReport(report);
+                    // Extract players from report
+                    const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
+                        id: `red-available-${playerName}-${i}`,
+                        nickname: playerName,
+                        name: playerName,
+                        role: 'TOP' as any
+                    }));
+                    setRedAvailablePlayers(allAvailablePlayers);
+
+                    // Initialize team with 5 placeholder slots
+                    const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                    const initialRoster = roles.map(role => ({
+                        id: `red-placeholder-${role}`,
+                        nickname: `Select ${role}`,
+                        name: `Select ${role}`,
+                        role
+                    }));
+                    setRedTeam(prev => ({ ...prev, players: initialRoster }));
+                }
+            }
+        }
+        fetchReports();
+    }, [blueTeamId, redTeamId, blueTournamentId, redTournamentId]);
 
     // AI Auto-Pick Logic
     useEffect(() => {
@@ -188,7 +251,7 @@ function DraftPageContent() {
     }, [currentStep, currentStepIndex, isStarted, blueAiEnabled, redAiEnabled, allChampions, unavailableChampionIds, blueTeam, redTeam, blueBans, redBans, bluePicks, redPicks]);
     const [showReport, setShowReport] = useState(false); // Report Modal State
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string } | null>(null);
+    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string, report: ScoutingReportData | null } | null>(null);
 
     useEffect(() => {
         const formatParam = searchParams.get('format');
@@ -206,12 +269,104 @@ function DraftPageContent() {
         }
     }, [isStarted, currentStep, isSeriesComplete]);
 
-    const handlePlayerClick = (player: Player, team: typeof blueTeam) => {
+    const handlePlayerClick = (player: Player, team: typeof blueTeam, side: 'blue' | 'red') => {
+        if (!playersLocked) {
+            // Player selection logic - Clicking a player in rosters fills the 5 slots
+            const report = side === 'blue' ? blueReport : redReport;
+            if (report) {
+                const currentTeam = side === 'blue' ? blueTeam : redTeam;
+                
+                // Get currently selected nicknames on this team
+                const currentNicknames = currentTeam.players?.map(p => p.nickname) || [];
+                
+                // If the player clicked is already in the roster, remove them (Deselect)
+                if (currentNicknames.includes(player.nickname)) {
+                    if (side === 'blue') {
+                        setBlueTeam(prev => {
+                            const newPlayers = [...(prev.players || [])];
+                            const index = newPlayers.findIndex(p => p.nickname === player.nickname);
+                            if (index !== -1) {
+                                const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                                newPlayers[index] = {
+                                    id: `blue-placeholder-${roles[index]}`,
+                                    nickname: `Select ${roles[index]}`,
+                                    name: `Select ${roles[index]}`,
+                                    role: roles[index]
+                                };
+                            }
+                            return { ...prev, players: newPlayers };
+                        });
+                    } else {
+                        setRedTeam(prev => {
+                            const newPlayers = [...(prev.players || [])];
+                            const index = newPlayers.findIndex(p => p.nickname === player.nickname);
+                            if (index !== -1) {
+                                const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                                newPlayers[index] = {
+                                    id: `red-placeholder-${roles[index]}`,
+                                    nickname: `Select ${roles[index]}`,
+                                    name: `Select ${roles[index]}`,
+                                    role: roles[index]
+                                };
+                            }
+                            return { ...prev, players: newPlayers };
+                        });
+                    }
+                    return;
+                }
+
+                // Create a new player object for the roster
+                const newPlayer: Player = {
+                    id: `${side}-${player.nickname}-${Date.now()}`,
+                    nickname: player.nickname,
+                    name: player.nickname,
+                    role: 'TOP' // Will be re-assigned based on index
+                };
+
+                // Find the first slot that hasn't been filled with a real player
+                // Placeholder players have ids like 'blue-placeholder-TOP'
+                
+                if (side === 'blue') {
+                    setBlueTeam(prev => {
+                        const newPlayers = [...(prev.players || [])];
+                        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                        
+                        // Find first placeholder slot
+                        const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
+                        
+                        if (firstPlaceholderIndex !== -1) {
+                            newPlayers[firstPlaceholderIndex] = {
+                                ...newPlayer,
+                                role: roles[firstPlaceholderIndex]
+                            };
+                        }
+
+                        return { ...prev, players: newPlayers };
+                    });
+                } else {
+                    setRedTeam(prev => {
+                        const newPlayers = [...(prev.players || [])];
+                        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+                        const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
+                        
+                        if (firstPlaceholderIndex !== -1) {
+                            newPlayers[firstPlaceholderIndex] = {
+                                ...newPlayer,
+                                role: roles[firstPlaceholderIndex]
+                            };
+                        }
+                        return { ...prev, players: newPlayers };
+                    });
+                }
+            }
+            return;
+        }
         setSelectedPlayer(player);
-        setSelectedTeamMeta({ name: team.name, color: team.color });
+        setSelectedTeamMeta({ name: team.shortName, color: team.color, report: side === 'blue' ? blueReport : redReport });
     };
 
     const handleInitializeDraft = () => {
+        setPlayersLocked(true);
         startDraft();
         setViewMode('DRAFT');
     };
@@ -282,6 +437,7 @@ function DraftPageContent() {
                 onClose={() => setSelectedPlayer(null)}
                 teamName={selectedTeamMeta?.name || ''}
                 teamColor={selectedTeamMeta?.color || ''}
+                report={selectedTeamMeta?.report || null}
             />
 
 
@@ -315,7 +471,7 @@ function DraftPageContent() {
                         <div className="p-4 border-b border-white/5 flex items-center gap-4 bg-gradient-to-r from-blue-900/20 to-transparent">
                             <TeamLogo team={blueTeam} className="w-12 h-12 rounded-xl shadow-lg" />
                             <div>
-                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{blueTeam.name}</h2>
+                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{blueTeam.shortName}</h2>
                                 <div className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em]">Blue Side</div>
                             </div>
 
@@ -344,10 +500,12 @@ function DraftPageContent() {
                                         player={p}
                                         teamColor={blueTeam.color}
                                         side="blue"
-                                        onClick={() => handlePlayerClick(p, blueTeam)}
+                                        onClick={() => handlePlayerClick(p, blueTeam, 'blue')}
+                                        onRemove={() => handlePlayerClick(p, blueTeam, 'blue')}
                                         isSelected={selectedPlayer?.id === p.id}
                                         pickedChampion={bluePicks[idx]}
                                         isActiveTurn={isStarted && isBlueTurn && isPickPhase && currentPickIndex === idx}
+                                        isLocked={playersLocked}
                                     />
                                 </div>
                             ))}
@@ -372,13 +530,21 @@ function DraftPageContent() {
                                     <button onClick={handleInitializeDraft} className="px-8 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">Start Draft</button>
                                 ) : (
                                     <div className="flex flex-col items-center gap-1">
-                                        <div className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">Current Turn</div>
-                                        <div className={cn(
-                                            "text-2xl font-black italic uppercase tracking-wider animate-pulse",
-                                            currentStep?.side === 'blue' ? "text-blue-400" : "text-red-500"
-                                        )}>
-                                            {currentStep?.side} {currentStep?.action}
+                                        <div className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">
+                                            {playersLocked ? "Current Turn" : "Preparation Phase"}
                                         </div>
+                                        {playersLocked ? (
+                                            <div className={cn(
+                                                "text-2xl font-black italic uppercase tracking-wider animate-pulse",
+                                                currentStep?.side === 'blue' ? "text-blue-400" : "text-red-500"
+                                            )}>
+                                                {currentStep?.side} {currentStep?.action}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xl font-black italic uppercase tracking-wider text-primary">
+                                                Select Starters
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -395,8 +561,121 @@ function DraftPageContent() {
                         <div className="flex-1 relative bg-grid-pattern min-h-0 flex flex-col">
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                                 {viewMode === 'SCOUTING' ? (
-                                    <div className="max-w-4xl mx-auto">
-                                        <ScoutingStats blueTeam={blueTeam} redTeam={redTeam} />
+                                    <div className="max-w-4xl mx-auto space-y-8">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Team Rosters</h2>
+                                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Select players from report data</p>
+                                            </div>
+                                            {!playersLocked && (
+                                                <button 
+                                                    onClick={handleInitializeDraft}
+                                                    disabled={!blueReport || !redReport || (blueTeam.players?.some(p => p.id.includes('placeholder'))) || (redTeam.players?.some(p => p.id.includes('placeholder')))}
+                                                    className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                                                >
+                                                    Lock & Start Draft
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-8">
+                                            {/* Blue Team Player List */}
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3 border-b border-blue-500/20 pb-2">
+                                                    <div className="w-2 h-6 bg-blue-500 rounded-full" />
+                                                    <h3 className="text-lg font-bold text-white uppercase">{blueTeam.shortName}</h3>
+                                                    <span className="text-[10px] text-gray-500 ml-auto font-bold uppercase tracking-widest">
+                                                        {blueTeam.players?.filter(p => !p.id.includes('placeholder')).length}/5 Filled
+                                                    </span>
+                                                </div>
+                                                {!blueReport ? (
+                                                    <div className="flex items-center justify-center p-8 bg-white/5 rounded-xl border border-white/5">
+                                                        <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {blueAvailablePlayers.map((p) => {
+                                                            const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                            const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                            const isSelected = isSelectedOnBlue || isSelectedOnRed;
+                                                            return (
+                                                                <button
+                                                                    key={p.id}
+                                                                    onClick={() => handlePlayerClick(p, blueTeam, 'blue')}
+                                                                    disabled={playersLocked || isSelectedOnRed}
+                                                                    className={cn(
+                                                                        "w-full flex items-center justify-between p-3 rounded-xl border transition-all group",
+                                                                        isSelectedOnRed 
+                                                                            ? "bg-white/5 border-white/5 opacity-50 cursor-not-allowed" 
+                                                                            : isSelectedOnBlue
+                                                                                ? "bg-blue-500/10 border-blue-500/30"
+                                                                                : "bg-white/5 border-white/5 hover:border-blue-500/30 hover:bg-white/10"
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="font-bold text-gray-200 group-hover:text-white">{p.nickname}</span>
+                                                                        {isSelectedOnBlue && <Check className="w-3 h-3 text-blue-400" />}
+                                                                        {isSelectedOnRed && <LockIcon className="w-3 h-3 text-gray-500" />}
+                                                                    </div>
+                                                                    {!playersLocked && !isSelectedOnRed && (
+                                                                        isSelectedOnBlue ? <X className="w-3 h-3 text-blue-400 hover:text-red-400" /> : <RefreshCw className="w-3 h-3 text-gray-600 group-hover:text-blue-400" />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Red Team Player List */}
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3 border-b border-red-500/20 pb-2 flex-row-reverse text-right">
+                                                    <div className="w-2 h-6 bg-red-500 rounded-full" />
+                                                    <h3 className="text-lg font-bold text-white uppercase">{redTeam.shortName}</h3>
+                                                    <span className="text-[10px] text-gray-500 mr-auto font-bold uppercase tracking-widest">
+                                                        {redTeam.players?.filter(p => !p.id.includes('placeholder')).length}/5 Filled
+                                                    </span>
+                                                </div>
+                                                {!redReport ? (
+                                                    <div className="flex items-center justify-center p-8 bg-white/5 rounded-xl border border-white/5">
+                                                        <Loader2 className="w-6 h-6 animate-spin text-red-500" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {redAvailablePlayers.map((p) => {
+                                                            const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                            const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                            const isSelected = isSelectedOnBlue || isSelectedOnRed;
+                                                            return (
+                                                                <button
+                                                                    key={p.id}
+                                                                    onClick={() => handlePlayerClick(p, redTeam, 'red')}
+                                                                    disabled={playersLocked || isSelectedOnBlue}
+                                                                    className={cn(
+                                                                        "w-full flex items-center justify-between p-3 rounded-xl border transition-all group flex-row-reverse",
+                                                                        isSelectedOnBlue 
+                                                                            ? "bg-white/5 border-white/5 opacity-50 cursor-not-allowed" 
+                                                                            : isSelectedOnRed
+                                                                                ? "bg-red-500/10 border-red-500/30"
+                                                                                : "bg-white/5 border-white/5 hover:border-red-500/30 hover:bg-white/10"
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-center gap-3 flex-row-reverse">
+                                                                        <span className="font-bold text-gray-200 group-hover:text-white">{p.nickname}</span>
+                                                                        {isSelectedOnRed && <Check className="w-3 h-3 text-red-500" />}
+                                                                        {isSelectedOnBlue && <LockIcon className="w-3 h-3 text-gray-500" />}
+                                                                    </div>
+                                                                    {!playersLocked && !isSelectedOnBlue && (
+                                                                        isSelectedOnRed ? <X className="w-3 h-3 text-red-500 hover:text-red-400" /> : <RefreshCw className="w-3 h-3 text-gray-600 group-hover:text-red-500" />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Removed ScoutingStats (Match Intelligence) during selection phase */}
                                     </div>
                                 ) : (
                                     ((isStarted && !currentStep) || isSeriesComplete) ? (
@@ -478,7 +757,7 @@ function DraftPageContent() {
 
                             <div className="flex items-center gap-4">
                                 <div className="text-right">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{redTeam.name}</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{redTeam.shortName}</h2>
                                     <div className="text-[10px] font-bold text-red-500 uppercase tracking-[0.3em]">Red Side</div>
                                 </div>
                                 <TeamLogo team={redTeam} className="w-12 h-12 rounded-xl shadow-lg" />
@@ -491,10 +770,12 @@ function DraftPageContent() {
                                         player={p}
                                         teamColor={redTeam.color}
                                         side="red"
-                                        onClick={() => handlePlayerClick(p, redTeam)}
+                                        onClick={() => handlePlayerClick(p, redTeam, 'red')}
+                                        onRemove={() => handlePlayerClick(p, redTeam, 'red')}
                                         isSelected={selectedPlayer?.id === p.id}
                                         pickedChampion={redPicks[idx]}
                                         isActiveTurn={isStarted && isRedTurn && isPickPhase && currentPickIndex === idx}
+                                        isLocked={playersLocked}
                                     />
                                 </div>
                             ))}

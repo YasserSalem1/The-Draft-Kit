@@ -47,13 +47,12 @@ interface GetTournamentTeamsResponse {
 export async function getMatchIds(teamId: string = TARGET_TEAM_ID, tournamentIds: string | string[] = TOURNAMENT_ID): Promise<string[]> {
   const tIds = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
   const query = `
-    query AllSeries {
+    query AllSeries($teamId: ID!, $tIds: [ID!]!) {
       allSeries(
         filter: {
-          teamIds: { in: ["${teamId}"] }
+          teamIds: { in: [$teamId] }
           tournament: {
-            id: { in: ${JSON.stringify(tIds)} }
-            title: { id: { in: ["3"] } }
+            id: { in: $tIds }
             includeChildren: { equals: true }
           }
         },
@@ -67,15 +66,20 @@ export async function getMatchIds(teamId: string = TARGET_TEAM_ID, tournamentIds
       }
     }
   `;
-  const response = await graphqlRequest<AllSeriesResponse>(query);
+  console.log(`[getMatchIds] Requesting matches for team ${teamId} in tournaments ${tIds}`);
+  const response = await graphqlRequest<AllSeriesResponse>(query, { teamId, tIds });
+  if (response.errors) {
+    console.error(`[getMatchIds] GraphQL Errors:`, JSON.stringify(response.errors, null, 2));
+    throw new Error(`GraphQL Error in getMatchIds: ${response.errors[0].message}`);
+  }
   return response.data?.allSeries?.edges.map(edge => edge.node.id) || [];
 }
 
 // Helper to get series state
 export async function getTournaments(regionName: string, parentId?: string): Promise<TournamentNode[]> {
   const query = `
-    query GetTournaments {
-      tournaments (filter: {name: {contains: "${regionName}"}, hasChildren: {equals: true}}, first: 50) {
+    query GetTournaments($regionName: String!) {
+      tournaments (filter: {name: {contains: $regionName}, hasChildren: {equals: true}}, first: 50) {
         edges {
           node {
             name
@@ -89,7 +93,7 @@ export async function getTournaments(regionName: string, parentId?: string): Pro
     }
   `;
   
-  const response = await graphqlRequest<any>(query);
+  const response = await graphqlRequest<any>(query, { regionName });
   if (response.errors) {
     throw new Error(response.errors.map((err: any) => err.message).join(', '));
   }
@@ -105,8 +109,8 @@ export async function getTournaments(regionName: string, parentId?: string): Pro
 
 export async function getTeamsInTournament(tournamentId: string): Promise<TournamentNode[]> {
   const query = `
-    query GetTournament {
-      tournament(id: "${tournamentId}") {
+    query GetTournament($tournamentId: ID!) {
+      tournament(id: $tournamentId) {
         name
         teams{
           name
@@ -116,7 +120,7 @@ export async function getTeamsInTournament(tournamentId: string): Promise<Tourna
       }
     }
   `;
-  const response = await graphqlRequest<GetTournamentTeamsResponse>(query);
+  const response = await graphqlRequest<GetTournamentTeamsResponse>(query, { tournamentId });
   if (response.errors) {
     throw new Error(response.errors.map(err => err.message).join(', '));
   }
@@ -125,8 +129,8 @@ export async function getTeamsInTournament(tournamentId: string): Promise<Tourna
 
 export async function getSeriesState(seriesId: string): Promise<any> {
   const query = `
-    query SeriesState {
-      seriesState(id: "${seriesId}") {
+    query SeriesState($seriesId: ID!) {
+      seriesState(id: $seriesId) {
         games {
           draftActions {
             type
@@ -159,7 +163,7 @@ export async function getSeriesState(seriesId: string): Promise<any> {
       }
     }
   `;
-  const response = await graphqlRequest<{ seriesState: any }>(query, {}, LIVE_DATA_FEED_URL);
+  const response = await graphqlRequest<{ seriesState: any }>(query, { seriesId }, LIVE_DATA_FEED_URL);
   return response.data?.seriesState;
 }
 

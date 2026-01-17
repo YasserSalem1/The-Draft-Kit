@@ -557,6 +557,10 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
         role: 'TOP' as const
     })) || [];
 
+    if (players.length === 0) {
+        console.warn(`No players found for team ${teamId}`);
+    }
+
     // Map roles based on index if exactly 5 players
     const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
     return players.map((p: any, i: number) => ({
