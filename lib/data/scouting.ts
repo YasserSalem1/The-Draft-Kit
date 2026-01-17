@@ -386,8 +386,8 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
       red_side: {},
     },
     most_banned_champions: {
-      against_blue_side: sortedRedBans,
-      against_red_side: sortedBlueBans,
+      against_blue_side: sortedBlueBans,
+      against_red_side: sortedRedBans,
       by_blue_side: sortedTargetTeamBlueBans,
       by_red_side: sortedTargetTeamRedBans,
     },
