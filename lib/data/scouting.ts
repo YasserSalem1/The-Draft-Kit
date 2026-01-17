@@ -1,25 +1,33 @@
 // drafting-and-reporting/lib/data/scouting.ts
 
 import { graphqlRequest, LIVE_DATA_FEED_URL } from '../api';
-import { getMatchIds, getSeriesState } from './drafts'; // Re-use from drafts data file
+import { getMatchIds, getSeriesState, getTeamsInTournament } from './drafts'; // Re-use from drafts data file
 
-const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || "47494";
-const TARGET_TEAM_NAME = process.env.NEXT_PUBLIC_TARGET_TEAM_NAME || "T1";
-const TOURNAMENT_ID = process.env.NEXT_PUBLIC_TOURNAMENT_ID || "756907";
+const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || '';
+const TARGET_TEAM_NAME = process.env.NEXT_PUBLIC_TARGET_TEAM_NAME || '';
+const TOURNAMENT_ID = process.env.NEXT_PUBLIC_TOURNAMENT_ID || '';
+
+interface BanStats {
+  champion: string;
+  count: number;
+  phase1: number;
+  phase2: number;
+}
 
 export interface ScoutingReportData {
   team_name: string;
+  team_logo?: string;
   games_count: number;
-  player_stats_grouped: Record<string, { name: string; played: number; wins: number }[]>;
+  player_stats_grouped: Record<string, { name: string; played: number; wins: number; blindPicks: number; counterPicks: number }[]>;
   draft_priorities: {
     blue_side: any;
     red_side: any;
   };
   most_banned_champions: {
-    against_blue_side: [string, number][];
-    against_red_side: [string, number][];
-    by_blue_side: [string, number][];
-    by_red_side: [string, number][];
+    against_blue_side: BanStats[];
+    against_red_side: BanStats[];
+    by_blue_side: BanStats[];
+    by_red_side: BanStats[];
   };
   most_picked_champions_by_slot: {
     blue1: [string, number][];
@@ -37,8 +45,8 @@ export interface ScoutingReportData {
 }
 
 // Main analysis function (mimicking run_analysis from Scouting.py)
-export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournamentId: string = TOURNAMENT_ID): Promise<ScoutingReportData | { message: string }> {
-  const matchIds = await getMatchIds(teamId, tournamentId);
+export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournamentIds: string | string[] = TOURNAMENT_ID): Promise<ScoutingReportData | { message: string }> {
+  const matchIds = await getMatchIds(teamId, tournamentIds);
 
   if (!matchIds.length) {
     return { message: "No matches found." };
@@ -46,16 +54,32 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
   console.log(`Found ${matchIds.length} matches for team ${teamId}. IDs:`, matchIds);
   const targetStats: any[] = [];
   const targetDrafts: any[] = [];
-  const blueSideBans: Record<string, number> = {};
-  const redSideBans: Record<string, number> = {};
-  const targetTeamBlueBans: Record<string, number> = {};
-  const targetTeamRedBans: Record<string, number> = {};
+  
+  const blueSideBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
+  const redSideBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
+  const targetTeamBlueBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
+  const targetTeamRedBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
+  
   const b1Picks: Record<string, number> = {};
   const r1Picks: Record<string, number> = {};
   const r2Picks: Record<string, number> = {};
 
   let fetchedTeamName = TARGET_TEAM_NAME;
+  let fetchedTeamLogo = '';
   let gamesCount = 0;
+
+  // Try to get team logo from tournament data
+  try {
+    const tIds = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
+    // Just use the first tournament to get the logo, assuming it's consistent
+    const teams = await getTeamsInTournament(tIds[0]);
+    const team = teams.find(t => String(t.id) === String(teamId));
+    if (team && (team as any).logoUrl) {
+      fetchedTeamLogo = (team as any).logoUrl;
+    }
+  } catch (e) {
+    console.error("Failed to fetch team logo", e);
+  }
 
   for (const mId of matchIds) {
     const stateData = await getSeriesState(mId);
@@ -104,7 +128,55 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
       }
 
       const roles = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
-      const champToRole: Record<string, { Role: string; Player: string }> = {};
+      const champToRole: Record<string, { Role: string; Player: string; isBlind: boolean; isCounter: boolean }> = {};
+
+      // Determine picks order for blind/counter pick detection
+      if (game.draftActions) {
+        const picksByRole: Record<string, { side: string; step: number }> = {};
+        const draftPicks = game.draftActions.filter((a: any) => a.type === 'pick');
+        
+        // First pass: identify which side picked which role at which step
+        // We need to map picked champions to roles for the target team
+        // This is tricky because we only know the role after mapping players
+      }
+
+      // Re-map players to get champ to role mapping
+      const teamChampToRole: Record<string, string> = {};
+      const enemyTeamObj = teams.find((t: any) => String(t.id) !== String(teamId));
+      const enemyChampToRole: Record<string, string> = {};
+
+      for (const [idx, p] of targetTeamObj.players.entries()) {
+        const role = roles[idx] || 'Sub';
+        const charObj = p.character || p.hero || {};
+        if (charObj.name) teamChampToRole[charObj.name] = role;
+      }
+      if (enemyTeamObj) {
+        for (const [idx, p] of enemyTeamObj.players.entries()) {
+          const role = roles[idx] || 'Sub';
+          const charObj = p.character || p.hero || {};
+          if (charObj.name) enemyChampToRole[charObj.name] = role;
+        }
+      }
+
+      // Detect Blind/Counter picks
+      const rolePickSteps: Record<string, { blueStep: number; redStep: number }> = {};
+      roles.forEach(r => rolePickSteps[r] = { blueStep: 0, redStep: 0 });
+
+      let stepCounter = 0;
+      if (game.draftActions) {
+        for (const action of game.draftActions) {
+          stepCounter++;
+          if (action.type === 'pick' && action.draftable?.name) {
+            const champ = action.draftable.name;
+            const side = teamSideMap[String(action.drafter?.id)];
+            const role = teamChampToRole[champ] || enemyChampToRole[champ];
+            if (role && rolePickSteps[role]) {
+              if (side === 'blue') rolePickSteps[role].blueStep = stepCounter;
+              else rolePickSteps[role].redStep = stepCounter;
+            }
+          }
+        }
+      }
 
       for (const [idx, p] of targetTeamObj.players.entries()) {
         const role = roles[idx] || 'Sub';
@@ -112,7 +184,22 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
         const cName = charObj.name;
 
         if (cName) {
-          champToRole[cName] = { Role: role, Player: p.name };
+          const side = teamSideMap[currentTargetTeamId];
+          const steps = rolePickSteps[role];
+          let isBlind = false;
+          let isCounter = false;
+
+          if (steps && steps.blueStep > 0 && steps.redStep > 0) {
+            if (side === 'blue') {
+              if (steps.blueStep < steps.redStep) isBlind = true;
+              else isCounter = true;
+            } else {
+              if (steps.redStep < steps.blueStep) isBlind = true;
+              else isCounter = true;
+            }
+          }
+
+          champToRole[cName] = { Role: role, Player: p.name, isBlind, isCounter };
           targetStats.push({
             Player: p.name,
             Role: role,
@@ -121,13 +208,17 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
             Kills: p.kills || 0,
             Deaths: p.deaths || 0,
             Assists: p.killAssistsGiven || 0,
+            isBlind,
+            isCounter
           });
         }
       }
 
       let pickCounter = 0;
+      let actionStep = 0;
       if (game.draftActions) {
         for (const action of game.draftActions) {
+          actionStep++;
           const actionType = action.type;
           const draftedChamp = action.draftable?.name;
           const drafterId = String(action.drafter?.id);
@@ -157,14 +248,23 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
                 }
               }
             }
-          } else if (actionType === 'ban') {
+          } else if (actionType === 'ban' && draftedChamp) {
+            const isPhase1 = actionStep <= 6;
+            const isPhase2 = actionStep >= 13 && actionStep <= 16;
+            
+            const updateBan = (record: Record<string, { count: number; phase1: number; phase2: number }>, champ: string) => {
+              if (!record[champ]) record[champ] = { count: 0, phase1: 0, phase2: 0 };
+              record[champ].count++;
+              if (isPhase1) record[champ].phase1++;
+              if (isPhase2) record[champ].phase2++;
+            };
+
             if (drafterId !== currentTargetTeamId) {
-              if (side === 'blue') redSideBans[draftedChamp] = (redSideBans[draftedChamp] || 0) + 1;
-              else blueSideBans[draftedChamp] = (blueSideBans[draftedChamp] || 0) + 1;
+              if (side === 'blue') updateBan(redSideBans, draftedChamp);
+              else updateBan(blueSideBans, draftedChamp);
             } else {
-              // Bans by the target team
-              if (side === 'blue') targetTeamBlueBans[draftedChamp] = (targetTeamBlueBans[draftedChamp] || 0) + 1;
-              else targetTeamRedBans[draftedChamp] = (targetTeamRedBans[draftedChamp] || 0) + 1;
+              if (side === 'blue') updateBan(targetTeamBlueBans, draftedChamp);
+              else updateBan(targetTeamRedBans, draftedChamp);
             }
           }
         }
@@ -197,11 +297,22 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
   }, {});
   // Similar for draftPivotRed
 
-  const sortedBlueBans = Object.entries(blueSideBans).sort(([, a], [, b]) => b - a).slice(0, 5);
-  const sortedRedBans = Object.entries(redSideBans).sort(([, a], [, b]) => b - a).slice(0, 5);
+  const formatBans = (record: Record<string, { count: number; phase1: number; phase2: number }>): BanStats[] => {
+    return Object.entries(record)
+      .sort(([, a], [, b]) => b.count - a.count)
+      .slice(0, 10)
+      .map(([champion, stats]) => ({
+        champion,
+        count: stats.count,
+        phase1: stats.phase1,
+        phase2: stats.phase2
+      }));
+  };
 
-  const sortedTargetTeamBlueBans = Object.entries(targetTeamBlueBans).sort(([, a], [, b]) => b - a).slice(0, 5);
-  const sortedTargetTeamRedBans = Object.entries(targetTeamRedBans).sort(([, a], [, b]) => b - a).slice(0, 5);
+  const sortedBlueBans = formatBans(blueSideBans);
+  const sortedRedBans = formatBans(redSideBans);
+  const sortedTargetTeamBlueBans = formatBans(targetTeamBlueBans);
+  const sortedTargetTeamRedBans = formatBans(targetTeamRedBans);
 
   const r1R2Picks: Record<string, number> = {};
   for (const champ in r1Picks) r1R2Picks[champ] = (r1R2Picks[champ] || 0) + r1Picks[champ];
@@ -235,11 +346,15 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
     if (existingChamp) {
       existingChamp.played++;
       existingChamp.wins += stat.Win;
+      if (stat.isBlind) existingChamp.blindPicks++;
+      if (stat.isCounter) existingChamp.counterPicks++;
     } else {
       groupedPlayerStats[stat.Player].push({
         name: stat.Champion,
         played: 1,
         wins: stat.Win,
+        blindPicks: stat.isBlind ? 1 : 0,
+        counterPicks: stat.isCounter ? 1 : 0,
       });
     }
   });
@@ -263,6 +378,7 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
 
   const reportData: ScoutingReportData = {
     team_name: fetchedTeamName,
+    team_logo: fetchedTeamLogo,
     games_count: gamesCount,
     player_stats_grouped: groupedPlayerStats,
     draft_priorities: {

@@ -9,6 +9,7 @@ interface TeamCardProps {
   team: {
     name: string;
     id: string;
+    logoUrl?: string;
   };
   onSelect: (teamId: string, teamName: string) => void;
   isSelected: boolean;
@@ -43,13 +44,17 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, isSelected }) => {
         </div>
       )}
       <div className="flex flex-col items-center text-center space-y-4 h-full justify-center">
-        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center font-black text-3xl transition-all
+        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center font-black text-3xl transition-all overflow-hidden
           ${isSelected 
             ? 'bg-gradient-to-br from-primary to-primary/70 text-white shadow-lg shadow-primary/50' 
-            : 'bg-surface text-gray-400'
+            : 'bg-surface text-gray-400 border border-white/5'
           }
         `}>
-          {initials}
+          {team.logoUrl ? (
+            <img src={team.logoUrl} alt={team.name} className="w-full h-full object-contain p-2" />
+          ) : (
+            initials
+          )}
         </div>
         <h3 className={`font-bold text-lg leading-tight px-2
           ${isSelected ? 'text-white' : 'text-gray-200'}

@@ -2,8 +2,8 @@
 
 import { graphqlRequest, LIVE_DATA_FEED_URL } from '../api';
 
-const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || "47494";
-const TOURNAMENT_ID = process.env.NEXT_PUBLIC_TOURNAMENT_ID || "756907";
+const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || '';
+const TOURNAMENT_ID = process.env.NEXT_PUBLIC_TOURNAMENT_ID || '';
 
 interface AllSeriesResponse {
   allSeries: {
@@ -44,14 +44,15 @@ interface GetTournamentTeamsResponse {
 }
 
 // Helper to get match IDs
-export async function getMatchIds(teamId: string = TARGET_TEAM_ID, tournamentId: string = TOURNAMENT_ID): Promise<string[]> {
+export async function getMatchIds(teamId: string = TARGET_TEAM_ID, tournamentIds: string | string[] = TOURNAMENT_ID): Promise<string[]> {
+  const tIds = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
   const query = `
     query AllSeries {
       allSeries(
         filter: {
           teamIds: { in: ["${teamId}"] }
           tournament: {
-            id: { in: ["${tournamentId}"] }
+            id: { in: ${JSON.stringify(tIds)} }
             title: { id: { in: ["3"] } }
             includeChildren: { equals: true }
           }
@@ -71,32 +72,35 @@ export async function getMatchIds(teamId: string = TARGET_TEAM_ID, tournamentId:
 }
 
 // Helper to get series state
-export async function getTournaments(regionName: string): Promise<TournamentNode[]> {
+export async function getTournaments(regionName: string, parentId?: string): Promise<TournamentNode[]> {
   const query = `
     query GetTournaments {
-      tournaments (filter:{name:{contains:"${regionName}"}},first:50) {
-        pageInfo {
-          hasPreviousPage
-          hasNextPage
-          startCursor
-          endCursor
-        }
-        totalCount
+      tournaments (filter: {name: {contains: "${regionName}"}, hasChildren: {equals: true}}, first: 50) {
         edges {
-          cursor
           node {
             name
             id
+            parent {
+              id
+            }
           }
         }
       }
     }
   `;
-  const response = await graphqlRequest<GetTournamentsResponse>(query);
+  
+  const response = await graphqlRequest<any>(query);
   if (response.errors) {
-    throw new Error(response.errors.map(err => err.message).join(', '));
+    throw new Error(response.errors.map((err: any) => err.message).join(', '));
   }
-  return response.data?.tournaments.edges.map(edge => edge.node) || [];
+
+  let tournaments = response.data?.tournaments.edges.map((edge: any) => edge.node) || [];
+  
+  if (parentId) {
+    tournaments = tournaments.filter((t: any) => t.parent?.id === parentId);
+  }
+  
+  return tournaments;
 }
 
 export async function getTeamsInTournament(tournamentId: string): Promise<TournamentNode[]> {
@@ -107,6 +111,7 @@ export async function getTeamsInTournament(tournamentId: string): Promise<Tourna
         teams{
           name
           id
+          logoUrl
         }
       }
     }

@@ -49,3 +49,24 @@ export async function getChampions(): Promise<Champion[]> {
 export function getChampionIconUrl(version: string, imageFull: string): string {
     return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${imageFull}`;
 }
+
+/**
+ * Standardizes champion names to DDragon ID format (e.g., "Kog'Maw" -> "KogMaw")
+ */
+export function getChampionIdFromName(name: string): string {
+    if (name === "Wukong") return "MonkeyKing";
+    
+    return name
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .replace("LeBlanc", "Leblanc")
+        .replace("KhaZix", "Khazix")
+        .replace("VelKoz", "Velkoz")
+        .replace("ChoGath", "Chogath")
+        .replace("BelVeth", "Belveth")
+        .replace("KaiSa", "Kaisa");
+}
+
+export function getChampionIconUrlByName(version: string, name: string): string {
+    const id = getChampionIdFromName(name);
+    return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${id}.png`;
+}

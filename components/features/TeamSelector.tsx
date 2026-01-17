@@ -82,11 +82,14 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
                             className="space-y-4"
                         >
                             <div
-                                className="w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold bg-white/10 backdrop-blur-md shadow-2xl ring-4 ring-white/10"
+                                className="w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold bg-white/10 backdrop-blur-md shadow-2xl ring-4 ring-white/10 overflow-hidden"
                                 style={{ color: selectedTeam.color }}
                             >
-                                {/* Logo placeholder if image fails, otherwise image would be better */}
-                                {selectedTeam.shortName}
+                                {selectedTeam.logo ? (
+                                    <img src={selectedTeam.logo} alt={selectedTeam.shortName} className="w-full h-full object-contain p-4" />
+                                ) : (
+                                    selectedTeam.shortName
+                                )}
                             </div>
                             <div>
                                 <h3 className="text-3xl font-bold text-white tracking-widest uppercase">{selectedTeam.name}</h3>
@@ -169,10 +172,14 @@ export function TeamSelector({ side, selectedTeam, onSelect, otherSelectedTeam }
                                             className="flex items-center p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group border border-transparent hover:border-white/5"
                                         >
                                             <div
-                                                className="w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-black mr-4 bg-black/40 border border-white/5"
+                                                className="w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-black mr-4 bg-black/40 border border-white/5 overflow-hidden"
                                                 style={{ color: team.color }}
                                             >
-                                                {team.shortName}
+                                                {team.logo ? (
+                                                    <img src={team.logo} alt={team.shortName} className="w-full h-full object-contain p-1.5" />
+                                                ) : (
+                                                    team.shortName
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-bold text-gray-200 group-hover:text-white">{team.name}</div>

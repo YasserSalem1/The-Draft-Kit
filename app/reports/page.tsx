@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { getScoutingReport, ScoutingReportData } from '@/lib/data/scouting';
+import { getTournaments } from '@/lib/data/drafts';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Download, FileText, TrendingUp, Target, Shield, Zap } from 'lucide-react';
+import { ArrowLeft, Download, FileText, TrendingUp, Target, Shield, Zap, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import sideData from '@/lib/data/side_preference_report_FULL.json';
 import { LEAGUES, League } from '@/lib/data/leagues';
@@ -15,40 +16,47 @@ import ReportDisplay from '../../components/ReportDisplay';
 
 export default function ReportsPage() {
     const [selectedLeague, setSelectedLeague] = useState<League | null>(null);
-    const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
-    const [selectedTournamentName, setSelectedTournamentName] = useState<string | null>(null);
+    const [selectedTournamentIds, setSelectedTournamentIds] = useState<string[]>([]);
+    const [availableTournaments, setAvailableTournaments] = useState<{ id: string, name: string }[]>([]);
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [reportData, setReportData] = useState<ScoutingReportData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleSelectLeague = (league: League) => {
+    const handleSelectLeague = async (league: League) => {
         setSelectedLeague(league);
-        setSelectedTournamentId(null);
-        setSelectedTournamentName(null);
+        setSelectedTournamentIds([]);
+        setAvailableTournaments([]);
         setSelectedTeamId(null);
         setSelectedTeamName(null);
         setReportData(null);
         setError(null);
+        setLoading(true);
+
+        try {
+            const tournaments = await getTournaments(league.regionName, league.parentId);
+            setAvailableTournaments(tournaments);
+            if (tournaments.length > 0) {
+                // Select the last tournament by default
+                const lastTournament = tournaments[tournaments.length - 1];
+                setSelectedTournamentIds([lastTournament.id]);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch tournaments');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSelectTournament = (tournamentId: string, tournamentName: string) => {
-        setSelectedTournamentId(tournamentId);
-        setSelectedTournamentName(tournamentName);
-        setSelectedTeamId(null);
-        setSelectedTeamName(null);
-        setReportData(null);
-        setError(null);
-    };
-
-    const handleSelectTeam = async (teamId: string, teamName: string) => {
+    const handleSelectTeam = async (teamId: string, teamName: string, tournamentIds?: string[]) => {
+        const tIds = tournamentIds || selectedTournamentIds;
         setSelectedTeamId(teamId);
         setSelectedTeamName(teamName);
         setLoading(true);
         setError(null);
         try {
-            const data = await getScoutingReport(teamId, selectedTournamentId!); // Fetch live data
+            const data = await getScoutingReport(teamId, tIds); // Fetch live data
             if ('message' in data) {
                 setError(data.message);
                 setReportData(null);
@@ -62,13 +70,28 @@ export default function ReportsPage() {
             setLoading(false);
         }
     };
+
+    const toggleTournament = async (tournamentId: string) => {
+        let newSelection: string[];
+        if (selectedTournamentIds.includes(tournamentId)) {
+            newSelection = selectedTournamentIds.filter(id => id !== tournamentId);
+        } else {
+            newSelection = [...selectedTournamentIds, tournamentId];
+        }
+        
+        if (newSelection.length === 0) return; // Must have at least one
+
+        setSelectedTournamentIds(newSelection);
+        if (selectedTeamId && selectedTeamName) {
+            await handleSelectTeam(selectedTeamId, selectedTeamName, newSelection);
+        }
+    };
+
     const currentSelectionStage = !selectedLeague
         ? 'league'
-        : !selectedTournamentId
-            ? 'tournament'
-            : !selectedTeamId
-                ? 'team'
-                : 'report';
+        : !selectedTeamId
+            ? 'team'
+            : 'report';
 
     if (loading) return <div className="flex justify-center items-center h-screen text-xl text-white">Loading report...</div>;
     if (error) return <div className="flex justify-center items-center h-screen text-xl text-red-600">Error: {error}</div>;
@@ -130,43 +153,35 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Breadcrumb Navigation */}
-                    {(selectedLeague || selectedTournamentName || selectedTeamName) && (
-                        <div className="flex items-center gap-2 mb-6 flex-wrap">
+                    {(selectedLeague || selectedTeamName) && (
+                        <div className="flex items-center gap-2 mb-4 flex-wrap">
                             {selectedLeague && (
                                 <>
                                     <button
                                         onClick={() => handleSelectLeague(selectedLeague)}
-                                        className="px-4 py-2 bg-primary/20 text-primary rounded-lg font-semibold hover:bg-primary/30 transition-colors"
+                                        className="px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-sm font-semibold hover:bg-primary/30 transition-colors"
                                     >
                                         {selectedLeague.name}
                                     </button>
-                                    {selectedTournamentName && <span className="text-gray-500">→</span>}
-                                </>
-                            )}
-                            {selectedTournamentName && (
-                                <>
-                                    <span className="px-4 py-2 bg-surface-light/50 text-gray-300 rounded-lg font-medium">
-                                        {selectedTournamentName}
-                                    </span>
-                                    {selectedTeamName && <span className="text-gray-500">→</span>}
+                                    {selectedTeamName && <span className="text-gray-500 text-xs">→</span>}
                                 </>
                             )}
                             {selectedTeamName && (
-                                <span className="px-4 py-2 bg-surface-light/50 text-gray-300 rounded-lg font-medium">
+                                <span className="px-3 py-1.5 bg-surface-light/50 text-gray-300 rounded-lg text-sm font-medium">
                                     {selectedTeamName}
                                 </span>
                             )}
-                            {(selectedLeague || selectedTournamentName || selectedTeamName) && (
+                            {(selectedLeague || selectedTeamName) && (
                                 <button
                                     onClick={() => {
                                         setSelectedLeague(null);
-                                        setSelectedTournamentId(null);
-                                        setSelectedTournamentName(null);
+                                        setSelectedTournamentIds([]);
+                                        setAvailableTournaments([]);
                                         setSelectedTeamId(null);
                                         setSelectedTeamName(null);
                                         setReportData(null);
                                     }}
-                                    className="ml-auto px-4 py-2 text-gray-400 hover:text-white text-sm font-medium"
+                                    className="ml-auto px-3 py-1.5 text-gray-400 hover:text-white text-xs font-medium"
                                 >
                                     Reset
                                 </button>
@@ -203,25 +218,7 @@ export default function ReportsPage() {
                         </AnimatePresence>
                     )}
 
-                    {currentSelectionStage === 'tournament' && selectedLeague && (
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key="tournament-selector"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3 }}
-                                className="w-full"
-                            >
-                                <TournamentSelector
-                                    regionName={selectedLeague.regionName}
-                                    onSelectTournament={handleSelectTournament}
-                                />
-                            </motion.div>
-                        </AnimatePresence>
-                    )}
-
-                    {currentSelectionStage === 'team' && selectedTournamentId && (
+                    {currentSelectionStage === 'team' && selectedLeague && selectedTournamentIds.length > 0 && (
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key="team-selector"
@@ -232,7 +229,7 @@ export default function ReportsPage() {
                                 className="w-full"
                             >
                                 <TeamSelector
-                                    tournamentId={selectedTournamentId}
+                                    tournamentId={selectedTournamentIds[0]}
                                     onSelectTeam={handleSelectTeam}
                                 />
                             </motion.div>
@@ -251,30 +248,56 @@ export default function ReportsPage() {
                             className="space-y-8"
                         >
                             {/* Report Header Card */}
-                            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-surface-light/30 p-8">
+                            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-surface-light/20 p-8 shadow-2xl">
                                 <div className="absolute top-0 right-0 p-32 bg-primary/10 rounded-full blur-3xl" />
 
-                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                                     <div className="flex items-center gap-6">
                                         {/* Simplified Team Logo/Name Display */}
-                                        <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center border border-white/10 shadow-lg">
-                                            <span className="text-3xl font-bold">{selectedTeamName?.substring(0, 2).toUpperCase()}</span>
+                                        <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center border border-white/10 shadow-xl overflow-hidden">
+                                            {reportData.team_logo ? (
+                                                <img src={reportData.team_logo} alt={selectedTeamName || ''} className="w-full h-full object-contain p-2" />
+                                            ) : (
+                                                <span className="text-3xl font-black text-primary">{selectedTeamName?.substring(0, 2).toUpperCase()}</span>
+                                            )}
                                         </div>
                                         <div>
-                                            <h2 className="text-3xl font-bold text-white mb-2">{selectedTeamName}</h2>
-                                            <div className="flex items-center gap-2">
-                                                <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest rounded border border-primary/20">{selectedLeague?.name || 'N/A'}</span>
-                                                <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-widest rounded border border-green-500/10">Active</span>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-black uppercase tracking-widest rounded-full border border-primary/20">{selectedLeague?.name || 'N/A'}</span>
+                                                <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-black uppercase tracking-widest rounded-full border border-green-500/10">Active Analysis</span>
+                                            </div>
+                                            <h2 className="text-4xl font-black text-white tracking-tight">{selectedTeamName}</h2>
+                                            
+                                            {/* Tournament Toggle Buttons */}
+                                            <div className="mt-6">
+                                                <p className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Include Tournaments:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {availableTournaments.map(t => (
+                                                        <button
+                                                            key={t.id}
+                                                            onClick={() => toggleTournament(t.id)}
+                                                            className={cn(
+                                                                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                                                                selectedTournamentIds.includes(t.id)
+                                                                    ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
+                                                                    : "bg-surface border-white/10 text-gray-400 hover:bg-surface-light hover:border-white/20 hover:text-gray-200"
+                                                            )}
+                                                        >
+                                                            {selectedTournamentIds.includes(t.id) && <Check className="w-3.5 h-3.5" />}
+                                                            {t.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-3">
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-colors border border-white/5">
-                                            <FileText className="w-4 h-4" /> Save Report
+                                    <div className="flex gap-4">
+                                        <button className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-black transition-all border border-white/10 hover:scale-105 active:scale-95 shadow-lg">
+                                            <FileText className="w-4 h-4" /> Export
                                         </button>
-                                        <Link href={`/drafts?teamId=${selectedTeamId}&tournamentId=${selectedTournamentId}`} className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/25">
-                                            <Download className="w-4 h-4" /> View Draft History
+                                        <Link href={`/drafts?teamId=${selectedTeamId}&tournamentId=${selectedTournamentIds[0]}`} className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-black transition-all shadow-xl shadow-primary/20 hover:scale-105 active:scale-95">
+                                            <TrendingUp className="w-4 h-4" /> Match History
                                         </Link>
                                     </div>
                                 </div>
@@ -298,13 +321,11 @@ export default function ReportsPage() {
                             <div className="text-center space-y-2">
                                 <p className="text-xl font-bold text-gray-300">
                                     {currentSelectionStage === 'league' && "Select a league to begin"
-                                        || currentSelectionStage === 'tournament' && "Select a tournament to continue"
                                         || currentSelectionStage === 'team' && "Select a team to generate the report"
                                         || "Select options above to generate report"}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     {currentSelectionStage === 'league' && "Choose from the available leagues above"
-                                        || currentSelectionStage === 'tournament' && "Pick a tournament from the cards above"
                                         || currentSelectionStage === 'team' && "Browse teams and select one to analyze"
                                         || "Follow the steps above to generate your report"}
                                 </p>

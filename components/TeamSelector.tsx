@@ -9,6 +9,7 @@ import TeamCard from './TeamCard';
 interface TeamNode {
   name: string;
   id: string;
+  logoUrl?: string;
 }
 
 interface GetTournamentResponse {
@@ -40,6 +41,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({ tournamentId, onSelectTeam 
               teams{
                 name
                 id
+                logoUrl
               }
             }
           }

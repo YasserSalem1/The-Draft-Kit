@@ -29,10 +29,11 @@ interface GetTournamentsResponse {
 
 interface TournamentSelectorProps {
   regionName: string;
+  parentId?: string;
   onSelectTournament: (tournamentId: string, tournamentName: string) => void;
 }
 
-const TournamentSelector: React.FC<TournamentSelectorProps> = ({ regionName, onSelectTournament }) => {
+const TournamentSelector: React.FC<TournamentSelectorProps> = ({ regionName, parentId, onSelectTournament }) => {
   const [tournaments, setTournaments] = useState<TournamentNode[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,44 +50,23 @@ const TournamentSelector: React.FC<TournamentSelectorProps> = ({ regionName, onS
         let cursor: string | null = null;
         let fetchedTotalCount = 0;
 
-        // Fetch all pages of tournaments
-        while (hasNextPage) {
-          const query = cursor
-            ? `
-              query GetTournaments($cursor: Cursor!) {
-                tournaments (filter:{name:{contains:"${regionName}"},hasChildren:{equals:true}}, after: $cursor) {
+        // Fetch tournaments
+        const fetchOnce = async () => {
+          const query = `
+              query GetTournaments($cursor: Cursor) {
+                tournaments (filter: {name: {contains: "${regionName}"}, hasChildren: {equals: true}}, first: 50, after: $cursor) {
                   pageInfo {
-                    hasPreviousPage
                     hasNextPage
-                    startCursor
                     endCursor
                   }
                   totalCount
                   edges {
-                    cursor
                     node {
                       name
                       id
-                    }
-                  }
-                }
-              }
-            `
-            : `
-              query GetTournaments {
-                tournaments (filter:{name:{contains:"${regionName}"},hasChildren:{equals:true}}) {
-                  pageInfo {
-                    hasPreviousPage
-                    hasNextPage
-                    startCursor
-                    endCursor
-                  }
-                  totalCount
-                  edges {
-                    cursor
-                    node {
-                      name
-                      id
+                      parent {
+                        id
+                      }
                     }
                   }
                 }
@@ -94,25 +74,35 @@ const TournamentSelector: React.FC<TournamentSelectorProps> = ({ regionName, onS
             `;
 
           const variables = cursor ? { cursor } : {};
-          const response = await graphqlRequest<GetTournamentsResponse>(query, variables);
+          const response = await graphqlRequest<any>(query, variables);
 
           if (response.errors) {
-            throw new Error(response.errors.map(err => err.message).join(', '));
+            throw new Error(response.errors.map((err: any) => err.message).join(', '));
           }
 
           const tournamentsData = response.data?.tournaments;
           if (tournamentsData) {
-            const pageTournaments = tournamentsData.edges.map(edge => edge.node);
+            let pageTournaments = tournamentsData.edges.map((edge: any) => edge.node);
+            
+            // Client-side filtering by parentId if provided
+            if (parentId) {
+              pageTournaments = pageTournaments.filter((t: any) => t.parent?.id === parentId);
+            }
+
             allTournaments = [...allTournaments, ...pageTournaments];
             hasNextPage = tournamentsData.pageInfo.hasNextPage;
             cursor = tournamentsData.pageInfo.endCursor;
-            // Set total count from first page
+            
             if (fetchedTotalCount === 0 && tournamentsData.totalCount) {
               fetchedTotalCount = tournamentsData.totalCount;
             }
           } else {
             hasNextPage = false;
           }
+        };
+
+        while (hasNextPage) {
+          await fetchOnce();
         }
 
         setTournaments(allTournaments);
