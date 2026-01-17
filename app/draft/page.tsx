@@ -455,11 +455,6 @@ function DraftPageContent() {
                 )}
             </AnimatePresence>
 
-            {/* Fearless Ban Strip */}
-            <div className="w-full border-b border-white/5 bg-black/20 backdrop-blur-sm z-20 relative">
-                <FearlessBanStrip />
-            </div>
-
             {/* MAIN CONTENT AREA - Symmetric 3-Column Layout */}
             <div className="flex-1 w-full max-w-[1920px] mx-auto p-6 relative z-10 min-h-0 flex flex-col pt-24">
                 <div className="flex-1 grid grid-cols-12 gap-6 min-h-0 h-full">
@@ -516,45 +511,50 @@ function DraftPageContent() {
                     <div className="col-span-12 xl:col-span-6 flex flex-col h-full bg-[#0C0E14] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden relative ring-1 ring-white/5">
 
                         {/* 1. Header: Scoreboard / Status */}
-                        <div className="h-24 bg-gradient-to-b from-white/5 to-transparent border-b border-white/5 flex items-center justify-between px-8 relative z-20">
-                            {/* Blue Bans */}
-                            <div className="flex gap-2">
-                                {blueBans.map((champ, i) => (
-                                    <BanSlot key={`blue-ban-${i}`} champion={champ} side="blue" isActive={isStarted && isBlueTurn && !isPickPhase && currentStep?.index === i} />
-                                ))}
-                            </div>
+                        <div className="h-auto bg-gradient-to-b from-white/5 to-transparent border-b border-white/5 flex flex-col relative z-20">
+                            <div className="h-24 flex items-center justify-between px-8">
+                                {/* Blue Bans */}
+                                <div className="flex gap-2">
+                                    {blueBans.map((champ, i) => (
+                                        <BanSlot key={`blue-ban-${i}`} champion={champ} side="blue" isActive={isStarted && isBlueTurn && !isPickPhase && currentStep?.index === i} />
+                                    ))}
+                                </div>
 
-                            {/* Center Status Display */}
-                            <div className="flex flex-col items-center">
-                                {!isStarted ? (
-                                    <button onClick={handleInitializeDraft} className="px-8 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">Start Draft</button>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">
-                                            {playersLocked ? "Current Turn" : "Preparation Phase"}
+                                {/* Center Status Display */}
+                                <div className="flex flex-col items-center">
+                                    {!isStarted ? (
+                                        <button onClick={handleInitializeDraft} className="px-8 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">Start Draft</button>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">
+                                                {playersLocked ? "Current Turn" : "Preparation Phase"}
+                                            </div>
+                                            {playersLocked ? (
+                                                <div className={cn(
+                                                    "text-2xl font-black italic uppercase tracking-wider animate-pulse",
+                                                    currentStep?.side === 'blue' ? "text-blue-400" : "text-red-500"
+                                                )}>
+                                                    {currentStep?.side} {currentStep?.action}
+                                                </div>
+                                            ) : (
+                                                <div className="text-xl font-black italic uppercase tracking-wider text-primary">
+                                                    Select Starters
+                                                </div>
+                                            )}
                                         </div>
-                                        {playersLocked ? (
-                                            <div className={cn(
-                                                "text-2xl font-black italic uppercase tracking-wider animate-pulse",
-                                                currentStep?.side === 'blue' ? "text-blue-400" : "text-red-500"
-                                            )}>
-                                                {currentStep?.side} {currentStep?.action}
-                                            </div>
-                                        ) : (
-                                            <div className="text-xl font-black italic uppercase tracking-wider text-primary">
-                                                Select Starters
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                    )}
+                                </div>
+
+                                {/* Red Bans */}
+                                <div className="flex gap-2">
+                                    {redBans.map((champ, i) => (
+                                        <BanSlot key={`red-ban-${i}`} champion={champ} side="red" isActive={isStarted && isRedTurn && !isPickPhase && currentStep?.index === i} />
+                                    ))}
+                                </div>
                             </div>
 
-                            {/* Red Bans */}
-                            <div className="flex gap-2">
-                                {redBans.map((champ, i) => (
-                                    <BanSlot key={`red-ban-${i}`} champion={champ} side="red" isActive={isStarted && isRedTurn && !isPickPhase && currentStep?.index === i} />
-                                ))}
-                            </div>
+                            {/* Fearless Ban Strip - Relocated below current bans */}
+                            <FearlessBanStrip />
                         </div>
 
                         {/* 2. Main Content Area */}

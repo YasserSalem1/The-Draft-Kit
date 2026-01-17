@@ -5,6 +5,7 @@ import { Player } from '@/lib/data/teams';
 import { cn } from '@/lib/utils';
 import { User, X } from 'lucide-react';
 import { Champion, getChampionIconUrl, getLatestVersion } from '@/lib/api/ddragon';
+import { isFlexPick } from '@/lib/utils/flex-pick';
 import { useEffect, useState } from 'react';
 
 interface PlayerCardProps {
@@ -87,14 +88,21 @@ export function PlayerCard({ player, teamColor, side, onClick, onRemove, isSelec
                     <span className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none truncate max-w-[180px]">
                         {player.name}
                     </span>
-                    {pickedChampion && pickedChampion.name !== player.name && (
-                        <span className={cn(
-                            "text-xs font-bold uppercase tracking-wider mt-1",
-                            isBlue ? "text-blue-400" : "text-red-400"
-                        )}>
-                            {pickedChampion.name}
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {pickedChampion && pickedChampion.name !== player.name && (
+                            <span className={cn(
+                                "text-xs font-bold uppercase tracking-wider mt-1",
+                                isBlue ? "text-blue-400" : "text-red-400"
+                            )}>
+                                {pickedChampion.name}
+                            </span>
+                        )}
+                        {pickedChampion && isFlexPick(pickedChampion.name) && (
+                            <span className="mt-1 px-1.5 py-0.5 rounded bg-primary/20 border border-primary/30 text-[8px] font-black text-primary uppercase tracking-widest">
+                                Flex Pick
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Spacer to push content to sides */}

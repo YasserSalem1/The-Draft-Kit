@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useDraft } from '@/lib/draft/draft-context';
 import { useSeries } from '@/lib/draft/series-context';
 import championRoles from '@/champion_role.json';
+import { isFlexPick } from '@/lib/utils/flex-pick';
 
 const ROLES = ['All', 'Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 
@@ -182,6 +183,12 @@ export function ChampionGrid({
                                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                             loading="lazy"
                                         />
+                                        {/* Flex Indicator */}
+                                        {isFlexPick(champ.name) && (
+                                            <div className="absolute top-0 right-0 bg-primary/80 backdrop-blur-sm px-1 py-0.5 rounded-bl text-[8px] font-black text-white uppercase tracking-tighter z-20">
+                                                Flex
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Name Tooltip */}

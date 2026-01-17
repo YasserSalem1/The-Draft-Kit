@@ -42,11 +42,9 @@ const initialSeriesState: SeriesState = {
 function calcFearlessBans(games: GameRecord[]): Set<string> {
   const bans = new Set<string>();
   for (const g of games) {
-    if (g.winner === 'blue') {
-      g.draftState.bluePicks.forEach(c => c && bans.add(c.id));
-    } else if (g.winner === 'red') {
-      g.draftState.redPicks.forEach(c => c && bans.add(c.id));
-    }
+    // Standard Fearless: All champions picked in previous games are banned
+    g.draftState.bluePicks.forEach(c => c && bans.add(c.id));
+    g.draftState.redPicks.forEach(c => c && bans.add(c.id));
   }
   return bans;
 }
