@@ -1,59 +1,60 @@
 
-        Matchup: Fnatic vs Movistar KOI
-        Current Phase: Ban Phase 1
+        Matchup: DRX vs KT
+        Current Phase: Ban Phase 2
         Active Turn: RED Team is BANing.
 
         Draft So Far:
-        Blue Bans: ['Aatrox', 'Pantheon', 'Ryze']
-        Red Bans: ['Azir', 'Wukong']
-        Blue Picks: []
-        Red Picks: []
+        Blue Bans: ['Azir', 'Taliyah', 'Varus']
+        Red Bans: ['Pantheon', 'Yunara', 'Wukong']
+        Blue Picks: ['Ryze', 'Gwen', 'Aurora']
+        Red Picks: ['Xin Zhao', 'Annie', 'Rumble']
         
         Team Reports & Analysis:
         === BLUE TEAM ===
-        Team: Fnatic
-- Games Analyzed: 25
+        Team: DRX
+- Games Analyzed: 34
 - Tendencies: Top:Prefers counter-picking and split-pushing.; Jungle:Focuses on early ganks and securing dragons.; Mid:Plays control mages and roams frequently.; ADC:Favors high-damage ADCs with strong late-game scaling.; Support:Engage supports with strong crowd control.
-- Most Banned By Them (Blue): Neeko(5), Poppy(4), Nautilus(4), Vi(3), Pantheon(3), Lillia(2), Trundle(2), Thresh(2)
-- Most Banned By Them (Red): Azir(10), Yunara(9), Poppy(6), Varus(4), Sion(3), Vi(3), Pantheon(2), Xayah(2)
-- Target Bans Against Them (Blue): Azir(7), Gwen(5), Yunara(5), Varus(3), Rumble(3), Sion(2), Wukong(2), Ornn(2)
-- Target Bans Against Them (Red): Rakan(6), Poppy(5), Vi(4), Trundle(4), Neeko(4), Pantheon(4), Lucian(3), Rumble(3)
+- Most Banned By Them (Blue): Varus(11), Alistar(7), Taliyah(7), Yone(6), Neeko(5), Vi(4), Nocturne(3), Leona(3)
+- Most Banned By Them (Red): Pantheon(12), Azir(10), Yunara(8), Varus(5), Taliyah(4), Rakan(4), Neeko(4), Gwen(4)
+- Target Bans Against Them (Blue): Pantheon(12), Azir(9), Yunara(8), Wukong(4), Poppy(4), Kai'Sa(4), Taliyah(3), Trundle(3)
+- Target Bans Against Them (Red): Varus(7), Poppy(7), Aurora(6), Alistar(6), Taliyah(6), Neeko(5), Wukong(5), Annie(4)
 - Frequent Bans: Renekton, Lucian, Thresh
 - Comfort Picks: Lee Sin, Azir, Aphelios
-- Priority B1 Picks: Yunara(2), Azir(2), Trundle(1), Rumble(1), Neeko(1)
-- Priority R1/R2 Picks: Wukong(5), Rumble(2), Kai'Sa(2), Maokai(2), Vi(2)
-- Preferred Blind Picks: Wukong(4), Rumble(3), Azir(3), Neeko(3), Sion(3), Ambessa(2), Trundle(2), Ezreal(2)
-- Preferred Counter Picks: Kai'Sa(4), Lucian(3), Braum(3), Jarvan IV(3), Orianna(2), Alistar(2), Annie(2), Yorick(2)
+- Priority B1 Picks: Ryze(3), Wukong(3), Xin Zhao(3), Varus(1), Yunara(1)
+- Priority R1/R2 Picks: Rumble(4), Aurora(3), Gwen(3), Xin Zhao(3), Taliyah(2)
+- Preferred Blind Picks: Aurora(7), Ryze(7), Taliyah(5), Ambessa(5), Xin Zhao(5), Wukong(4), Jarvan IV(4), Azir(3)
+- Preferred Counter Picks: Sivir(6), Lucian(5), Xin Zhao(4), Gwen(4), Miss Fortune(3), Rumble(3), Leona(3), K'Sante(3)
 
 --- Player Pools & Stats ---
-Player Oscarinin: Rumble(4g 100%wr), Sion(3g 67%wr), Ambessa(2g 50%wr), Gragas(2g 50%wr), Yorick(2g 50%wr)
-Player Razork: Wukong(6g 83%wr), Jarvan IV(4g 50%wr), Poppy(3g 67%wr), Vi(3g 33%wr), Trundle(2g 50%wr)
-Player Poby: Orianna(4g 100%wr), Annie(3g 0%wr), Azir(3g 67%wr), Galio(3g 67%wr), Ryze(2g 100%wr)
-Player Upset: Kai'Sa(5g 60%wr), Lucian(3g 0%wr), Ezreal(3g 67%wr), Yunara(3g 100%wr), Varus(2g 50%wr)
-Player Mikyx: Braum(4g 25%wr), Neeko(4g 50%wr), Alistar(3g 100%wr), Rell(2g 50%wr), Nautilus(2g 100%wr)
+Player Teddy: Sivir(7g 43%wr), Lucian(5g 40%wr), Jhin(4g 25%wr), Miss Fortune(3g 67%wr), Kai'Sa(3g 33%wr)
+Player Rich: Ambessa(7g 57%wr), Gwen(7g 43%wr), Rumble(5g 20%wr), K'Sante(4g 25%wr), Renekton(2g 50%wr)
+Player Andil: Alistar(6g 17%wr), Nautilus(5g 40%wr), Rakan(4g 50%wr), Leona(3g 67%wr), Neeko(3g 33%wr)
+Player Sponge: Xin Zhao(9g 78%wr), Wukong(5g 60%wr), Jarvan IV(5g 20%wr), Pantheon(4g 50%wr), Trundle(3g 0%wr)
+Player kyeahoo: Ryze(7g 43%wr), Aurora(5g 40%wr), Taliyah(5g 60%wr), Azir(3g 33%wr), Annie(3g 67%wr)
 
         
         === RED TEAM ===
-        Team: Movistar KOI
-- Games Analyzed: 26
+        Team: KT
+- Games Analyzed: 41
 - Tendencies: Top:Prefers counter-picking and split-pushing.; Jungle:Focuses on early ganks and securing dragons.; Mid:Plays control mages and roams frequently.; ADC:Favors high-damage ADCs with strong late-game scaling.; Support:Engage supports with strong crowd control.
-- Most Banned By Them (Blue): Poppy(9), Jax(6), Annie(3), Taliyah(3), Varus(3), Yone(2), Corki(2), Aphelios(2)
-- Most Banned By Them (Red): Azir(4), Varus(3), Yunara(3), Gwen(2), Ziggs(2), Braum(2), Jayce(2), Sion(2)
-- Target Bans Against Them (Blue): Yunara(8), Azir(8), Varus(6), Neeko(5), Ambessa(5), Gwen(4), Vi(4), Pantheon(4)
-- Target Bans Against Them (Red): Yunara(3), Ambessa(3), Gwen(3), Taliyah(3), Trundle(2), Nautilus(2), Galio(2), Varus(2)
+- Most Banned By Them (Blue): Poppy(10), Varus(9), Neeko(9), Vi(8), Aurora(7), Gwen(7), Bard(6), Sivir(5)
+- Most Banned By Them (Red): Azir(16), Yunara(10), Pantheon(9), Vi(5), Kai'Sa(5), Rakan(4), Elise(3), Bard(3)
+- Target Bans Against Them (Blue): Azir(21), Pantheon(13), Yunara(8), Wukong(7), Alistar(6), Lucian(5), Ryze(4), Poppy(4)
+- Target Bans Against Them (Red): Taliyah(11), Neeko(11), Trundle(6), Jarvan IV(5), Sivir(4), Corki(4), Ryze(3), Alistar(3)
 - Frequent Bans: Renekton, Lucian, Thresh
 - Comfort Picks: Lee Sin, Azir, Aphelios
-- Priority B1 Picks: Azir(4), Taliyah(2), Sion(1), Gwen(1), Varus(1)
-- Priority R1/R2 Picks: Ryze(3), Pantheon(2), Taliyah(2), Rumble(2), Yone(1)
-- Preferred Blind Picks: Azir(4), Ryze(4), Taliyah(4), Pantheon(4), Rakan(3), Rell(3), Aurora(2), Neeko(2)
-- Preferred Counter Picks: Sivir(4), Wukong(3), Galio(3), Ziggs(3), Pantheon(2), Ezreal(2), Ornn(2), Alistar(2)
+- Priority B1 Picks: Taliyah(4), Trundle(4), Wukong(2), Pantheon(2), Rumble(2)
+- Priority R1/R2 Picks: Annie(5), Xin Zhao(5), Ryze(4), Wukong(2), Rumble(2)
+- Preferred Blind Picks: Trundle(10), Xin Zhao(8), Taliyah(6), Wukong(5), Jhin(4), Jarvan IV(4), Sion(4), Ryze(4)
+- Preferred Counter Picks: Nautilus(8), Corki(5), Annie(5), Ambessa(5), Leona(4), Ryze(4), Ezreal(4), Rakan(3)
 
 --- Player Pools & Stats ---
-Player Myrwn: Sion(4g 50%wr), Ambessa(4g 100%wr), Rumble(3g 67%wr), Yorick(3g 33%wr), Aurora(2g 0%wr)
-Player Elyoya: Pantheon(6g 67%wr), Wukong(4g 25%wr), Poppy(3g 100%wr), Xin Zhao(2g 0%wr), Jarvan IV(2g 100%wr)
-Player Jojopyun: Ryze(5g 80%wr), Azir(4g 25%wr), Yone(4g 50%wr), Taliyah(4g 75%wr), Galio(3g 33%wr)
-Player Supa: Sivir(4g 50%wr), Ezreal(3g 100%wr), Aphelios(3g 67%wr), Kai'Sa(3g 33%wr), Zeri(3g 67%wr)
-Player Alvaro: Rakan(5g 60%wr), Alistar(4g 75%wr), Rell(4g 25%wr), Neeko(3g 33%wr), Braum(3g 67%wr)
+Player PerfecT: Rumble(7g 29%wr), Sion(7g 29%wr), Ambessa(6g 33%wr), Renekton(5g 40%wr), Gwen(4g 75%wr)
+Player Bdd: Taliyah(8g 25%wr), Annie(8g 38%wr), Ryze(8g 38%wr), Ahri(3g 0%wr), Aurora(2g 100%wr)
+Player Cuzz: Trundle(11g 9%wr), Xin Zhao(8g 25%wr), Wukong(5g 80%wr), Jarvan IV(5g 60%wr), Skarner(3g 0%wr)
+Player deokdam: Jhin(7g 14%wr), Corki(6g 50%wr), Ziggs(5g 60%wr), Sivir(5g 20%wr), Ezreal(5g 80%wr)
+Player Peter: Nautilus(8g 50%wr), Alistar(6g 67%wr), Leona(6g 17%wr), Rakan(5g 60%wr), Neeko(3g 67%wr)
+Player Way: Rell(2g 0%wr), Nautilus(1g 0%wr), Karma(1g 0%wr), Rakan(1g 0%wr), Neeko(1g 0%wr)
 
         
         TASK:

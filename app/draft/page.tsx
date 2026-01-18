@@ -184,104 +184,114 @@ function DraftPageContent() {
         fetchReports();
     }, [blueTeamId, redTeamId, blueTournamentId, redTournamentId]);
 
-    // AI Auto-Fill Ref - Prevents double calling
-    const aiProcessingStep = useRef<number>(-1);
+    // AI State (Lifted from AIFocusMode)
+    const [recommendations, setRecommendations] = useState<any[]>([]);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
+    const [aiActionMessage, setAiActionMessage] = useState<string | null>(null); // New state for visual feedback
+    const lastProcessedStep = useRef<number>(-1);
 
-    // AI Auto-Pick Logic
+    // AI Fetch Function
+    const fetchPredictions = async () => {
+        if (!currentStep) return;
+
+        // Prevent double fetch if already loading or already fetched for this step
+        if (isAiLoading || lastProcessedStep.current === currentStepIndex) return;
+
+        setIsAiLoading(true);
+        setAiError(null);
+        try {
+            const payload = {
+                currentStepIndex,
+                blueBans,
+                redBans,
+                bluePicks,
+                redPicks,
+                blueTeam: {
+                    name: blueTeam.shortName || blueTeam.name,
+                    players: blueTeam.players,
+                    ...(blueReport || {})
+                },
+                redTeam: {
+                    name: redTeam.shortName || redTeam.name,
+                    players: redTeam.players,
+                    ...(redReport || {})
+                }
+            };
+
+            const res = await fetch('http://localhost:5001/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("AI Server Error");
+
+            const data = await res.json();
+            setRecommendations(data.recommendations || []);
+            lastProcessedStep.current = currentStepIndex; // Mark as processed
+        } catch (err) {
+            console.error(err);
+            setAiError("Failed to connect to AI Server.");
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
+    // Effect: Clear recommendations on step change
+    useEffect(() => {
+        if (lastProcessedStep.current !== currentStepIndex) {
+            setRecommendations([]);
+            setAiError(null);
+        }
+    }, [currentStepIndex]);
+
+    // Effect: Auto-Fetch for Visual Mode OR Auto-Pick Mode
+    useEffect(() => {
+        if (!isStarted || !currentStep) return;
+
+        const isBlueTurn = currentStep.side === 'blue';
+        const isRedTurn = currentStep.side === 'red';
+        const isAiActiveForTurn = (isBlueTurn && blueAiEnabled) || (isRedTurn && redAiEnabled);
+
+        // Fetch if Visual Mode is OPEN or Takeover is ACTIVE, and we haven't fetched yet
+        if ((aiMode || isAiActiveForTurn) && lastProcessedStep.current !== currentStepIndex && !isAiLoading) {
+            fetchPredictions();
+        }
+    }, [currentStepIndex, aiMode, blueAiEnabled, redAiEnabled, isStarted, currentStep, isAiLoading]);
+
+
+    // Effect: Auto-Pick Execution (Takeover)
     useEffect(() => {
         if (!isStarted || !currentStep || !allChampions.length) return;
-
-        // Prevent double execution for the same step
-        if (aiProcessingStep.current === currentStepIndex) {
-            return;
-        }
 
         const isBlueTurn = currentStep.side === 'blue';
         const isRedTurn = currentStep.side === 'red';
 
-        // Only proceed if the active side has AI enabled
+        // Check if Takeover is enabled for current side
         if ((isBlueTurn && blueAiEnabled) || (isRedTurn && redAiEnabled)) {
-            // Mark this step as processing
-            aiProcessingStep.current = currentStepIndex;
 
-            const executeAiTurn = async () => {
-                try {
-                    // 1. Sync State to Backend
-                    const backendPayload = {
-                        blue_team: {
-                            name: blueTeam.name,
-                            bans: blueBans.map(c => c?.name || null),
-                            picks: bluePicks.map(c => c?.name || null),
-                            ...(blueReport || {}) // Send full report data
-                        },
-                        red_team: {
-                            name: redTeam.name,
-                            bans: redBans.map(c => c?.name || null),
-                            picks: redPicks.map(c => c?.name || null),
-                            ...(redReport || {}) // Send full report data
-                        },
-                        current_step: currentStepIndex,
-                        phase: currentStepIndex < 6 ? 'ban_1' :
-                            currentStepIndex < 12 ? 'pick_1' :
-                                currentStepIndex < 16 ? 'ban_2' : 'pick_2' // Approximation, server handles fine details
-                    };
+            // If we have recommendations, PICK IMMEDIATELY
+            if (recommendations.length > 0) {
+                const topRec = recommendations[0];
+                const champName = typeof topRec === 'string' ? topRec : topRec.championName;
 
-                    console.log("[DraftPage] AI Turn Payload:", JSON.stringify(backendPayload, null, 2));
-                    console.log("[DraftPage] Blue Report State:", blueReport ? "Loaded" : "Null");
-                    console.log("[DraftPage] Red Report State:", redReport ? "Loaded" : "Null");
+                const validPick = allChampions.find(c => c.name.toLowerCase() === champName.toLowerCase());
 
-                    await fetch('http://localhost:5001/draft/load', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(backendPayload)
-                    });
+                if (validPick && !unavailableChampionIds.has(validPick.id)) {
+                    // Feedback: Show message
+                    setAiActionMessage(`AI Taking Over: ${validPick.name}...`);
 
-                    // 2. Get Recommendations
-                    const res = await fetch('http://localhost:5001/recommendations');
-                    const data = await res.json();
-
-                    // Recommendations might be strings or objects
-                    const rawRecommendations = data.recommendations || [];
-                    const recommendations: string[] = rawRecommendations.map((r: any) =>
-                        typeof r === 'string' ? r : r.championName
-                    );
-
-                    // 3. Find first valid pick
-                    // If no recommendations, we might want to pick ANY valid champ as fallback? 
-                    // For now, let's rely on recommendations. 
-                    let validPick: Champion | undefined;
-
-                    for (const name of recommendations) {
-                        const champ = allChampions.find(c => c.name.toLowerCase() === name.toLowerCase());
-                        if (champ && !unavailableChampionIds.has(champ.id)) {
-                            validPick = champ;
-                            break;
-                        }
-                    }
-
-                    // Fallback: Pick highest winrate or just random if strict AI required?
-                    // Let's stick to recommendations for now. If empty, maybe do nothing (human intervention).
-
-                    if (validPick) {
-                        // Small delay for UX
-                        const timer = setTimeout(() => {
-                            selectChampion(validPick!);
-                        }, 1500);
-                        return () => clearTimeout(timer);
-                    } else {
-                        console.warn('AI could not find a valid champion to pick.');
-                    }
-
-                } catch (e) {
-                    console.error('AI Turn Execution Failed:', e);
-                    // Reset lock on failure so it can retry if triggered again? 
-                    // Or keep locked to prevent spam loop. keeping locked seems safer.
+                    // Execute Pick
+                    const timer = setTimeout(() => {
+                        selectChampion(validPick);
+                        setAiActionMessage(null); // Clear message
+                    }, 1500); // Small delay for visual clarity
+                    return () => clearTimeout(timer);
                 }
-            };
-
-            executeAiTurn();
+            }
         }
-    }, [currentStep, currentStepIndex, isStarted, blueAiEnabled, redAiEnabled, allChampions, unavailableChampionIds, blueTeam, redTeam, blueBans, redBans, bluePicks, redPicks]);
+    }, [currentStep, currentStepIndex, isStarted, blueAiEnabled, redAiEnabled, allChampions, unavailableChampionIds, recommendations]);
     const [showReport, setShowReport] = useState(false); // Report Modal State
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string, report: ScoutingReportData | null } | null>(null);
@@ -491,6 +501,8 @@ function DraftPageContent() {
                 setAiMode={setAiMode}
                 onOpenReport={() => setShowReport(true)}
             />
+
+            {/* AI Action Toast Removed */}
 
             <AnimatePresence>
                 {showReport && (
@@ -780,7 +792,19 @@ function DraftPageContent() {
 
                             {/* AI Overlay */}
                             <AnimatePresence>
-                                {aiMode && <AIFocusMode blueTeam={blueTeam} redTeam={redTeam} blueReport={blueReport} redReport={redReport} />}
+                                {aiMode && (
+                                    <AIFocusMode
+                                        blueTeam={blueTeam}
+                                        redTeam={redTeam}
+                                        blueReport={blueReport}
+                                        redReport={redReport}
+                                        recommendations={recommendations}
+                                        isLoading={isAiLoading}
+                                        error={aiError}
+                                        isTakeover={(currentStep?.side === 'blue' && blueAiEnabled) || (currentStep?.side === 'red' && redAiEnabled)}
+                                        aiActionMessage={aiActionMessage}
+                                    />
+                                )}
                             </AnimatePresence>
                         </div>
                     </div>
