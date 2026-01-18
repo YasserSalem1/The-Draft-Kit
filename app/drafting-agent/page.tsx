@@ -259,20 +259,10 @@ export default function DraftingAgentPage() {
                 // For now, let's just confirm it loaded.
                 console.log("Draft state synced with backend.");
 
-                // Trigger a short "thinking" update to get new recommendations based on swap?
-                // Let's call chat with empty message to refresh context/recommendations
-                const chatResponse = await fetch(`${API_BASE}/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: `I swapped a pick to ${champion}. What do you think?` }),
-                });
-
-                if (chatResponse.ok) {
-                    const chatData = await chatResponse.json();
-                    setCurrentMessage(chatData.response);
-                    if (chatData.recommendations) setRecommendations(chatData.recommendations);
-                    // playTTS(chatData.response); // Optional: speak the reaction
-                }
+                // User Request: Clear suggestions, coach text, and DO NOT prompt the model again
+                setRecommendations([]);
+                setCurrentMessage('');
+                setUserTranscript('');
             }
         } catch (error) {
             console.error("Failed to sync swap:", error);
@@ -472,26 +462,6 @@ export default function DraftingAgentPage() {
                     )}
                 </AnimatePresence>
 
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={currentMessage}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="max-w-3xl text-center px-8 py-3 bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md shadow-2xl"
-                    >
-                        <p className="text-white/90 text-lg font-medium leading-relaxed">
-                            {isProcessing ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" />
-                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce [animation-delay:0.4s]" />
-                                </span>
-                            ) : currentMessage}
-                        </p>
-                    </motion.div>
-                </AnimatePresence>
-
                 <div className="flex items-center gap-4">
                     <motion.button
                         onClick={handleMicClick}
@@ -526,6 +496,6 @@ export default function DraftingAgentPage() {
                 <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[70%] bg-blue-900/10 rounded-full blur-[200px]" />
                 <div className="absolute bottom-[-30%] right-[-20%] w-[70%] h-[70%] bg-red-900/10 rounded-full blur-[200px]" />
             </div>
-        </main>
+        </main >
     );
 }

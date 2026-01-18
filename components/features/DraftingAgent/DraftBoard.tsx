@@ -25,6 +25,7 @@ interface DraftBoardProps {
         newChampion: string;
     } | null;
     onPickSwap?: (side: 'blue' | 'red', index: number, champion: string) => void;
+    coachMessage?: string;
 }
 
 export function DraftBoard({
@@ -35,7 +36,8 @@ export function DraftBoard({
     ddragonVersion,
     recommendations = [],
     swapPreview,
-    onPickSwap
+    onPickSwap,
+    coachMessage
 }: DraftBoardProps) {
     const [selectedSlot, setSelectedSlot] = React.useState<{ side: 'blue' | 'red', index: number } | null>(null);
 
@@ -137,50 +139,60 @@ export function DraftBoard({
 
     return (
         <div className="flex flex-col items-center w-full h-full overflow-hidden">
-            {/* Bans Section - Compact */}
-            <div className="flex items-center justify-between w-full px-4 py-2 bg-black/20 border-y border-white/5 backdrop-blur-md shrink-0 z-20">
-                <div className="flex items-center gap-4">
-                    <span className="text-blue-400/50 text-xs font-bold uppercase tracking-wider">Blue Bans</span>
-                    <div className="flex gap-1">
-                        {blueTeam.bans.map((ban, i) => renderBanSlot(ban, i, 'blue'))}
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-4 flex-row-reverse">
-                    <span className="text-red-400/50 text-xs font-bold uppercase tracking-wider">Red Bans</span>
-                    <div className="flex gap-1">
-                        {redTeam.bans.map((ban, i) => renderBanSlot(ban, i, 'red'))}
-                    </div>
-                </div>
-            </div>
-
             {/* Main Draft Area - Fits Height */}
-            <div className="flex-1 w-full grid grid-cols-[1fr_500px_1fr] gap-4 items-stretch px-4 py-2 min-h-0">
+            <div className="flex-1 w-full grid grid-cols-[540px_1fr_540px] gap-4 items-stretch px-8 py-4 min-h-0">
                 {/* Blue Team Picks */}
-                <div className="flex flex-col h-full px-8">
-                    <h2 className="text-blue-400 text-2xl font-black uppercase tracking-wider mb-2 flex items-center gap-4 shrink-0">
-                        {blueTeam.name}
-                        <div className="w-2 h-8 bg-blue-500 rounded-full" />
-                    </h2>
+                <div className="flex flex-col h-full px-0">
+                    <div className="flex flex-col gap-2 mb-4 shrink-0">
+                        <h2 className="text-blue-400 text-2xl font-black uppercase tracking-wider flex items-center gap-4">
+                            {blueTeam.name}
+                            <div className="w-2 h-8 bg-blue-500 rounded-full" />
+                        </h2>
+                        {/* Blue Bans */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-blue-400/50 text-xs font-bold uppercase tracking-wider">Bans</span>
+                            <div className="flex gap-1">
+                                {blueTeam.bans.map((ban, i) => renderBanSlot(ban, i, 'blue'))}
+                            </div>
+                        </div>
+                    </div>
                     <div className="flex-1 flex flex-col justify-between min-h-0">
                         {blueTeam.picks.map((pick, i) => renderPickSlot(pick, i, 'blue'))}
                     </div>
                 </div>
 
-                {/* Center Column: Recommendations & Status */}
-                <div className="h-full flex flex-col items-center justify-center gap-4 relative py-2 min-h-0">
+                {/* Center Column: Recommendations Only */}
+                <div className="flex flex-col items-center justify-center gap-6 h-full py-2 min-h-0 relative px-2">
 
-                    {/* Recommendations List (Horizontal Icons in Center) */}
-                    <div className="flex-1 flex flex-col items-center justify-center gap-2 min-h-0 overflow-hidden w-full">
+                    {/* Coach Message Bubble */}
+                    <AnimatePresence mode="wait">
+                        {coachMessage && (
+                            <motion.div
+                                key={coachMessage}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="w-full max-w-[450px] bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 backdrop-blur-sm shrink-0"
+                            >
+                                <p className="text-amber-400 text-xs font-medium leading-relaxed text-center">
+                                    {coachMessage}
+                                </p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Recommendations List (Wrapped 3-2 Layout) */}
+                    <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
                         {recommendations.length > 0 && (
-                            <div className="flex items-center justify-center gap-2 mb-2 shrink-0">
+                            <div className="flex items-center justify-center gap-2 mb-4 shrink-0">
                                 <span className={selectedSlot ? "text-green-400 animate-pulse uppercase tracking-widest text-sm font-bold" : "text-amber-400 uppercase tracking-widest text-sm font-bold"}>
                                     {selectedSlot ? "Click to Swap" : "Suggested"}
                                 </span>
                             </div>
                         )}
 
-                        <div className="flex flex-row flex-wrap justify-center items-center gap-4 overflow-y-auto w-full px-2 h-full content-center">
+                        {/* Constrained width to force 3 items then 2 items wrap */}
+                        <div className="flex flex-row flex-wrap justify-center items-center gap-4 w-full max-w-[500px]">
                             <AnimatePresence>
                                 {recommendations.slice(0, 5).map((champ, idx) => (
                                     <motion.div
@@ -189,35 +201,33 @@ export function DraftBoard({
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: idx * 0.05 }}
                                         className={`
-                                            relative group cursor-pointer w-32 h-[120px] rounded-xl overflow-hidden 
-                                            border transition-all shrink-0 hover:z-10 shadow-2xl
-                                            ${selectedSlot ? 'border-green-500/50 hover:border-green-400 hover:scale-110 shadow-[0_0_20px_rgba(74,222,128,0.4)]' : 'border-amber-500/30 hover:border-amber-400/80 bg-black/40 hover:bg-black/60'}
+                                            group cursor-pointer flex flex-col items-center
+                                            transition-all shrink-0 hover:z-10 hover:scale-105
                                         `}
                                         onClick={() => handleRecommendationClick(champ)}
                                     >
-                                        {/* Image (Centered Splash/Loading) */}
-                                        <div className="absolute inset-0">
+                                        {/* Card Container */}
+                                        <div className={`
+                                            relative w-[140px] h-[240px] rounded-lg overflow-hidden border-2 shadow-xl bg-black
+                                            ${selectedSlot ? 'border-green-500 shadow-[0_0_20px_rgba(74,222,128,0.4)]' : 'border-amber-500/30 hover:border-amber-400/80'}
+                                        `}>
+                                            {/* Image (Full Vertical) */}
                                             <img
                                                 src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionId(champ)}_0.jpg`}
                                                 alt={champ}
-                                                className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
-                                                style={{
-                                                    objectPosition: "top center"
-                                                }}
+                                                className="w-full h-full object-cover"
                                             />
-                                            {/* Gradient Overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+
+                                            {/* Hover Highlight */}
+                                            <div className={`absolute inset-0 border-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity ${selectedSlot ? 'border-green-400' : 'border-amber-400'}`} />
                                         </div>
 
-                                        {/* Name Overlay */}
-                                        <div className="absolute bottom-0 left-0 right-0 p-2 flex flex-col items-center">
-                                            <span className={`text-sm font-black uppercase tracking-wider text-center drop-shadow-md ${selectedSlot ? 'text-green-100' : 'text-amber-100'}`}>
+                                        {/* Name Below Card */}
+                                        <div className="mt-2 px-3 py-1 bg-black/60 border border-white/10 rounded-full backdrop-blur-sm">
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${selectedSlot ? 'text-green-300' : 'text-amber-100'}`}>
                                                 {champ}
                                             </span>
                                         </div>
-
-                                        {/* Hover Highlight/Border Effect */}
-                                        <div className={`absolute inset-0 border-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity ${selectedSlot ? 'border-green-400' : 'border-amber-400'}`} />
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
@@ -226,11 +236,20 @@ export function DraftBoard({
                 </div>
 
                 {/* Red Team Picks */}
-                <div className="flex flex-col h-full px-8">
-                    <h2 className="text-red-400 text-2xl font-black uppercase tracking-wider mb-2 flex items-center gap-4 flex-row-reverse shrink-0">
-                        {redTeam.name}
-                        <div className="w-2 h-8 bg-red-500 rounded-full" />
-                    </h2>
+                <div className="flex flex-col h-full px-0">
+                    <div className="flex flex-col gap-2 mb-4 shrink-0 items-end">
+                        <h2 className="text-red-400 text-2xl font-black uppercase tracking-wider flex items-center gap-4 flex-row-reverse">
+                            {redTeam.name}
+                            <div className="w-2 h-8 bg-red-500 rounded-full" />
+                        </h2>
+                        {/* Red Bans */}
+                        <div className="flex items-center gap-2 flex-row-reverse">
+                            <span className="text-red-400/50 text-xs font-bold uppercase tracking-wider">Bans</span>
+                            <div className="flex gap-1">
+                                {redTeam.bans.map((ban, i) => renderBanSlot(ban, i, 'red'))}
+                            </div>
+                        </div>
+                    </div>
                     <div className="flex-1 flex flex-col justify-between min-h-0">
                         {redTeam.picks.map((pick, i) => renderPickSlot(pick, i, 'red'))}
                     </div>

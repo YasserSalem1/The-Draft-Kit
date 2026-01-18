@@ -2,19 +2,18 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { X, BrainCircuit, Loader2 } from 'lucide-react';
+import { X, BrainCircuit } from 'lucide-react';
 import { getChampionIconUrl, getLatestVersion, getChampions, Champion } from '@/lib/api/ddragon';
 
 interface IntelligenceReportModalProps {
     onClose: () => void;
     blueTeam: any;
     redTeam: any;
+    blueReport?: any;
+    redReport?: any;
 }
 
-export function IntelligenceReportModal({ onClose, blueTeam, redTeam }: IntelligenceReportModalProps) {
-    const [strategy, setStrategy] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export function IntelligenceReportModal({ onClose, blueTeam, redTeam, blueReport, redReport }: IntelligenceReportModalProps) {
     const [version, setVersion] = useState('');
     const [champions, setChampions] = useState<Champion[]>([]);
 
@@ -25,30 +24,12 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam }: Intellig
                 const data = await getChampions();
                 setVersion(v);
                 setChampions(data);
-
-                // Fetch strategy
-                const res = await fetch('http://localhost:5001/strategy', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        blueTeam: { name: blueTeam.name, players: blueTeam.players },
-                        redTeam: { name: redTeam.name, players: redTeam.players }
-                    })
-                });
-
-                if (!res.ok) throw new Error("Failed to load strategy");
-
-                const strategyData = await res.json();
-                setStrategy(strategyData);
             } catch (err) {
-                console.error(err);
-                setError("Could not load Intelligence Report.");
-            } finally {
-                setLoading(false);
+                console.error("Failed to load champion data", err);
             }
         }
         init();
-    }, [blueTeam, redTeam]);
+    }, []);
 
     const getChampImage = (name: string) => {
         const champ = champions.find(c => c.name.toLowerCase() === name.toLowerCase());
@@ -61,21 +42,45 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam }: Intellig
         return getChampionIconUrl(version, champ.image.full);
     };
 
-    const renderPool = (title: string, list: string[], color: 'blue' | 'red') => (
-        <div className={`rounded-xl border ${color === 'blue' ? 'border-blue-500/20 bg-blue-900/10' : 'border-red-500/20 bg-red-900/10'} p-4 flex flex-col gap-3`}>
-            <h4 className={`text-xs font-black uppercase tracking-widest ${color === 'blue' ? 'text-blue-400' : 'text-red-400'}`}>{title}</h4>
-            <div className="grid grid-cols-5 gap-2">
-                {list?.map((name, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1 group">
-                        <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden relative group-hover:border-white/50 transition-colors">
-                            {getChampImage(name) && <img src={getChampImage(name)} alt={name} className="w-full h-full object-cover" />}
+    const renderChampItem = (name: string, count?: number, label?: string, large = false) => {
+        const imageUrl = getChampImage(name);
+        return (
+            <div className={`flex flex-col items-center gap-2 group ${large ? 'w-full' : ''}`}>
+                <div className={`${large ? 'w-16 h-16' : 'w-10 h-10'} rounded-2xl overflow-hidden border border-white/10 group-hover:border-amber-400 transition-colors shadow-lg relative`}>
+                    {imageUrl && <img src={imageUrl} alt={name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />}
+                    {count !== undefined && (
+                        <div className="absolute bottom-0 right-0 bg-black/80 backdrop-blur text-white text-[10px] font-bold px-1.5 py-0.5 rounded-tl-lg">
+                            {count}
                         </div>
-                        <span className="text-[9px] text-gray-400 uppercase font-bold truncate w-full text-center group-hover:text-white transition-colors">{name}</span>
-                    </div>
-                )) || <span className="text-gray-600 text-xs">No Data</span>}
+                    )}
+                </div>
+                <span className={`${large ? 'text-[10px]' : 'text-[9px]'} text-gray-400 uppercase font-bold truncate w-full text-center group-hover:text-white transition-colors`}>{label || name}</span>
             </div>
-        </div>
-    );
+        );
+    };
+
+    const matchPlayerToPool = (playerName: string, teamPools: Record<string, any[]>) => {
+        // Simple fuzzy match or direct match
+        if (!teamPools) return [];
+        // Try exact match first
+        if (teamPools[playerName]) return teamPools[playerName];
+
+        // Try case insensitive
+        const key = Object.keys(teamPools).find(k => k.toLowerCase() === playerName.toLowerCase());
+        if (key) return teamPools[key];
+
+        return [];
+    };
+
+    const getPlayerStats = (playerName: string, groupedStats: any) => {
+        if (!groupedStats) return null;
+        // Search across all roles
+        for (const role in groupedStats) {
+            const playerFn = groupedStats[role].find((p: any) => p.name?.toLowerCase() === playerName.toLowerCase());
+            if (playerFn) return playerFn;
+        }
+        return null;
+    };
 
     return (
         <motion.div
@@ -91,48 +96,193 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam }: Intellig
             <div className="max-w-6xl w-full h-[85vh] bg-[#0C0E14] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
 
                 {/* Header */}
-                <div className="h-20 border-b border-white/5 flex items-center px-8 bg-gradient-to-r from-cyan-900/20 to-transparent">
-                    <BrainCircuit className="w-8 h-8 text-cyan-400 mr-4" />
-                    <div>
-                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Match Intelligence</h2>
-                        <div className="text-xs font-bold text-cyan-500 uppercase tracking-widest">Pre-Match Strategy Analysis</div>
+                <div className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-gradient-to-r from-cyan-900/20 to-transparent">
+                    <div className="flex items-center">
+                        <BrainCircuit className="w-8 h-8 text-cyan-400 mr-4" />
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Intelligence Report</h2>
+                            <div className="text-xs font-bold text-cyan-500 uppercase tracking-widest">Pre-Match Strategy Analysis</div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                    {loading ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-4 text-cyan-500">
-                            <Loader2 className="w-12 h-12 animate-spin" />
-                            <span className="text-sm uppercase tracking-widest font-bold">Accessing Secure Database...</span>
-                        </div>
-                    ) : error ? (
-                        <div className="h-full flex items-center justify-center text-red-500 font-bold uppercase tracking-widest">
-                            {error}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 gap-12">
-                            {/* Blue Side */}
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-black text-blue-500 uppercase italic tracking-tighter border-b border-blue-500/20 pb-2">{blueTeam.name} Strategy</h3>
-
-                                {renderPool("Phase 1 Bans", strategy.blue_ban_phase_1, 'blue')}
-                                {renderPool("Phase 1 Picks (Core)", strategy.blue_pick_phase_1, 'blue')}
-                                {renderPool("Phase 2 Bans", strategy.blue_ban_phase_2, 'blue')}
-                                {renderPool("Phase 2 Picks (Rounding)", strategy.blue_pick_phase_2, 'blue')}
+                    <div className="grid grid-cols-2 gap-12">
+                        {/* Blue Side Scouting */}
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-4 border-b border-blue-500/20 pb-4">
+                                <h3 className="text-3xl font-black text-blue-500 uppercase italic tracking-tighter">{blueTeam.shortName} Habits</h3>
+                                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest ml-auto bg-blue-500/10 px-3 py-1 rounded-full">
+                                    {blueReport?.games_count || 0} Games Analyzed
+                                </span>
                             </div>
 
-                            {/* Red Side */}
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-black text-red-500 uppercase italic tracking-tighter border-b border-red-500/20 pb-2">{redTeam.name} Strategy</h3>
+                            {/* DRAFT HABITS GRID */}
+                            <div className="grid grid-cols-2 gap-8">
+                                {/* BANS BY THEM */}
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                        Most Banned By Them
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {blueReport?.most_banned_champions?.by_blue_side?.slice(0, 6).map((ban: any, i: number) => (
+                                            <div key={i}>{renderChampItem(ban.champion, ban.count, undefined, true)}</div>
+                                        )) || <span className="text-gray-600 text-xs col-span-3">No Data</span>}
+                                    </div>
+                                </div>
 
-                                {renderPool("Phase 1 Bans", strategy.red_ban_phase_1, 'red')}
-                                {renderPool("Phase 1 Picks (Core)", strategy.red_pick_phase_1, 'red')}
-                                {renderPool("Phase 2 Bans", strategy.red_ban_phase_2, 'red')}
-                                {renderPool("Phase 2 Picks (Rounding)", strategy.red_pick_phase_2, 'red')}
+                                {/* TARGET BANS */}
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                                        Target Bans
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {blueReport?.most_banned_champions?.against_blue_side?.slice(0, 6).map((ban: any, i: number) => (
+                                            <div key={i}>{renderChampItem(ban.champion, ban.count, undefined, true)}</div>
+                                        )) || <span className="text-gray-600 text-xs col-span-3">No Data</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* PRIORITY PICKS */}
+                            <div className="bg-blue-900/5 rounded-2xl p-6 border border-blue-500/10">
+                                <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    Priority First Picks (B1)
+                                </h4>
+                                <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                                    {blueReport?.most_picked_champions_by_slot?.blue1?.slice(0, 8).map(([champ, count]: [string, number], i: number) => (
+                                        <div key={i} className="min-w-[4rem]">{renderChampItem(champ, count, undefined, true)}</div>
+                                    )) || <span className="text-gray-600 text-xs">No Data</span>}
+                                </div>
+                            </div>
+
+                            {/* DRAFT PICK NATURE */}
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Draft Pick Nature</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Blind Picks */}
+                                    <div className="bg-blue-900/10 border border-blue-500/10 rounded-xl p-4">
+                                        <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                            Safety (Blind Picks)
+                                        </h5>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {blueReport?.blind_pick_champions_frequency?.slice(0, 6).map(([name, count]: [string, number], i: number) => (
+                                                <div key={i}>
+                                                    {renderChampItem(name, count, undefined)}
+                                                </div>
+                                            )) || <span className="text-gray-600 text-[10px] col-span-3">No Data</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Counter Picks */}
+                                    <div className="bg-red-900/10 border border-red-500/10 rounded-xl p-4">
+                                        <h5 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                                            Answers (Counter Picks)
+                                        </h5>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {blueReport?.counter_pick_champions_frequency?.slice(0, 6).map(([name, count]: [string, number], i: number) => (
+                                                <div key={i}>
+                                                    {renderChampItem(name, count, undefined)}
+                                                </div>
+                                            )) || <span className="text-gray-600 text-[10px] col-span-3">No Data</span>}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
+
+                        {/* Red Side Scouting */}
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-4 border-b border-red-500/20 pb-4">
+                                <h3 className="text-3xl font-black text-red-500 uppercase italic tracking-tighter">{redTeam.shortName} Habits</h3>
+                                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest ml-auto bg-red-500/10 px-3 py-1 rounded-full">
+                                    {redReport?.games_count || 0} Games Analyzed
+                                </span>
+                            </div>
+
+                            {/* DRAFT HABITS GRID */}
+                            <div className="grid grid-cols-2 gap-8">
+                                {/* BANS BY THEM */}
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                        Most Banned By Them
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {redReport?.most_banned_champions?.by_red_side?.slice(0, 6).map((ban: any, i: number) => (
+                                            <div key={i}>{renderChampItem(ban.champion, ban.count, undefined, true)}</div>
+                                        )) || <span className="text-gray-600 text-xs col-span-3">No Data</span>}
+                                    </div>
+                                </div>
+
+                                {/* TARGET BANS */}
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                        Target Bans
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {redReport?.most_banned_champions?.against_red_side?.slice(0, 6).map((ban: any, i: number) => (
+                                            <div key={i}>{renderChampItem(ban.champion, ban.count, undefined, true)}</div>
+                                        )) || <span className="text-gray-600 text-xs col-span-3">No Data</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* PRIORITY PICKS */}
+                            <div className="bg-red-900/5 rounded-2xl p-6 border border-red-500/10">
+                                <h4 className="text-xs font-black text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    Priority Rotation Picks (R1/R2)
+                                </h4>
+                                <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                                    {redReport?.most_picked_champions_by_slot?.red1_red2?.slice(0, 8).map(([champ, count]: [string, number], i: number) => (
+                                        <div key={i} className="min-w-[4rem]">{renderChampItem(champ, count, undefined, true)}</div>
+                                    )) || <span className="text-gray-600 text-xs">No Data</span>}
+                                </div>
+                            </div>
+
+                            {/* DRAFT PICK NATURE */}
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Draft Pick Nature</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Blind Picks */}
+                                    <div className="bg-blue-900/10 border border-blue-500/10 rounded-xl p-4">
+                                        <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                            Safety (Blind Picks)
+                                        </h5>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {redReport?.blind_pick_champions_frequency?.slice(0, 6).map(([name, count]: [string, number], i: number) => (
+                                                <div key={i}>
+                                                    {renderChampItem(name, count, undefined)}
+                                                </div>
+                                            )) || <span className="text-gray-600 text-[10px] col-span-3">No Data</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Counter Picks */}
+                                    <div className="bg-red-900/10 border border-red-500/10 rounded-xl p-4">
+                                        <h5 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                                            Answers (Counter Picks)
+                                        </h5>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {redReport?.counter_pick_champions_frequency?.slice(0, 6).map(([name, count]: [string, number], i: number) => (
+                                                <div key={i}>
+                                                    {renderChampItem(name, count, undefined)}
+                                                </div>
+                                            )) || <span className="text-gray-600 text-[10px] col-span-3">No Data</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </motion.div>

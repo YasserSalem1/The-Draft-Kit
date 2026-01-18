@@ -74,7 +74,7 @@ export default function HubPage() {
                 THE DRAFT KIT
               </h1>
               <span className="text-primary/60 text-lg font-bold tracking-[0.5em] uppercase mt-2 opacity-80 block">
-                the only drafting tool you need
+                the only PRO PLAY READY drafting tool you need
               </span>
             </div>
           </motion.div>
@@ -202,7 +202,7 @@ export default function HubPage() {
 
           {/* Right Side Tech Decor */}
           <div className="absolute right-10 hidden xl:flex items-center gap-4 text-purple-500/60 font-mono text-xs tracking-widest uppercase">
-            <span className="group-hover:text-purple-400 transition-colors">System Optimal</span>
+            <span className="group-hover:text-purple-400 transition-colors"></span>
             <div className="relative w-3 h-3">
               <div className="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-20" />
               <div className="relative w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.8)]" />

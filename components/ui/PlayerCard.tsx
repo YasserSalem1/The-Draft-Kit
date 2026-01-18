@@ -85,11 +85,11 @@ export function PlayerCard({ player, teamColor, side, onClick, onRemove, isSelec
                 {/* 1. Player Role & Name Block */}
                 <div className="flex flex-col justify-center gap-1 z-20 drop-shadow-md">
                     {/* Role text removed */}
-                    <span className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none truncate max-w-[180px]">
-                        {player.name}
+                    <span className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none truncate max-w-[180px]" style={{ fontFamily: 'var(--font-inter)' }}> {/* Ensure font consistency */}
+                        {player.nickname}
                     </span>
                     <div className="flex items-center gap-2">
-                        {pickedChampion && pickedChampion.name !== player.name && (
+                        {pickedChampion && pickedChampion.name !== player.nickname && (
                             <span className={cn(
                                 "text-xs font-bold uppercase tracking-wider mt-1",
                                 isBlue ? "text-blue-400" : "text-red-400"

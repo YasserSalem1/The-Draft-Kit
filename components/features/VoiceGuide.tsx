@@ -65,7 +65,7 @@ export function VoiceGuide() {
         <button
             onClick={() => setEnabled(!enabled)}
             className={cn(
-                "fixed top-4 right-6 z-[100] w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md border",
+                "fixed bottom-8 right-8 z-[100] w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md border",
                 enabled
                     ? "bg-primary text-white border-primary shadow-[0_0_20px_rgba(59,130,246,0.4)]"
                     : "bg-black/40 text-gray-500 border-white/10 hover:bg-black/60 hover:text-white"

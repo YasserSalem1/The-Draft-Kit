@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { TEAMS, Player } from '@/lib/data/teams';
 import { PlayerCard } from '@/components/ui/PlayerCard';
@@ -51,7 +51,6 @@ function DraftHeader({ isStarted, viewMode, aiMode, setAiMode, onOpenReport }: D
                 <span className="text-gray-500 text-xs font-mono uppercase">
                     {format} • Game {currentGameIndex + 1}
                 </span>
-                {/* Scores Removed as requested */}
             </div>
 
             {/* Center Status - AI Button */}
@@ -59,16 +58,12 @@ function DraftHeader({ isStarted, viewMode, aiMode, setAiMode, onOpenReport }: D
                 {isStarted && viewMode === 'DRAFT' && (
                     <AIAssistantButton isActive={aiMode} onClick={() => setAiMode(!aiMode)} />
                 )}
-                {isStarted && viewMode === 'DRAFT' && (
-                    <IntelligenceReportButton isActive={false} onClick={onOpenReport} />
-                )}
+                {isStarted && <IntelligenceReportButton isActive={false} onClick={onOpenReport} />}
             </div>
 
             {/* Right Controls */}
             <div className="flex items-center gap-4 pointer-events-auto">
                 <div className="w-px h-4 bg-white/10" />
-
-                {/* Minimal Controls */}
                 <DraftControls />
             </div>
         </header>
@@ -129,19 +124,27 @@ function DraftPageContent() {
                     const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
                         id: `blue-available-${playerName}-${i}`,
                         nickname: playerName,
-                        name: playerName,
                         role: 'TOP' as any
                     }));
                     setBlueAvailablePlayers(allAvailablePlayers);
 
-                    // Initialize team with 5 placeholder slots
+                    // Initialize team with 5 players (Auto-Select first 5 or fill)
                     const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-                    const initialRoster = roles.map(role => ({
-                        id: `blue-placeholder-${role}`,
-                        nickname: `Select ${role}`,
-                        name: `Select ${role}`,
-                        role
-                    }));
+                    const initialRoster = roles.map((role, i) => {
+                        const existingPlayer = allAvailablePlayers[i];
+                        if (existingPlayer) {
+                            return {
+                                ...existingPlayer,
+                                id: `blue-roster-${existingPlayer.nickname}-${i}`,
+                                role
+                            };
+                        }
+                        return {
+                            id: `blue-placeholder-${role}`,
+                            nickname: `Select ${role}`,
+                            role
+                        };
+                    });
                     setBlueTeam(prev => ({ ...prev, players: initialRoster }));
                 }
             }
@@ -153,19 +156,27 @@ function DraftPageContent() {
                     const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
                         id: `red-available-${playerName}-${i}`,
                         nickname: playerName,
-                        name: playerName,
                         role: 'TOP' as any
                     }));
                     setRedAvailablePlayers(allAvailablePlayers);
 
-                    // Initialize team with 5 placeholder slots
+                    // Initialize team with 5 players (Auto-Select first 5 or fill)
                     const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-                    const initialRoster = roles.map(role => ({
-                        id: `red-placeholder-${role}`,
-                        nickname: `Select ${role}`,
-                        name: `Select ${role}`,
-                        role
-                    }));
+                    const initialRoster = roles.map((role, i) => {
+                        const existingPlayer = allAvailablePlayers[i];
+                        if (existingPlayer) {
+                            return {
+                                ...existingPlayer,
+                                id: `red-roster-${existingPlayer.nickname}-${i}`,
+                                role
+                            };
+                        }
+                        return {
+                            id: `red-placeholder-${role}`,
+                            nickname: `Select ${role}`,
+                            role
+                        };
+                    });
                     setRedTeam(prev => ({ ...prev, players: initialRoster }));
                 }
             }
@@ -173,15 +184,26 @@ function DraftPageContent() {
         fetchReports();
     }, [blueTeamId, redTeamId, blueTournamentId, redTournamentId]);
 
+    // AI Auto-Fill Ref - Prevents double calling
+    const aiProcessingStep = useRef<number>(-1);
+
     // AI Auto-Pick Logic
     useEffect(() => {
         if (!isStarted || !currentStep || !allChampions.length) return;
+
+        // Prevent double execution for the same step
+        if (aiProcessingStep.current === currentStepIndex) {
+            return;
+        }
 
         const isBlueTurn = currentStep.side === 'blue';
         const isRedTurn = currentStep.side === 'red';
 
         // Only proceed if the active side has AI enabled
         if ((isBlueTurn && blueAiEnabled) || (isRedTurn && redAiEnabled)) {
+            // Mark this step as processing
+            aiProcessingStep.current = currentStepIndex;
+
             const executeAiTurn = async () => {
                 try {
                     // 1. Sync State to Backend
@@ -189,12 +211,14 @@ function DraftPageContent() {
                         blue_team: {
                             name: blueTeam.name,
                             bans: blueBans.map(c => c?.name || null),
-                            picks: bluePicks.map(c => c?.name || null)
+                            picks: bluePicks.map(c => c?.name || null),
+                            ...(blueReport || {}) // Send full report data
                         },
                         red_team: {
                             name: redTeam.name,
                             bans: redBans.map(c => c?.name || null),
-                            picks: redPicks.map(c => c?.name || null)
+                            picks: redPicks.map(c => c?.name || null),
+                            ...(redReport || {}) // Send full report data
                         },
                         current_step: currentStepIndex,
                         phase: currentStepIndex < 6 ? 'ban_1' :
@@ -202,18 +226,25 @@ function DraftPageContent() {
                                 currentStepIndex < 16 ? 'ban_2' : 'pick_2' // Approximation, server handles fine details
                     };
 
-                    await fetch('http://localhost:5002/draft/load', {
+                    console.log("[DraftPage] AI Turn Payload:", JSON.stringify(backendPayload, null, 2));
+                    console.log("[DraftPage] Blue Report State:", blueReport ? "Loaded" : "Null");
+                    console.log("[DraftPage] Red Report State:", redReport ? "Loaded" : "Null");
+
+                    await fetch('http://localhost:5001/draft/load', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(backendPayload)
                     });
 
                     // 2. Get Recommendations
-                    const res = await fetch('http://localhost:5002/recommendations');
+                    const res = await fetch('http://localhost:5001/recommendations');
                     const data = await res.json();
 
-                    // Recommendations are strings (Names), need to find Champion object
-                    const recommendations: string[] = data.recommendations || [];
+                    // Recommendations might be strings or objects
+                    const rawRecommendations = data.recommendations || [];
+                    const recommendations: string[] = rawRecommendations.map((r: any) =>
+                        typeof r === 'string' ? r : r.championName
+                    );
 
                     // 3. Find first valid pick
                     // If no recommendations, we might want to pick ANY valid champ as fallback? 
@@ -243,6 +274,8 @@ function DraftPageContent() {
 
                 } catch (e) {
                     console.error('AI Turn Execution Failed:', e);
+                    // Reset lock on failure so it can retry if triggered again? 
+                    // Or keep locked to prevent spam loop. keeping locked seems safer.
                 }
             };
 
@@ -269,16 +302,23 @@ function DraftPageContent() {
         }
     }, [isStarted, currentStep, isSeriesComplete]);
 
+    useEffect(() => {
+        if (!isStarted) {
+            setViewMode('SCOUTING');
+            setPlayersLocked(false);
+        }
+    }, [isStarted]);
+
     const handlePlayerClick = (player: Player, team: typeof blueTeam, side: 'blue' | 'red') => {
         if (!playersLocked) {
             // Player selection logic - Clicking a player in rosters fills the 5 slots
             const report = side === 'blue' ? blueReport : redReport;
             if (report) {
                 const currentTeam = side === 'blue' ? blueTeam : redTeam;
-                
+
                 // Get currently selected nicknames on this team
                 const currentNicknames = currentTeam.players?.map(p => p.nickname) || [];
-                
+
                 // If the player clicked is already in the roster, remove them (Deselect)
                 if (currentNicknames.includes(player.nickname)) {
                     if (side === 'blue') {
@@ -290,7 +330,6 @@ function DraftPageContent() {
                                 newPlayers[index] = {
                                     id: `blue-placeholder-${roles[index]}`,
                                     nickname: `Select ${roles[index]}`,
-                                    name: `Select ${roles[index]}`,
                                     role: roles[index]
                                 };
                             }
@@ -305,7 +344,6 @@ function DraftPageContent() {
                                 newPlayers[index] = {
                                     id: `red-placeholder-${roles[index]}`,
                                     nickname: `Select ${roles[index]}`,
-                                    name: `Select ${roles[index]}`,
                                     role: roles[index]
                                 };
                             }
@@ -319,21 +357,20 @@ function DraftPageContent() {
                 const newPlayer: Player = {
                     id: `${side}-${player.nickname}-${Date.now()}`,
                     nickname: player.nickname,
-                    name: player.nickname,
                     role: 'TOP' // Will be re-assigned based on index
                 };
 
                 // Find the first slot that hasn't been filled with a real player
                 // Placeholder players have ids like 'blue-placeholder-TOP'
-                
+
                 if (side === 'blue') {
                     setBlueTeam(prev => {
                         const newPlayers = [...(prev.players || [])];
                         const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-                        
+
                         // Find first placeholder slot
                         const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
-                        
+
                         if (firstPlaceholderIndex !== -1) {
                             newPlayers[firstPlaceholderIndex] = {
                                 ...newPlayer,
@@ -348,7 +385,7 @@ function DraftPageContent() {
                         const newPlayers = [...(prev.players || [])];
                         const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
                         const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
-                        
+
                         if (firstPlaceholderIndex !== -1) {
                             newPlayers[firstPlaceholderIndex] = {
                                 ...newPlayer,
@@ -424,6 +461,10 @@ function DraftPageContent() {
         addAlternative(side, champ);
     };
 
+    const isReadyToStart =
+        ((blueTeam.players?.filter(p => !p.id.includes('placeholder')).length || 0) >= 5) &&
+        ((redTeam.players?.filter(p => !p.id.includes('placeholder')).length || 0) >= 5);
+
     return (
         <main className="h-screen w-full bg-[#090A0F] flex flex-col overflow-hidden relative selection:bg-primary/30">
             {/* Ambient Backgrounds - Perfectly Centered */}
@@ -443,7 +484,13 @@ function DraftPageContent() {
 
 
             {/* Header */}
-            <DraftHeader isStarted={isStarted} viewMode={viewMode} aiMode={aiMode} setAiMode={setAiMode} onOpenReport={() => setShowReport(true)} />
+            <DraftHeader
+                isStarted={isStarted}
+                viewMode={viewMode}
+                aiMode={aiMode}
+                setAiMode={setAiMode}
+                onOpenReport={() => setShowReport(true)}
+            />
 
             <AnimatePresence>
                 {showReport && (
@@ -451,6 +498,8 @@ function DraftPageContent() {
                         onClose={() => setShowReport(false)}
                         blueTeam={blueTeam}
                         redTeam={redTeam}
+                        blueReport={blueReport}
+                        redReport={redReport}
                     />
                 )}
             </AnimatePresence>
@@ -489,7 +538,7 @@ function DraftPageContent() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5">
-                            {blueTeam.players.map((p, idx) => (
+                            {blueTeam.players?.map((p, idx) => (
                                 <div key={p.id} className="flex-1 flex flex-col justify-center">
                                     <PlayerCard
                                         player={p}
@@ -523,7 +572,18 @@ function DraftPageContent() {
                                 {/* Center Status Display */}
                                 <div className="flex flex-col items-center">
                                     {!isStarted ? (
-                                        <button onClick={handleInitializeDraft} className="px-8 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">Start Draft</button>
+                                        <button
+                                            onClick={handleInitializeDraft}
+                                            disabled={!isReadyToStart}
+                                            className={cn(
+                                                "px-8 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+                                                isReadyToStart
+                                                    ? "hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                                                    : "opacity-30 cursor-not-allowed grayscale"
+                                            )}
+                                        >
+                                            Start Draft
+                                        </button>
                                     ) : (
                                         <div className="flex flex-col items-center gap-1">
                                             <div className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">
@@ -561,122 +621,114 @@ function DraftPageContent() {
                         <div className="flex-1 relative bg-grid-pattern min-h-0 flex flex-col">
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                                 {viewMode === 'SCOUTING' ? (
-                                    <div className="max-w-4xl mx-auto space-y-8">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Team Rosters</h2>
-                                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Select players from report data</p>
-                                            </div>
-                                            {!playersLocked && (
-                                                <button 
-                                                    onClick={handleInitializeDraft}
-                                                    disabled={!blueReport || !redReport || (blueTeam.players?.some(p => p.id.includes('placeholder'))) || (redTeam.players?.some(p => p.id.includes('placeholder')))}
-                                                    className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
-                                                >
-                                                    Lock & Start Draft
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-8">
-                                            {/* Blue Team Player List */}
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-3 border-b border-blue-500/20 pb-2">
-                                                    <div className="w-2 h-6 bg-blue-500 rounded-full" />
-                                                    <h3 className="text-lg font-bold text-white uppercase">{blueTeam.shortName}</h3>
-                                                    <span className="text-[10px] text-gray-500 ml-auto font-bold uppercase tracking-widest">
-                                                        {blueTeam.players?.filter(p => !p.id.includes('placeholder')).length}/5 Filled
-                                                    </span>
-                                                </div>
-                                                {!blueReport ? (
-                                                    <div className="flex items-center justify-center p-8 bg-white/5 rounded-xl border border-white/5">
-                                                        <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        {blueAvailablePlayers.map((p) => {
-                                                            const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
-                                                            const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
-                                                            const isSelected = isSelectedOnBlue || isSelectedOnRed;
-                                                            return (
-                                                                <button
-                                                                    key={p.id}
-                                                                    onClick={() => handlePlayerClick(p, blueTeam, 'blue')}
-                                                                    disabled={playersLocked || isSelectedOnRed}
-                                                                    className={cn(
-                                                                        "w-full flex items-center justify-between p-3 rounded-xl border transition-all group",
-                                                                        isSelectedOnRed 
-                                                                            ? "bg-white/5 border-white/5 opacity-50 cursor-not-allowed" 
-                                                                            : isSelectedOnBlue
-                                                                                ? "bg-blue-500/10 border-blue-500/30"
-                                                                                : "bg-white/5 border-white/5 hover:border-blue-500/30 hover:bg-white/10"
-                                                                    )}
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className="font-bold text-gray-200 group-hover:text-white">{p.nickname}</span>
-                                                                        {isSelectedOnBlue && <Check className="w-3 h-3 text-blue-400" />}
-                                                                        {isSelectedOnRed && <LockIcon className="w-3 h-3 text-gray-500" />}
-                                                                    </div>
-                                                                    {!playersLocked && !isSelectedOnRed && (
-                                                                        isSelectedOnBlue ? <X className="w-3 h-3 text-blue-400 hover:text-red-400" /> : <RefreshCw className="w-3 h-3 text-gray-600 group-hover:text-blue-400" />
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Red Team Player List */}
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-3 border-b border-red-500/20 pb-2 flex-row-reverse text-right">
-                                                    <div className="w-2 h-6 bg-red-500 rounded-full" />
-                                                    <h3 className="text-lg font-bold text-white uppercase">{redTeam.shortName}</h3>
-                                                    <span className="text-[10px] text-gray-500 mr-auto font-bold uppercase tracking-widest">
-                                                        {redTeam.players?.filter(p => !p.id.includes('placeholder')).length}/5 Filled
-                                                    </span>
-                                                </div>
-                                                {!redReport ? (
-                                                    <div className="flex items-center justify-center p-8 bg-white/5 rounded-xl border border-white/5">
-                                                        <Loader2 className="w-6 h-6 animate-spin text-red-500" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        {redAvailablePlayers.map((p) => {
-                                                            const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
-                                                            const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
-                                                            const isSelected = isSelectedOnBlue || isSelectedOnRed;
-                                                            return (
-                                                                <button
-                                                                    key={p.id}
-                                                                    onClick={() => handlePlayerClick(p, redTeam, 'red')}
-                                                                    disabled={playersLocked || isSelectedOnBlue}
-                                                                    className={cn(
-                                                                        "w-full flex items-center justify-between p-3 rounded-xl border transition-all group flex-row-reverse",
-                                                                        isSelectedOnBlue 
-                                                                            ? "bg-white/5 border-white/5 opacity-50 cursor-not-allowed" 
-                                                                            : isSelectedOnRed
-                                                                                ? "bg-red-500/10 border-red-500/30"
-                                                                                : "bg-white/5 border-white/5 hover:border-red-500/30 hover:bg-white/10"
-                                                                    )}
-                                                                >
-                                                                    <div className="flex items-center gap-3 flex-row-reverse">
-                                                                        <span className="font-bold text-gray-200 group-hover:text-white">{p.nickname}</span>
-                                                                        {isSelectedOnRed && <Check className="w-3 h-3 text-red-500" />}
-                                                                        {isSelectedOnBlue && <LockIcon className="w-3 h-3 text-gray-500" />}
-                                                                    </div>
-                                                                    {!playersLocked && !isSelectedOnBlue && (
-                                                                        isSelectedOnRed ? <X className="w-3 h-3 text-red-500 hover:text-red-400" /> : <RefreshCw className="w-3 h-3 text-gray-600 group-hover:text-red-500" />
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
+                                    (!blueReport || !redReport) ? (
+                                        <div className="flex flex-col items-center justify-center h-full space-y-6 animate-pulse">
+                                            <Loader2 className="w-16 h-16 text-cyan-500 animate-spin" />
+                                            <div className="text-center">
+                                                <h2 className="text-2xl font-black text-white uppercase tracking-widest">Accessing Scouting Database</h2>
+                                                <p className="text-cyan-500 text-sm font-bold uppercase tracking-widest mt-2">Retrieving Player Statistics & Champion Pools...</p>
                                             </div>
                                         </div>
-                                        {/* Removed ScoutingStats (Match Intelligence) during selection phase */}
-                                    </div>
+                                    ) : (
+                                        <div className="max-w-7xl mx-auto w-full h-full flex flex-col justify-center">
+                                            <div className="text-center mb-12">
+                                                <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter glow-text">Team Rosters</h2>
+                                                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mt-2">Confirm Active Lineups</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-12 items-start px-12">
+                                                {/* Blue Team Roster */}
+                                                <div className="space-y-3">
+                                                    {blueAvailablePlayers.map((p) => {
+                                                        const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                        const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
+
+                                                        return (
+                                                            <button
+                                                                key={p.id}
+                                                                onClick={() => handlePlayerClick(p, blueTeam, 'blue')}
+                                                                disabled={playersLocked || isSelectedOnRed}
+                                                                className={cn(
+                                                                    "w-full flex items-center justify-between p-4 rounded-xl border transition-all group relative overflow-hidden",
+                                                                    isSelectedOnBlue
+                                                                        ? "bg-gradient-to-r from-blue-600/20 to-blue-900/10 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                                                                        : "bg-white/5 border-white/5 hover:border-blue-500/30 hover:bg-white/10"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center gap-4 relative z-10">
+                                                                    <div className={cn(
+                                                                        "w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors",
+                                                                        isSelectedOnBlue ? "bg-blue-500 text-white" : "bg-white/10 text-gray-500"
+                                                                    )}>
+                                                                        {isSelectedOnBlue ? <Check className="w-4 h-4" /> : p.role?.charAt(0) || "?"}
+                                                                    </div>
+                                                                    <span className={cn(
+                                                                        "transition-colors",
+                                                                        isSelectedOnBlue
+                                                                            ? "text-white font-black uppercase italic tracking-tighter text-xl"
+                                                                            : "text-gray-400 font-bold text-lg group-hover:text-white"
+                                                                    )}>{p.nickname}</span>
+                                                                </div>
+
+                                                                {isSelectedOnRed && (
+                                                                    <div className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-widest">
+                                                                        <LockIcon className="w-3 h-3" />
+                                                                        Opponent
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Red Team Roster */}
+                                                <div className="space-y-3">
+                                                    {redAvailablePlayers.map((p) => {
+                                                        const isSelectedOnBlue = blueTeam.players?.some(selected => selected.nickname === p.nickname);
+                                                        const isSelectedOnRed = redTeam.players?.some(selected => selected.nickname === p.nickname);
+
+                                                        return (
+                                                            <button
+                                                                key={p.id}
+                                                                onClick={() => handlePlayerClick(p, redTeam, 'red')}
+                                                                disabled={playersLocked || isSelectedOnBlue}
+                                                                className={cn(
+                                                                    "w-full flex items-center justify-between p-4 rounded-xl border transition-all group relative overflow-hidden flex-row-reverse",
+                                                                    isSelectedOnRed
+                                                                        ? "bg-gradient-to-l from-red-600/20 to-red-900/10 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+                                                                        : "bg-white/5 border-white/5 hover:border-red-500/30 hover:bg-white/10"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center gap-4 relative z-10 flex-row-reverse">
+                                                                    <div className={cn(
+                                                                        "w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors",
+                                                                        isSelectedOnRed ? "bg-red-500 text-white" : "bg-white/10 text-gray-500"
+                                                                    )}>
+                                                                        {isSelectedOnRed ? <Check className="w-4 h-4" /> : p.role?.charAt(0) || "?"}
+                                                                    </div>
+                                                                    <span className={cn(
+                                                                        "transition-colors",
+                                                                        isSelectedOnRed
+                                                                            ? "text-white font-black uppercase italic tracking-tighter text-xl"
+                                                                            : "text-gray-400 font-bold text-lg group-hover:text-white"
+                                                                    )}>{p.nickname}</span>
+                                                                </div>
+
+                                                                {isSelectedOnBlue && (
+                                                                    <div className="flex items-center gap-2 text-blue-500 text-xs font-bold uppercase tracking-widest flex-row-reverse">
+                                                                        <LockIcon className="w-3 h-3" />
+                                                                        Opponent
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Unified Start Button Removed - Functionality moved to Header */}
+                                        </div>
+                                    )
                                 ) : (
                                     ((isStarted && !currentStep) || isSeriesComplete) ? (
                                         <div className="flex flex-col items-center justify-center h-full space-y-8 p-8 animate-in fade-in zoom-in duration-500">
@@ -728,7 +780,7 @@ function DraftPageContent() {
 
                             {/* AI Overlay */}
                             <AnimatePresence>
-                                {aiMode && <AIFocusMode blueTeam={blueTeam} redTeam={redTeam} />}
+                                {aiMode && <AIFocusMode blueTeam={blueTeam} redTeam={redTeam} blueReport={blueReport} redReport={redReport} />}
                             </AnimatePresence>
                         </div>
                     </div>
@@ -764,7 +816,7 @@ function DraftPageContent() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5">
-                            {redTeam.players.map((p, idx) => (
+                            {redTeam.players?.map((p, idx) => (
                                 <div key={p.id} className="flex-1 flex flex-col justify-center">
                                     <PlayerCard
                                         player={p}
@@ -784,7 +836,7 @@ function DraftPageContent() {
 
                 </div>
             </div>
-        </main>
+        </main >
     );
 }
 

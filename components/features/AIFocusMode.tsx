@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Bot, AlertTriangle, TrendingUp, CheckCircle2, BrainCircuit, RefreshCw } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getChampionIconUrl, getLatestVersion, getChampions, Champion } from '@/lib/api/ddragon';
 import { useDraft } from '@/lib/draft/draft-context';
 // import { MOCK_AI_DATA } from '@/lib/data/ai-recommendations'; // Removed MOCK
@@ -11,9 +11,11 @@ import { useDraft } from '@/lib/draft/draft-context';
 export interface AIFocusModeProps {
     blueTeam: any; // Type 'Team' from '@/lib/data/teams' ideally, but 'any' avoids circular dep issues if simplistic
     redTeam: any;
+    blueReport?: any;
+    redReport?: any;
 }
 
-export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
+export function AIFocusMode({ blueTeam, redTeam, blueReport, redReport }: AIFocusModeProps) {
     const [version, setVersion] = useState('');
     const [champions, setChampions] = useState<Champion[]>([]);
     const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -53,11 +55,13 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
                 redPicks,
                 blueTeam: {
                     name: blueTeam.shortName || blueTeam.name,
-                    players: blueTeam.players
+                    players: blueTeam.players,
+                    ...(blueReport || {})
                 },
                 redTeam: {
                     name: redTeam.shortName || redTeam.name,
-                    players: redTeam.players
+                    players: redTeam.players,
+                    ...(redReport || {})
                 }
             };
 
@@ -80,7 +84,13 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
     };
 
     // Auto-fetch on mount or step change
+    const lastFetchedStep = useRef<number>(-1);
+
     useEffect(() => {
+        // Prevent double fetch for the same step (e.g. strict mode or re-renders)
+        if (lastFetchedStep.current === currentStepIndex) return;
+
+        lastFetchedStep.current = currentStepIndex;
         fetchPredictions();
     }, [currentStepIndex]); // Re-fetch when draft advances
 
@@ -162,46 +172,68 @@ export function AIFocusMode({ blueTeam, redTeam }: AIFocusModeProps) {
                                     className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:border-primary/50 transition-all duration-300 group relative cursor-pointer hover:bg-white/10 active:scale-[0.99] flex items-stretch flex-1 min-h-[60px]" // Reduced border radius and added min-height constraint
                                     onClick={() => handleRecommendationClick(rec)}
                                 >
-                                    {/* Champ Image & Info - Larger Loading Art */}
-                                    <div className="w-48 relative border-r border-white/5 bg-black/20 group-hover:bg-black/40 transition-colors shrink-0">
+                                    {/* Champ Image & Info - Main Pick (25%) */}
+                                    <div className="w-1/4 relative bg-black/20 group-hover:bg-black/40 transition-colors shrink-0 border-r border-white/5">
                                         {getChampImage(rec.championName) && (
                                             <img
                                                 src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${rec.championName.replace(/[^a-zA-Z0-9]/g, '')}_0.jpg`}
                                                 alt={rec.championName}
-                                                className="absolute inset-0 w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                                                className="absolute inset-0 w-full h-full object-cover object-top opacity-60 group-hover:opacity-100 transition-opacity duration-700"
                                             />
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-                                        <div className="absolute inset-x-0 bottom-0 p-3">
-                                            <h4 className="text-xl font-black text-white truncate shadow-black drop-shadow-lg leading-none uppercase italic tracking-tighter">{rec.championName}</h4>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+                                        <div className="absolute inset-x-0 bottom-0 p-4">
+                                            <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 drop-shadow-md">Recommended</div>
+                                            <h4 className="text-xl font-black text-white truncate shadow-black drop-shadow-2xl leading-none uppercase italic tracking-tighter">{rec.championName}</h4>
                                         </div>
                                     </div>
 
-                                    {/* Reasoning Content - Cleaner & Smaller */}
-                                    <div className="flex-1 p-3 flex flex-col justify-between overflow-hidden">
-                                        <p className="text-xs text-gray-300 leading-snug font-light line-clamp-3 mb-2">
-                                            {Array.isArray(rec.reasoning) && rec.reasoning.length > 0
-                                                ? rec.reasoning.join('. ')
-                                                : "Top strategic fit for current draft state."}
-                                        </p>
+                                    {/* Lookahead / Next Pick Preview - Prominent (75%) */}
+                                    <div className="flex-1 p-6 flex flex-col justify-center items-center bg-black/40 relative">
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                                            <Bot className="w-64 h-64 text-white" />
+                                        </div>
 
-                                        {/* Lookahead / Next Pick Preview */}
-                                        {rec.opponentResponses && rec.opponentResponses.length > 0 && (
-                                            <div className="mt-auto pt-2 border-t border-white/5">
-                                                <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Potential Response</div>
-                                                <div className="flex items-center gap-1">
-                                                    {rec.opponentResponses.slice(0, 5).map((opName: string) => (
-                                                        <div key={opName} className="w-6 h-6 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/50" title={opName}>
-                                                            <img
-                                                                src={getChampImage(opName)}
-                                                                alt={opName}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                        <div className="relative z-10 w-full">
+                                            <div className="text-[10px] text-gray-400 uppercase font-black mb-6 tracking-[0.3em] text-center opacity-70">Projected Opponent Response</div>
+                                            <div className="flex items-center justify-center gap-4">
+                                                {rec.opponentResponses && rec.opponentResponses.length > 0 ? (
+                                                    rec.opponentResponses.slice(0, 5).map((opResp: any, idx: number) => {
+                                                        const opName = typeof opResp === 'string' ? opResp : opResp.championName;
+                                                        return (
+                                                            <div
+                                                                key={opName}
+                                                                className="group/op relative"
+                                                                title={opName}
+                                                            >
+                                                                <motion.div
+                                                                    initial={{ scale: 0, y: 10 }}
+                                                                    animate={{ scale: 1, y: 0 }}
+                                                                    transition={{
+                                                                        type: "spring",
+                                                                        stiffness: 260,
+                                                                        damping: 20,
+                                                                        delay: 0.1 + (idx * 0.05)
+                                                                    }}
+                                                                    className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 ring-2 ring-black/50 shadow-2xl group-hover/op:ring-red-500/50 group-hover/op:scale-110 transition-all duration-300"
+                                                                >
+                                                                    <img
+                                                                        src={getChampImage(opName)}
+                                                                        alt={opName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </motion.div>
+                                                                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/op:opacity-100 transition-all duration-300 whitespace-nowrap translate-y-2 group-hover/op:translate-y-0 z-50">
+                                                                    <span className="text-[10px] font-black text-white uppercase tracking-widest bg-black/95 px-3 py-1 rounded-full border border-white/10 shadow-xl">{opName}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <div className="text-gray-600 text-[10px] font-black uppercase tracking-widest italic opacity-50">Simulation Unavailable</div>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
 
                                 </motion.div>

@@ -153,3 +153,31 @@ npm run lint   # lint the project
 ### License
 
 Internal prototype for hackathon/demo use. Replace with your chosen license if open‑sourcing.
+
+### Startup Commands
+
+```bash
+ source /Users/yassersalem/skyisthelimithackathon/venv/bin/activate
+```
+
+**1. Frontend Application:**
+```bash
+npm run dev
+```
+
+**2. Drafting Agent Backend:**
+```bash
+source venv/bin/activate
+python TheDraftingAgent/server.py
+```
+
+**3. Draft Predictor Backend:**
+```bash
+source venv/bin/activate
+python DraftPredictor/server.py
+
+
+
+
+
+```

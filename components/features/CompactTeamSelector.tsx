@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TEAMS, Team, Region } from '@/lib/data/teams';
-import { Check, ChevronDown, Search, Globe, X } from 'lucide-react';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 
@@ -84,7 +84,7 @@ export function CompactTeamSelector({ placeholder = "Select Team", selectedTeamI
             >
                 {selectedTeam ? (
                     <div className="flex items-center gap-2 overflow-hidden">
-                        <TeamLogo team={selectedTeam} className="w-4 h-4 text-[8px]" />
+                        <TeamLogo key={selectedTeam.id} team={selectedTeam} className="w-4 h-4 text-[8px]" />
                         <span className="truncate font-medium text-white">{selectedTeam.shortName}</span>
                     </div>
                 ) : (

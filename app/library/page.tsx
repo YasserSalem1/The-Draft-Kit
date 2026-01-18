@@ -499,6 +499,8 @@ export default function LibraryPage() {
                                                                 updateSeries(id, { name });
                                                                 refreshData();
                                                             }}
+                                                            onMove={handleMoveSeries}
+                                                            availableFolders={folders}
                                                         />
                                                     ))}
                                                 </div>

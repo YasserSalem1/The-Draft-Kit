@@ -42,6 +42,8 @@ export interface ScoutingReportData {
   famousPicks?: { name: string; rate: number }[];
   popularBans?: { name: string; rate: number }[];
   insight?: string;
+  blind_pick_champions_frequency?: [string, number][];
+  counter_pick_champions_frequency?: [string, number][];
 }
 
 // Main analysis function (mimicking run_analysis from Scouting.py)
@@ -60,12 +62,12 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
   console.log(`Found ${matchIds.length} matches for team ${teamId}. IDs:`, matchIds);
   const targetStats: any[] = [];
   const targetDrafts: any[] = [];
-  
+
   const blueSideBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
   const redSideBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
   const targetTeamBlueBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
   const targetTeamRedBans: Record<string, { count: number; phase1: number; phase2: number }> = {};
-  
+
   const b1Picks: Record<string, number> = {};
   const r1Picks: Record<string, number> = {};
   const r2Picks: Record<string, number> = {};
@@ -101,7 +103,7 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
       const teams = game.teams || [];
       const targetTeamObj = teams.find((t: any) => String(t.id) === String(teamId));
       if (!targetTeamObj) {
-        console.warn(`[Scouting] Team ${teamId} not found in game ${game.id} (Match ${mId}). Teams: ${teams.map((t:any) => t.id).join(',')}`);
+        console.warn(`[Scouting] Team ${teamId} not found in game ${game.id} (Match ${mId}). Teams: ${teams.map((t: any) => t.id).join(',')}`);
         continue;
       }
       gamesCount++;
@@ -140,7 +142,7 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
       if (game.draftActions) {
         const picksByRole: Record<string, { side: string; step: number }> = {};
         const draftPicks = game.draftActions.filter((a: any) => a.type === 'pick');
-        
+
         // First pass: identify which side picked which role at which step
         // We need to map picked champions to roles for the target team
         // This is tricky because we only know the role after mapping players
@@ -257,7 +259,7 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
           } else if (actionType === 'ban' && draftedChamp) {
             const isPhase1 = actionStep <= 6;
             const isPhase2 = actionStep >= 13 && actionStep <= 16;
-            
+
             const updateBan = (record: Record<string, { count: number; phase1: number; phase2: number }>, champ: string) => {
               if (!record[champ]) record[champ] = { count: 0, phase1: 0, phase2: 0 };
               record[champ].count++;
@@ -382,13 +384,34 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
     }).sort((a, b) => b.Games - a.Games).slice(0, 5);
   });
 
+  // Aggregate Blind and Counter Pick Frequencies
+  const blindPickCounts: Record<string, number> = {};
+  const counterPickCounts: Record<string, number> = {};
+
+  df.forEach((stat: any) => {
+    if (stat.isBlind) {
+      blindPickCounts[stat.Champion] = (blindPickCounts[stat.Champion] || 0) + 1;
+    }
+    if (stat.isCounter) {
+      counterPickCounts[stat.Champion] = (counterPickCounts[stat.Champion] || 0) + 1;
+    }
+  });
+
+  const sortedBlindPicks = Object.entries(blindPickCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10);
+
+  const sortedCounterPicks = Object.entries(counterPickCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10);
+
   const reportData: ScoutingReportData = {
     team_name: fetchedTeamName,
     team_logo: fetchedTeamLogo,
     games_count: gamesCount,
     player_stats_grouped: groupedPlayerStats,
     draft_priorities: {
-      blue_side: {}, 
+      blue_side: {},
       red_side: {},
     },
     most_banned_champions: {
@@ -397,6 +420,8 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
       by_blue_side: sortedTargetTeamBlueBans,
       by_red_side: sortedTargetTeamRedBans,
     },
+    blind_pick_champions_frequency: sortedBlindPicks,
+    counter_pick_champions_frequency: sortedCounterPicks,
     most_picked_champions_by_slot: {
       blue1: sortedB1Picks,
       red1_red2: sortedR1R2Picks,
@@ -407,21 +432,21 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
     overview: "This is a placeholder overview of the team's strategic identity and performance. Detailed analysis would go here.",
     strategies: ["Early Game Aggression", "Objective Control", "Scaling Compositions"],
     tendencies: [
-        { name: "Zeus", role: "Top", tendency: "Prefers counter-picking and split-pushing." },
-        { name: "Oner", role: "Jungle", tendency: "Focuses on early ganks and securing dragons." },
-        { name: "Faker", role: "Mid", tendency: "Plays control mages and roams frequently." },
-        { name: "Gumayusi", role: "ADC", tendency: "Favors high-damage ADCs with strong late-game scaling." },
-        { name: "Keria", role: "Support", tendency: "Engage supports with strong crowd control." },
+      { name: "Zeus", role: "Top", tendency: "Prefers counter-picking and split-pushing." },
+      { name: "Oner", role: "Jungle", tendency: "Focuses on early ganks and securing dragons." },
+      { name: "Faker", role: "Mid", tendency: "Plays control mages and roams frequently." },
+      { name: "Gumayusi", role: "ADC", tendency: "Favors high-damage ADCs with strong late-game scaling." },
+      { name: "Keria", role: "Support", tendency: "Engage supports with strong crowd control." },
     ],
     famousPicks: [
-        { name: "Lee Sin", rate: 75 },
-        { name: "Azir", rate: 60 },
-        { name: "Aphelios", rate: 55 },
+      { name: "Lee Sin", rate: 75 },
+      { name: "Azir", rate: 60 },
+      { name: "Aphelios", rate: 55 },
     ],
     popularBans: [
-        { name: "Renekton", rate: 80 },
-        { name: "Lucian", rate: 70 },
-        { name: "Thresh", rate: 65 },
+      { name: "Renekton", rate: 80 },
+      { name: "Lucian", rate: 70 },
+      { name: "Thresh", rate: 65 },
     ],
     insight: "Focus on early objective control and lane priority to disrupt their rhythm.",
   };

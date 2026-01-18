@@ -2,7 +2,7 @@
 
 import { Team } from '@/lib/data/teams';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface TeamLogoProps {
     team?: Team; // Optional to handle potential missing data gracefully
@@ -13,10 +13,8 @@ interface TeamLogoProps {
 export function TeamLogo({ team, className, fallbackClassName }: TeamLogoProps) {
     const [error, setError] = useState(false);
 
-    // If team changes, reset error to try loading new logo
-    useEffect(() => {
-        setError(false);
-    }, [team?.logo]);
+    // State reset is now handled by the parent component changing the `key` prop
+
 
     if (!team) {
         return <div className={cn("bg-white/10 rounded-full shrink-0 flex items-center justify-center", className)}>?</div>;

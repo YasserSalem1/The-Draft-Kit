@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Ban, Trophy } from 'lucide-react';
-import { SavedSeries } from '@/lib/persistence/storage';
+import { Trash2, Ban, Trophy, FolderInput, Folder } from 'lucide-react';
+import { SavedSeries, DraftFolder } from '@/lib/persistence/storage';
 import { TEAMS } from '@/lib/data/teams';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { getChampionIconUrl } from '@/lib/api/ddragon';
@@ -13,14 +13,35 @@ export interface SeriesCardProps {
     ddragonVersion: string;
     onDelete: (id: string) => void;
     onRename: (id: string, newName: string) => void;
+    onMove: (id: string, folderId: string | undefined) => void;
+    availableFolders: DraftFolder[];
 }
 
 const ROLE_ICONS = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 
-export function SeriesCard({ series, ddragonVersion, onDelete, onRename }: SeriesCardProps) {
+export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove, availableFolders }: SeriesCardProps) {
     const [activeGameIndex, setActiveGameIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(series.name || '');
+
+    // Move Dropdown State
+    const [isMoveOpen, setIsMoveOpen] = useState(false);
+    const moveDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (moveDropdownRef.current && !moveDropdownRef.current.contains(event.target as Node)) {
+                setIsMoveOpen(false);
+            }
+        }
+        if (isMoveOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isMoveOpen]);
 
     // Sort games by date if needed, but usually they are pushed in order. 
     // Default to game 1 (index 0) or latest? User usually wants to see start or end. 
@@ -50,7 +71,7 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename }: Serie
     return (
         <div className="group relative bg-[#0a0a0a] border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden transition-all hover:shadow-2xl hover:shadow-black/50 hover:translate-y-[-2px]">
             {/* Header: Series Info & Game Selector */}
-            <div className="flex items-center justify-between p-3 border-b border-white/5 bg-white/[0.02]">
+            <div className="flex items-center justify-between p-3 border-b border-white/5 bg-white/[0.02] relative z-20">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                     {isEditing ? (
                         <input
@@ -97,6 +118,66 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename }: Serie
                             ))}
                         </div>
                     )}
+
+                    {/* Move to Folder */}
+                    <div className="relative" ref={moveDropdownRef}>
+                        <button
+                            onClick={(e) => { e.preventDefault(); setIsMoveOpen(!isMoveOpen); }}
+                            className={cn(
+                                "p-1.5 rounded transition-colors",
+                                isMoveOpen ? "text-primary bg-primary/10" : "text-gray-600 hover:text-white hover:bg-white/10"
+                            )}
+                            title="Move to folder"
+                        >
+                            <FolderInput className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        <AnimatePresence>
+                            {isMoveOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                    className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col py-1"
+                                >
+                                    <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-white/5">
+                                        Move to...
+                                    </div>
+                                    <div className="max-h-[200px] overflow-y-auto">
+                                        {/* Option: Unfiled */}
+                                        {series.folderId && (
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); onMove(series.id, undefined); setIsMoveOpen(false); }}
+                                                className="w-full text-left px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 flex items-center gap-2"
+                                            >
+                                                <Folder className="w-3 h-3 text-gray-600" />
+                                                Unfiled (Remove)
+                                            </button>
+                                        )}
+
+                                        {/* Folders */}
+                                        {availableFolders.filter(f => f.id !== series.folderId).map(folder => (
+                                            <button
+                                                key={folder.id}
+                                                onClick={(e) => { e.preventDefault(); onMove(series.id, folder.id); setIsMoveOpen(false); }}
+                                                className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2 truncate"
+                                            >
+                                                <Folder className="w-3 h-3 text-primary" />
+                                                <span className="truncate">{folder.name}</span>
+                                            </button>
+                                        ))}
+
+                                        {availableFolders.filter(f => f.id !== series.folderId).length === 0 && !series.folderId && (
+                                            <div className="px-3 py-2 text-[10px] text-gray-600 italic text-center">
+                                                No folders available
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     <button
                         onClick={(e) => { e.preventDefault(); onDelete(series.id); }}
