@@ -1,6 +1,5 @@
 export interface AIRecommendation {
     championName: string;
-    role: string;
     winRate: number;
     reasoning: string[];
     score: number; // 0-100 relevance score
@@ -20,7 +19,6 @@ export const MOCK_AI_DATA: AIDraftState = {
     recommendations: [
         {
             championName: "Sejuani",
-            role: "JUNGLE",
             winRate: 60,
             reasoning: [
                 "High synergy with Ashe / Braum",
@@ -31,7 +29,6 @@ export const MOCK_AI_DATA: AIDraftState = {
         },
         {
             championName: "Maokai",
-            role: "JUNGLE",
             winRate: 58,
             reasoning: [
                 "Excellent objective control",
@@ -42,7 +39,6 @@ export const MOCK_AI_DATA: AIDraftState = {
         },
         {
             championName: "Jarvan IV",
-            role: "JUNGLE",
             winRate: 53,
             reasoning: [
                 "Early game pressure",
@@ -53,7 +49,6 @@ export const MOCK_AI_DATA: AIDraftState = {
         },
         {
             championName: "Vi",
-            role: "JUNGLE",
             winRate: 51,
             reasoning: [
                 "Guaranteed backline access",

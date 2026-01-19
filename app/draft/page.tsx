@@ -82,22 +82,18 @@ function DraftPageContent() {
 
     const [blueTeam, setBlueTeam] = useState(() => {
         const team = TEAMS.find(t => t.id === blueTeamId) || TEAMS[0];
-        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-        const placeholders = roles.map(role => ({
-            id: `blue-placeholder-${role}`,
-            nickname: `Select ${role}`,
-            role
+        const placeholders = Array.from({ length: 5 }, (_, i) => ({
+            id: `blue-placeholder-${i}`,
+            nickname: `Select Player ${i + 1}`
         }));
         return { ...team, players: placeholders };
     });
 
     const [redTeam, setRedTeam] = useState(() => {
         const team = TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]);
-        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-        const placeholders = roles.map(role => ({
-            id: `red-placeholder-${role}`,
-            nickname: `Select ${role}`,
-            role
+        const placeholders = Array.from({ length: 5 }, (_, i) => ({
+            id: `red-placeholder-${i}`,
+            nickname: `Select Player ${i + 1}`
         }));
         return { ...team, players: placeholders };
     });
@@ -144,8 +140,7 @@ function DraftPageContent() {
                     // Extract players from report
                     const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
                         id: `blue-available-${playerName}-${i}`,
-                        nickname: playerName,
-                        role: 'TOP' as any
+                        nickname: playerName
                     }));
                     setBlueAvailablePlayers(allAvailablePlayers);
                 } else {
@@ -170,8 +165,7 @@ function DraftPageContent() {
                     // Extract players from report
                     const allAvailablePlayers = Object.keys(report.player_stats_grouped).map((playerName, i) => ({
                         id: `red-available-${playerName}-${i}`,
-                        nickname: playerName,
-                        role: 'TOP' as any
+                        nickname: playerName
                     }));
                     setRedAvailablePlayers(allAvailablePlayers);
                 } else {
@@ -344,11 +338,9 @@ function DraftPageContent() {
                             const newPlayers = [...(prev.players || [])];
                             const index = newPlayers.findIndex(p => p.nickname === player.nickname);
                             if (index !== -1) {
-                                const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
                                 newPlayers[index] = {
-                                    id: `blue-placeholder-${roles[index]}`,
-                                    nickname: `Select ${roles[index]}`,
-                                    role: roles[index]
+                                    id: `blue-placeholder-${index}`,
+                                    nickname: `Select Player ${index + 1}`
                                 };
                             }
                             return { ...prev, players: newPlayers };
@@ -358,11 +350,9 @@ function DraftPageContent() {
                             const newPlayers = [...(prev.players || [])];
                             const index = newPlayers.findIndex(p => p.nickname === player.nickname);
                             if (index !== -1) {
-                                const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
                                 newPlayers[index] = {
-                                    id: `red-placeholder-${roles[index]}`,
-                                    nickname: `Select ${roles[index]}`,
-                                    role: roles[index]
+                                    id: `red-placeholder-${index}`,
+                                    nickname: `Select Player ${index + 1}`
                                 };
                             }
                             return { ...prev, players: newPlayers };
@@ -375,16 +365,14 @@ function DraftPageContent() {
                 const newPlayer: any = {
                     id: `${side}-${player.nickname || player.name}-${Date.now()}`,
                     nickname: player.nickname || player.name,
-                    role: 'TOP' // Will be re-assigned based on index
                 };
 
                 // Find the first slot that hasn't been filled with a real player
-                // Placeholder players have ids like 'blue-placeholder-TOP'
+                // Placeholder players have ids like 'blue-placeholder-0'
 
                 if (side === 'blue') {
                     setBlueTeam(prev => {
                         const newPlayers = [...(prev.players || [])];
-                        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
 
                         // Find first placeholder slot
                         const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
@@ -392,7 +380,6 @@ function DraftPageContent() {
                         if (firstPlaceholderIndex !== -1) {
                             newPlayers[firstPlaceholderIndex] = {
                                 ...newPlayer,
-                                role: roles[firstPlaceholderIndex]
                             };
                         }
 
@@ -401,13 +388,11 @@ function DraftPageContent() {
                 } else {
                     setRedTeam(prev => {
                         const newPlayers = [...(prev.players || [])];
-                        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
                         const firstPlaceholderIndex = newPlayers.findIndex(p => p.id.includes('placeholder'));
 
                         if (firstPlaceholderIndex !== -1) {
                             newPlayers[firstPlaceholderIndex] = {
                                 ...newPlayer,
-                                role: roles[firstPlaceholderIndex]
                             };
                         }
                         return { ...prev, players: newPlayers };
@@ -680,7 +665,7 @@ function DraftPageContent() {
                                                                         "w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors",
                                                                         isSelectedOnBlue ? "bg-blue-500 text-white" : "bg-white/10 text-gray-500"
                                                                     )}>
-                                                                        {isSelectedOnBlue ? <Check className="w-4 h-4" /> : p.role?.charAt(0) || "?"}
+                                                                        {isSelectedOnBlue ? <Check className="w-4 h-4" /> : "?"}
                                                                     </div>
                                                                     <span className={cn(
                                                                         "transition-colors",
@@ -724,7 +709,7 @@ function DraftPageContent() {
                                                                         "w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors",
                                                                         isSelectedOnRed ? "bg-red-500 text-white" : "bg-white/10 text-gray-500"
                                                                     )}>
-                                                                        {isSelectedOnRed ? <Check className="w-4 h-4" /> : p.role?.charAt(0) || "?"}
+                                                                        {isSelectedOnRed ? <Check className="w-4 h-4" /> : "?"}
                                                                     </div>
                                                                     <span className={cn(
                                                                         "transition-colors",

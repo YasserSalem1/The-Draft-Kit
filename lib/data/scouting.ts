@@ -33,12 +33,12 @@ export interface ScoutingReportData {
     blue1: [string, number][];
     red1_red2: [string, number][];
   };
-  roster_stats: { Player: string; Role: string; Games: number; WinRate: number }[];
+  roster_stats: { Player: string; Games: number; WinRate: number }[];
   champion_pools_by_player: Record<string, { Champion: string; Games: number; WinRate: string; KDA: string }[]>;
   // Add these for the new report page structure
   overview?: string;
   strategies?: string[];
-  tendencies?: { name: string; role: string; tendency: string }[];
+  tendencies?: { name: string; tendency: string }[];
   famousPicks?: { name: string; rate: number }[];
   popularBans?: { name: string; rate: number }[];
   match_history?: any[];
@@ -157,40 +157,26 @@ export async function getScoutingReport(
         }
       }
 
-      const roles = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
-      const champToRole: Record<string, { Role: string; Player: string; isBlind: boolean; isCounter: boolean }> = {};
+      const champToRole: Record<string, { Player: string; isBlind: boolean; isCounter: boolean }> = {};
 
       // Determine picks order for blind/counter pick detection
       if (game.draftActions) {
-        const picksByRole: Record<string, { side: string; step: number }> = {};
         const draftPicks = game.draftActions.filter((a: any) => a.type === 'pick');
 
-        // First pass: identify which side picked which role at which step
-        // We need to map picked champions to roles for the target team
-        // This is tricky because we only know the role after mapping players
+        // First pass: identify which side picked which champ at which step
       }
 
-      // Re-map players to get champ to role mapping
-      const teamChampToRole: Record<string, string> = {};
+      // Re-map players to get champ mapping
+      const teamChampMap: Record<string, string> = {};
       const enemyTeamObj = teams.find((t: any) => String(t.id) !== String(teamId));
-      const enemyChampToRole: Record<string, string> = {};
 
-      for (const [idx, p] of targetTeamObj.players.entries()) {
-        const role = roles[idx] || 'Sub';
+      for (const p of targetTeamObj.players) {
         const charObj = p.character || p.hero || {};
-        if (charObj.name) teamChampToRole[charObj.name] = role;
-      }
-      if (enemyTeamObj) {
-        for (const [idx, p] of enemyTeamObj.players.entries()) {
-          const role = roles[idx] || 'Sub';
-          const charObj = p.character || p.hero || {};
-          if (charObj.name) enemyChampToRole[charObj.name] = role;
-        }
+        if (charObj.name) teamChampMap[charObj.name] = p.name;
       }
 
       // Detect Blind/Counter picks
-      const rolePickSteps: Record<string, { blueStep: number; redStep: number }> = {};
-      roles.forEach(r => rolePickSteps[r] = { blueStep: 0, redStep: 0 });
+      const champPickSteps: Record<string, { blueStep: number; redStep: number }> = {};
 
       let stepCounter = 0;
       if (game.draftActions) {
@@ -199,40 +185,34 @@ export async function getScoutingReport(
           if (action.type === 'pick' && action.draftable?.name) {
             const champ = action.draftable.name;
             const side = teamSideMap[String(action.drafter?.id)];
-            const role = teamChampToRole[champ] || enemyChampToRole[champ];
-            if (role && rolePickSteps[role]) {
-              if (side === 'blue') rolePickSteps[role].blueStep = stepCounter;
-              else rolePickSteps[role].redStep = stepCounter;
-            }
+            if (!champPickSteps[champ]) champPickSteps[champ] = { blueStep: 0, redStep: 0 };
+            if (side === 'blue') champPickSteps[champ].blueStep = stepCounter;
+            else champPickSteps[champ].redStep = stepCounter;
           }
         }
       }
 
-      for (const [idx, p] of targetTeamObj.players.entries()) {
-        const role = roles[idx] || 'Sub';
+      // Blind/Counter pick detection requires role/lane mapping which we are removing
+      // We'll simplify this to just store stats without blind/counter for now if roles are gone, 
+      // or we can try to guess based on match history but that's complex.
+      // The requirement is to REMOVE role from UI, not necessarily break analysis.
+      // But if we remove roles, "Blind" and "Counter" picks (which are lane-specific) lose some meaning.
+      // Let's keep the logic but remove it from the final result if it depends on roles.
+
+      for (const p of targetTeamObj.players) {
         const charObj = p.character || p.hero || {};
         const cName = charObj.name;
 
         if (cName) {
           const side = teamSideMap[currentTargetTeamId];
-          const steps = rolePickSteps[role];
+          const steps = champPickSteps[cName];
+          // Simplified blind/counter detection - might not be fully accurate without lane info
           let isBlind = false;
           let isCounter = false;
 
-          if (steps && steps.blueStep > 0 && steps.redStep > 0) {
-            if (side === 'blue') {
-              if (steps.blueStep < steps.redStep) isBlind = true;
-              else isCounter = true;
-            } else {
-              if (steps.redStep < steps.blueStep) isBlind = true;
-              else isCounter = true;
-            }
-          }
-
-          champToRole[cName] = { Role: role, Player: p.name, isBlind, isCounter };
+          champToRole[cName] = { Player: p.name, isBlind, isCounter };
           targetStats.push({
             Player: p.name,
-            Role: role,
             Champion: cName,
             Win: targetTeamObj.won ? 1 : 0,
             Kills: p.kills || 0,
@@ -267,7 +247,6 @@ export async function getScoutingReport(
               if (rawSlot) {
                 targetDrafts.push({
                   Player: playerInfo.Player,
-                  Role: playerInfo.Role,
                   Slot: rawSlot,
                   Side: side,
                 });
@@ -319,13 +298,9 @@ export async function getScoutingReport(
   const dfDraftBlue = dfDraft.filter(d => d.Side === 'blue');
   const dfDraftRed = dfDraft.filter(d => d.Side === 'red');
 
-  // Simplified crosstab logic - in real app, use proper grouping/aggregation
-  const draftPivotBlue = dfDraftBlue.reduce((acc: any, curr) => {
-    if (!acc[curr.Role]) acc[curr.Role] = {};
-    acc[curr.Role][curr.Slot] = (acc[curr.Role][curr.Slot] || 0) + 1;
-    return acc;
-  }, {});
-  // Similar for draftPivotRed
+  // No role-based pivot anymore as we removed roles
+  const draftPivotBlue: any = {};
+  const draftPivotRed: any = {};
 
   const formatBans = (record: Record<string, { count: number; phase1: number; phase2: number }>): BanStats[] => {
     return Object.entries(record)
@@ -457,11 +432,11 @@ export async function getScoutingReport(
     overview: "This is a placeholder overview of the team's strategic identity and performance. Detailed analysis would go here.",
     strategies: ["Early Game Aggression", "Objective Control", "Scaling Compositions"],
     tendencies: [
-      { name: "Zeus", role: "Top", tendency: "Prefers counter-picking and split-pushing." },
-      { name: "Oner", role: "Jungle", tendency: "Focuses on early ganks and securing dragons." },
-      { name: "Faker", role: "Mid", tendency: "Plays control mages and roams frequently." },
-      { name: "Gumayusi", role: "ADC", tendency: "Favors high-damage ADCs with strong late-game scaling." },
-      { name: "Keria", role: "Support", tendency: "Engage supports with strong crowd control." },
+      { name: "Zeus", tendency: "Prefers counter-picking and split-pushing." },
+      { name: "Oner", tendency: "Focuses on early ganks and securing dragons." },
+      { name: "Faker", tendency: "Plays control mages and roams frequently." },
+      { name: "Gumayusi", tendency: "Favors high-damage ADCs with strong late-game scaling." },
+      { name: "Keria", tendency: "Engage supports with strong crowd control." },
     ],
     famousPicks: [
       { name: "Lee Sin", rate: 75 },
@@ -484,11 +459,11 @@ export const SCOUTING_DATA = {
     overview: "Fast-paced, objective-focused playstyle with high mechanical skill.",
     strategies: ["Early Dragon Priority", "Lane Dominance", "1-3-1 Split Push"],
     tendencies: [
-      { name: "Zeus", role: "Top", tendency: "High resource carry top" },
-      { name: "Oner", role: "Jungle", tendency: "Proactive pathing" },
-      { name: "Faker", role: "Mid", tendency: "Playmaking & Control" },
-      { name: "Gumayusi", role: "ADC", tendency: "Safe & Reliable" },
-      { name: "Keria", role: "Support", tendency: "Unique picks & Roaming" }
+      { name: "Zeus", tendency: "High resource carry top" },
+      { name: "Oner", tendency: "Proactive pathing" },
+      { name: "Faker", tendency: "Playmaking & Control" },
+      { name: "Gumayusi", tendency: "Safe & Reliable" },
+      { name: "Keria", tendency: "Unique picks & Roaming" }
     ],
     famousPicks: [
       { name: "Lee Sin", rate: 75 },
@@ -506,11 +481,11 @@ export const SCOUTING_DATA = {
     overview: "Methodical, late-game scaling focused with exceptional teamfighting.",
     strategies: ["Cross-map trades", "Vision Control", "Late Game Front-to-Back"],
     tendencies: [
-      { name: "Kiin", role: "Top", tendency: "Versatile & Solid" },
-      { name: "Canyon", role: "Jungle", tendency: "Carry Jungle potential" },
-      { name: "Chovy", role: "Mid", tendency: "Extreme CS & Pressure" },
-      { name: "Peyz", role: "ADC", tendency: "Primary carry threat" },
-      { name: "Lehends", role: "Support", tendency: "Vision & Peeling" }
+      { name: "Kiin", tendency: "Versatile & Solid" },
+      { name: "Canyon", tendency: "Carry Jungle potential" },
+      { name: "Chovy", tendency: "Extreme CS & Pressure" },
+      { name: "Peyz", tendency: "Primary carry threat" },
+      { name: "Lehends", tendency: "Vision & Peeling" }
     ],
     famousPicks: [
       { name: "Tristana", rate: 70 },

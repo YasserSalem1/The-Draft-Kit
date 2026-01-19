@@ -73,7 +73,6 @@ export function PlayerDetailsPanel({ player, onClose, teamName, teamColor, repor
                                     </span>
                                 </div>
                                 <h2 className="text-4xl font-bold text-white uppercase italic tracking-tighter">{player.nickname || player.name}</h2>
-                                <p className="text-gray-400 font-medium tracking-widest text-sm mt-1">{player.role}</p>
                             </div>
                         </div>
 

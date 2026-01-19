@@ -8,10 +8,9 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useDraft } from '@/lib/draft/draft-context';
 import { useSeries } from '@/lib/draft/series-context';
-import championRoles from '@/champion_role.json';
 import { isFlexPick } from '@/lib/utils/flex-pick';
 
-const ROLES = ['All', 'Top', 'Jungle', 'Mid', 'Bot', 'Support'];
+const ROLES = ['All', 'Assassin', 'Fighter', 'Mage', 'Marksman', 'Support', 'Tank'];
 
 export function ChampionGrid({
     altAddSide,
@@ -58,9 +57,7 @@ export function ChampionGrid({
             
             let matchesRole = activeRole === 'All';
             if (!matchesRole) {
-                const roleKey = activeRole as keyof typeof championRoles;
-                const roleChamps = championRoles[roleKey] || [];
-                matchesRole = roleChamps.includes(c.name);
+                matchesRole = c.tags.includes(activeRole);
             }
 
             if (altAddSide) {

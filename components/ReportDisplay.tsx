@@ -213,16 +213,14 @@ const ReportDisplay: React.FC<ScoutingReportProps> = ({ report }) => {
               <thead className="bg-surface/80 border-b border-white/10 text-gray-400 font-black uppercase tracking-widest">
                 <tr>
                   <th className="px-4 py-3 text-left">Player</th>
-                  <th className="px-4 py-3 text-left">Role</th>
                   <th className="px-4 py-3 text-center">G</th>
                   <th className="px-4 py-3 text-right">WR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
                 {report.roster_stats.map((stat) => (
-                  <tr key={`${stat.Player}-${stat.Role}`} className="hover:bg-white/5 transition-colors">
+                  <tr key={stat.Player} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 font-bold text-white">{stat.Player}</td>
-                    <td className="px-4 py-3 text-gray-400">{stat.Role}</td>
                     <td className="px-4 py-3 text-center font-mono font-bold text-gray-300">{stat.Games}</td>
                     <td className="px-4 py-3 text-right">
                       <span className={cn("font-black", stat.WinRate >= 50 ? 'text-green-400' : 'text-red-400')}>

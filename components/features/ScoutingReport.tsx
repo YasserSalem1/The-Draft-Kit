@@ -95,7 +95,6 @@ function TeamReportCard({ team, report, side }: { team: typeof TEAMS[0], report:
                     {report.tendencies.map((player, i) => (
                         <div key={i} className="flex items-center justify-between p-2 rounded hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
                             <div className="flex items-center gap-3">
-                                <span className="text-xs text-gray-500 font-bold w-12">{player.role}</span>
                                 <span className="text-white font-bold">{player.name}</span>
                             </div>
                             <span className="text-xs text-gray-400 italic">{player.tendency}</span>
