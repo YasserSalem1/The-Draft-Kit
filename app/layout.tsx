@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "R&D Drafting Platform",
+  title: "The Drafting Kit",
   description: "Advanced Drafting & Reporting Intelligence",
 };
 

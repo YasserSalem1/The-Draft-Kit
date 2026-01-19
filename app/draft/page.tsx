@@ -79,8 +79,27 @@ function DraftPageContent() {
     const redTournamentId = searchParams.get('redTournament');
     const folderId = searchParams.get('folderId'); // Get folderId
 
-    const [blueTeam, setBlueTeam] = useState(TEAMS.find(t => t.id === blueTeamId) || TEAMS[0]);
-    const [redTeam, setRedTeam] = useState(TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]));
+    const [blueTeam, setBlueTeam] = useState(() => {
+        const team = TEAMS.find(t => t.id === blueTeamId) || TEAMS[0];
+        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+        const placeholders = roles.map(role => ({
+            id: `blue-placeholder-${role}`,
+            nickname: `Select ${role}`,
+            role
+        }));
+        return { ...team, players: placeholders };
+    });
+
+    const [redTeam, setRedTeam] = useState(() => {
+        const team = TEAMS.find(t => t.id === redTeamId) || (TEAMS[1] || TEAMS[0]);
+        const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+        const placeholders = roles.map(role => ({
+            id: `red-placeholder-${role}`,
+            nickname: `Select ${role}`,
+            role
+        }));
+        return { ...team, players: placeholders };
+    });
     const [blueReport, setBlueReport] = useState<ScoutingReportData | null>(null);
     const [redReport, setRedReport] = useState<ScoutingReportData | null>(null);
     const [blueAvailablePlayers, setBlueAvailablePlayers] = useState<Player[]>([]);
@@ -127,25 +146,18 @@ function DraftPageContent() {
                         role: 'TOP' as any
                     }));
                     setBlueAvailablePlayers(allAvailablePlayers);
-
-                    // Initialize team with 5 players (Auto-Select first 5 or fill)
-                    const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-                    const initialRoster = roles.map((role, i) => {
-                        const existingPlayer = allAvailablePlayers[i];
-                        if (existingPlayer) {
-                            return {
-                                ...existingPlayer,
-                                id: `blue-roster-${existingPlayer.nickname}-${i}`,
-                                role
-                            };
-                        }
-                        return {
-                            id: `blue-placeholder-${role}`,
-                            nickname: `Select ${role}`,
-                            role
-                        };
-                    });
-                    setBlueTeam(prev => ({ ...prev, players: initialRoster }));
+                } else {
+                    // Fallback to default roster if report failed
+                    const defaultTeam = TEAMS.find(t => t.id === blueTeamId);
+                    if (defaultTeam && defaultTeam.players) {
+                        setBlueAvailablePlayers(defaultTeam.players);
+                    }
+                }
+            } else {
+                // Fallback if no ID (shouldn't happen often)
+                const defaultTeam = TEAMS[0];
+                if (defaultTeam && defaultTeam.players) {
+                    setBlueAvailablePlayers(defaultTeam.players);
                 }
             }
             if (redTeamId) {
@@ -159,25 +171,18 @@ function DraftPageContent() {
                         role: 'TOP' as any
                     }));
                     setRedAvailablePlayers(allAvailablePlayers);
-
-                    // Initialize team with 5 players (Auto-Select first 5 or fill)
-                    const roles: ('TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT')[] = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-                    const initialRoster = roles.map((role, i) => {
-                        const existingPlayer = allAvailablePlayers[i];
-                        if (existingPlayer) {
-                            return {
-                                ...existingPlayer,
-                                id: `red-roster-${existingPlayer.nickname}-${i}`,
-                                role
-                            };
-                        }
-                        return {
-                            id: `red-placeholder-${role}`,
-                            nickname: `Select ${role}`,
-                            role
-                        };
-                    });
-                    setRedTeam(prev => ({ ...prev, players: initialRoster }));
+                } else {
+                    // Fallback to default roster if report failed
+                    const defaultTeam = TEAMS.find(t => t.id === redTeamId);
+                    if (defaultTeam && defaultTeam.players) {
+                        setRedAvailablePlayers(defaultTeam.players);
+                    }
+                }
+            } else {
+                // Fallback
+                const defaultTeam = TEAMS.find(t => t.id === redTeamId) || TEAMS[1];
+                if (defaultTeam && defaultTeam.players) {
+                    setRedAvailablePlayers(defaultTeam.players);
                 }
             }
         }

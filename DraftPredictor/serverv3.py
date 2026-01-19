@@ -89,33 +89,119 @@ def init_resources():
         print(f"❌ Failed to load model: {e}")
         sys.exit(1)
 
-from google import genai
-from groq import Groq
+import google.generativeai as genai
+import requests
+from bs4 import BeautifulSoup
+
 
 # ... (Previous globals remain) ...
 
 # Initialize Gemini
 # User provided snippet uses GOOGLE_API_KEY. Let's support both.
 API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not API_KEY:
     print("⚠️ Gemini/Google API Key missing. Strategic Layer will be disabled.")
-
-if GROQ_API_KEY:
-    groq_client = Groq(api_key=GROQ_API_KEY)
-else:
-    print("⚠️ GROQ_API_KEY missing. Reasoning Layer will be disabled.")
 
 class StrategyManager:
     def __init__(self):
         self.candidate_cache = {}  # Key: (blue_team_name, red_team_name, phase_name) -> candidates list
         # Initialize Google GenAI Client
+        # Initialize Google GenAI
         if API_KEY:
-            self.client = genai.Client(api_key=API_KEY)
+            genai.configure(api_key=API_KEY)
+            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
         else:
-            self.client = None
+            self.model = None
 
+
+    def get_patch_report(self):
+        """
+        Scrapes gol.gg for the latest pro play stats.
+        Top 10 by Presence (Picks + Bans).
+        """
+        print("🌍 Fetching Patch Report from Gol.gg...")
+        
+        try:
+            # Stats for Season 15 (S15) - Spring Split
+            # Using a generic URL that usually redirects or shows the latest split stats
+            # Or hardcoding for S15 Spring which is likely the context of the hackathon/current time
+            url = "https://gol.gg/champion/list/season-S15/split-Spring/tournament-ALL/"
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code != 200:
+                raise Exception(f"Gol.gg returned status {resp.status_code}")
+                
+            soup = BeautifulSoup(resp.content, 'html.parser')
+            
+            # Find the main stats table
+            table = soup.find('table', class_='table_list')
+            if not table:
+                raise Exception("Could not find stats table on gol.gg")
+                
+            rows = table.find_all('tr')[1:] # Skip header
+            
+            champs_data = []
+            
+            # Parse rows
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) < 15: continue # Ensure we have enough columns for CSD@15
+                
+                name_link = cols[0].find('a')
+                if not name_link: continue
+                
+                name = name_link.text.strip()
+                
+                # Column Indices based on user screenshot:
+                # 0: Champion, 1: Picks, 2: Bans, 3: Prio, 4: Wins, 5: Losses, 6: Winrate
+                # ... 14: CSD@15 (2nd to last)
+                
+                prio_val = cols[3].text.strip()
+                winrate_val = cols[6].text.strip()
+                csd15_val = cols[14].text.strip()
+                
+                # Convert Prio to float for sorting
+                try:
+                    prio_num = float(prio_val.replace('%', ''))
+                except:
+                    prio_num = 0
+                    
+                champs_data.append({
+                    "name": name,
+                    "role": "FLEX",
+                    "win_rate": winrate_val,
+                    "prio_score": prio_val,
+                    "csd_15": csd15_val,
+                    "tier": "S+" if prio_num > 80 else ("S" if prio_num > 50 else "A"),
+                    "sort_val": prio_num
+                })
+                
+            # Sort by Prio Score descending
+            champs_data.sort(key=lambda x: x['sort_val'], reverse=True)
+            
+            top_10 = champs_data[:10]
+            
+            return {
+                "patch_version": "S15 Major Leagues",
+                "tournaments": "Global (LCK, LPL, LEC, LCS)",
+                "games_analyzed": "Latest Split Data",
+                "champs": top_10
+            }
+            
+        except Exception as e:
+            print(f"❌ Patch Report Scraping Failed: {e}")
+            return {
+                "error_log": str(e),
+                "patch_version": "N/A",
+                "tournaments": "N/A",
+                "games_analyzed": "N/A", 
+                "champs": []
+            }
 
     def get_phase_info(self, step_index):
         """Returns (phase_name, action_type) for a given step."""
@@ -343,13 +429,10 @@ class StrategyManager:
             print(f"DEBUG: Failed to write prompt log: {e}")
             
         try:
-            if not self.client:
-                 raise ValueError("Client not initialized")
+            if not self.model:
+                 raise ValueError("GenAI Model not initialized")
                  
-            response = self.client.models.generate_content(
-                model="gemini-3-flash-preview",
-                contents=prompt
-            )
+            response = self.model.generate_content(prompt)
             text = response.text.replace("```json", "").replace("```", "").strip()
             
             # LOGGING RESPONSE
@@ -381,81 +464,7 @@ class StrategyManager:
             print(f"❌ Candidate Generation Failed: {e}")
             return []
 
-    def generate_reasoning(self, draft_state_text, recommendations, next_step_info=None):
-        if not GROQ_API_KEY:
-             print("⚠️ Groq API Key missing. Skipping reasoning.")
-             return {}
 
-        print("🧠 Generating Detailed Reasoning via Groq...")
-        
-        rec_list = ", ".join([r['championName'] for r in recommendations])
-        
-        # Determine what the next step will be (opponent's turn)
-        next_step_desc = "Unknown"
-        if next_step_info:
-            side, action = next_step_info
-            next_step_desc = f"{side.upper()} team will {action}"
-        
-        prompt = f"""
-You are an elite League of Legends Draft Analyst. Analyze these recommendations in the context of the current draft.
-
-{draft_state_text}
-
-TOP 5 RECOMMENDED CHAMPIONS: {rec_list}
-
-NEXT STEP: {next_step_desc}
-
-YOUR TASK:
-1. Provide clear, actionable, and advisable bullet-point analysis for each recommendation
-2. Predict the opponent's top 5 likely responses for the next step
-
-For EACH of the 5 recommended champions, provide 3-4 SHORT, PUNCHY bullet points (max 6-8 words each):
-• Synergy: [Ally champion] + [key combo/mechanic]
-• Counters: [Enemy champion] - [how]
-• Value: [Role/strategy fulfilled]
-• Timing: [Why now]
-
-Return ONLY valid JSON (no markdown):
-{{
-    "analyses": {{
-        "ChampionName1": [
-            "• Synergy: [Ally] via [mechanic]",
-            "",
-            "• Counters [Enemy] through [advantage]",
-            "",
-            "• Fulfills [strategy/role]",
-            "",
-            "• Timing: [brief reason]"
-        ],
-        "ChampionName2": [...]
-    }},
-    "draft_summary": "1-2 sentences on how the current draft is unfolding and what both teams are building towards.",
-    "critical_picks": ["Most important champion from the 5 recommendations"],
-    "threat_assessment": "What are the biggest threats/weaknesses in the current draft that these picks address?"
-}}
-
-CRITICAL: 
-- Each bullet point MUST be 6-8 words MAX
-- Include empty string "" between bullet points for newline spacing
-- Be BRIEF, ACTIONABLE, and SPECIFIC
-- Reference actual champion names from draft
-- No fluff or generic statements - just key facts
-"""
-        
-        try:
-            response = groq_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model="llama-3.3-70b-versatile",
-                temperature=0.7,
-                max_tokens=3072
-            )
-            text = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
-            analysis = json.loads(text)
-            print("✅ Reasoning Generated via Groq.")
-            return analysis
-        except Exception as e:
-            print(f"❌ Reasoning Generation Failed: {e}")
-            return {}
 
 strategy_manager = StrategyManager()
 
@@ -648,7 +657,7 @@ def get_predictions_logic(data):
         strategy_boost_map = {}
         
         # Dynamic Decay: Trust LLM less as draft progresses
-        decay_factor = max(0.2, 1.0 - (current_idx / 25.0))
+        decay_factor = max(0.1, 1.0 - (current_idx / 10.0))
         
         # Transformer Weight: Trust Transformer MORE as draft progresses (Inverse of Decay)
         # Start at 0.40, grow to 1.0
@@ -898,6 +907,14 @@ def get_recommendations():
         })
     except Exception as e:
         print(f"❌ Recommendation Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/patch-report', methods=['GET'])
+def patch_report():
+    try:
+        report = strategy_manager.get_patch_report()
+        return jsonify(report)
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/strategy', methods=['POST'])

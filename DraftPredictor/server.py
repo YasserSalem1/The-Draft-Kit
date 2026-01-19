@@ -90,6 +90,8 @@ def init_resources():
         sys.exit(1)
 
 import google.generativeai as genai
+import requests
+from bs4 import BeautifulSoup
 from groq import Groq
 
 # ... (Previous globals remain) ...
@@ -114,6 +116,94 @@ class StrategyManager:
         self.candidate_cache = {}  # Key: (blue_team_name, red_team_name, phase_name) -> candidates list
         # User has access to Gemini 3 Flash Prev as confirmed by debug script
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+    def get_patch_report(self):
+        """
+        Scrapes gol.gg for the latest pro play stats.
+        Top 10 by Presence (Picks + Bans).
+        """
+        print("🌍 Fetching Patch Report from Gol.gg...")
+        
+        try:
+            # Stats for Season 15 (S15) - Spring Split
+            # Using a generic URL that usually redirects or shows the latest split stats
+            # Or hardcoding for S15 Spring which is likely the context of the hackathon/current time
+            url = "https://gol.gg/champion/list/season-S15/split-Spring/tournament-ALL/"
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code != 200:
+                raise Exception(f"Gol.gg returned status {resp.status_code}")
+                
+            soup = BeautifulSoup(resp.content, 'html.parser')
+            
+            # Find the main stats table
+            table = soup.find('table', class_='table_list')
+            if not table:
+                raise Exception("Could not find stats table on gol.gg")
+                
+            rows = table.find_all('tr')[1:] # Skip header
+            
+            champs_data = []
+            
+            # Parse rows
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) < 15: continue # Ensure we have enough columns for CSD@15
+                
+                name_link = cols[0].find('a')
+                if not name_link: continue
+                
+                name = name_link.text.strip()
+                
+                # Column Indices based on user screenshot:
+                # 0: Champion, 1: Picks, 2: Bans, 3: Prio, 4: Wins, 5: Losses, 6: Winrate
+                # ... 14: CSD@15 (2nd to last)
+                
+                prio_val = cols[3].text.strip()
+                winrate_val = cols[6].text.strip()
+                csd15_val = cols[14].text.strip()
+                
+                # Convert Prio to float for sorting
+                try:
+                    prio_num = float(prio_val.replace('%', ''))
+                except:
+                    prio_num = 0
+                    
+                champs_data.append({
+                    "name": name,
+                    "role": "FLEX",
+                    "win_rate": winrate_val,
+                    "prio_score": prio_val,
+                    "csd_15": csd15_val,
+                    "tier": "S+" if prio_num > 80 else ("S" if prio_num > 50 else "A"),
+                    "sort_val": prio_num
+                })
+                
+            # Sort by Prio Score descending
+            champs_data.sort(key=lambda x: x['sort_val'], reverse=True)
+            
+            top_10 = champs_data[:10]
+            
+            return {
+                "patch_version": "S15 Major Leagues",
+                "tournaments": "Global (LCK, LPL, LEC, LCS)",
+                "games_analyzed": "Latest Split Data",
+                "champs": top_10
+            }
+            
+        except Exception as e:
+            print(f"❌ Patch Report Scraping Failed: {e}")
+            return {
+                "error_log": str(e),
+                "patch_version": "N/A",
+                "tournaments": "N/A",
+                "games_analyzed": "N/A", 
+                "champs": []
+            }
 
     def get_phase_info(self, step_index):
         """Returns (phase_name, action_type) for a given step."""
@@ -640,7 +730,8 @@ def get_predictions_logic(data):
         strategy_boost_map = {}
         
         # Dynamic Decay: Trust LLM less as draft progresses
-        decay_factor = max(0.2, 1.0 - (current_idx / 25.0))
+        # Dynamic Decay: Trust LLM less as draft progresses
+        decay_factor = max(0.1, 1.0 - (current_idx / 15.0))
         
         # Transformer Weight: Trust Transformer MORE as draft progresses (Inverse of Decay)
         # Start at 0.40, grow to 1.0
@@ -890,6 +981,16 @@ def get_recommendations():
         })
     except Exception as e:
         print(f"❌ Recommendation Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/patch-report', methods=['GET'])
+def patch_report():
+    try:
+        report = strategy_manager.get_patch_report()
+        return jsonify(report)
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/strategy', methods=['POST'])
