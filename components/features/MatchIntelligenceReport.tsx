@@ -7,8 +7,8 @@ import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MatchIntelligenceReportProps {
-    blueTeam: { name: string; players: any[] };
-    redTeam: { name: string; players: any[] };
+    blueTeam: { name: string; shortName?: string; players?: any[] };
+    redTeam: { name: string; shortName?: string; players?: any[] };
 }
 
 interface StrategyData {

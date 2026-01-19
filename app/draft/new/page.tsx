@@ -40,8 +40,8 @@ function DraftSetupContent() {
             const params = new URLSearchParams({
                 blue: blueTeam.id,
                 red: redTeam.id,
-                blueTournament: blueLeague?.parentId || '',
-                redTournament: redLeague?.parentId || '',
+                blueRegion: blueTeam.region,
+                redRegion: redTeam.region,
                 format: format,
             });
 

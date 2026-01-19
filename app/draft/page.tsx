@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { TEAMS, Player } from '@/lib/data/teams';
+import { LEAGUES } from '@/lib/data/leagues';
 import { PlayerCard } from '@/components/ui/PlayerCard';
 import { ChampionGrid } from '@/components/features/ChampionGrid';
 import { PlayerDetailsPanel } from '@/components/features/PlayerDetailsPanel';
@@ -75,8 +76,8 @@ function DraftPageContent() {
     const searchParams = useSearchParams();
     const blueTeamId = searchParams.get('blue');
     const redTeamId = searchParams.get('red');
-    const blueTournamentId = searchParams.get('blueTournament');
-    const redTournamentId = searchParams.get('redTournament');
+    const blueRegion = searchParams.get('blueRegion');
+    const redRegion = searchParams.get('redRegion');
     const folderId = searchParams.get('folderId'); // Get folderId
 
     const [blueTeam, setBlueTeam] = useState(() => {
@@ -136,7 +137,8 @@ function DraftPageContent() {
     useEffect(() => {
         async function fetchReports() {
             if (blueTeamId) {
-                const report = await getScoutingReport(blueTeamId, blueTournamentId || undefined);
+                const blueLeague = LEAGUES.find(l => l.regionName === blueRegion);
+                const report = await getScoutingReport(blueTeamId, undefined, blueRegion || undefined, blueLeague?.parentId);
                 if (!('message' in report)) {
                     setBlueReport(report);
                     // Extract players from report
@@ -161,7 +163,8 @@ function DraftPageContent() {
                 }
             }
             if (redTeamId) {
-                const report = await getScoutingReport(redTeamId, redTournamentId || undefined);
+                const redLeague = LEAGUES.find(l => l.regionName === redRegion);
+                const report = await getScoutingReport(redTeamId, undefined, redRegion || undefined, redLeague?.parentId);
                 if (!('message' in report)) {
                     setRedReport(report);
                     // Extract players from report
@@ -187,7 +190,7 @@ function DraftPageContent() {
             }
         }
         fetchReports();
-    }, [blueTeamId, redTeamId, blueTournamentId, redTournamentId]);
+    }, [blueTeamId, redTeamId, blueRegion, redRegion]);
 
     // AI State (Lifted from AIFocusMode)
     const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -332,10 +335,10 @@ function DraftPageContent() {
                 const currentTeam = side === 'blue' ? blueTeam : redTeam;
 
                 // Get currently selected nicknames on this team
-                const currentNicknames = currentTeam.players?.map(p => p.nickname) || [];
+                const currentNicknames = currentTeam.players?.map(p => p.nickname || '') || [];
 
                 // If the player clicked is already in the roster, remove them (Deselect)
-                if (currentNicknames.includes(player.nickname)) {
+                if (currentNicknames.includes(player.nickname || '')) {
                     if (side === 'blue') {
                         setBlueTeam(prev => {
                             const newPlayers = [...(prev.players || [])];
@@ -369,9 +372,9 @@ function DraftPageContent() {
                 }
 
                 // Create a new player object for the roster
-                const newPlayer: Player = {
-                    id: `${side}-${player.nickname}-${Date.now()}`,
-                    nickname: player.nickname,
+                const newPlayer: any = {
+                    id: `${side}-${player.nickname || player.name}-${Date.now()}`,
+                    nickname: player.nickname || player.name,
                     role: 'TOP' // Will be re-assigned based on index
                 };
 

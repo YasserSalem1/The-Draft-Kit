@@ -541,7 +541,7 @@ ROLE_RECOMMENDATIONS = {
     'JUNGLE': ['Lee Sin', 'Vi', 'Jarvan IV', 'Elise', 'Viego', "Rek'Sai", 'Xin Zhao', 'Hecarim', 'Graves', 'Nidalee'],
     'MID': ['Ahri', 'Syndra', 'Orianna', 'Azir', 'Viktor', 'LeBlanc', 'Akali', 'Zed', 'Sylas', 'Corki'],
     'ADC': ['Jinx', "Kai'Sa", 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn'],
-    'SUPPORT': ['Thresh', 'Nautilus', 'Leona', 'Lulu', 'Karma', 'Renata Glasc', 'Braum', 'Rakan', 'Alistar', 'Milio']
+    'SUPPORT': ['Thresh', 'Nautilus', 'Leona', 'Lulu', 'Karma', 'Renata Glasc', 'Braum', 'Rakan', 'Alistar', 'Milio', 'Yunara']
 }
 
 def get_predictions_logic(data):

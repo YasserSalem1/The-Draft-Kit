@@ -8,7 +8,7 @@ interface ChampionIconProps {
   size?: number;
 }
 
-export const ChampionIcon = ({ name, version = '14.23.1', size = 40 }: ChampionIconProps) => (
+export const ChampionIcon = ({ name, version = '16.1.1', size = 40 }: ChampionIconProps) => (
   <div 
     className="relative overflow-hidden rounded-lg border border-white/10 bg-surface shadow-md flex-shrink-0"
     style={{ width: size, height: size }}

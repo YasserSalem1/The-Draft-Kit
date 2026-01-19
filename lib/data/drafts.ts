@@ -187,7 +187,7 @@ export async function getTeamDrafts(tournamentId: string = TOURNAMENT_ID, teamId
     }
 
     const games = stateData.games || [];
-    for (const game of games) {
+    for (const [gameIdx, game] of games.entries()) {
       const teams = game.teams || [];
       const targetTeamObj = teams.find((t: any) => String(t.id) === teamId);
 
@@ -221,7 +221,7 @@ export async function getTeamDrafts(tournamentId: string = TOURNAMENT_ID, teamId
       }
 
       if (game.draftActions) {
-        for (const [gameIndex, action] of game.draftActions.entries()) {
+        for (const [stepIndex, action] of game.draftActions.entries()) {
           const actionType = action.type;
           const draftedChamp = action.draftable?.name;
           const drafterId = String(action.drafter?.id);
@@ -229,12 +229,14 @@ export async function getTeamDrafts(tournamentId: string = TOURNAMENT_ID, teamId
 
           const draftInfo = {
             series_id: mId,
-            game_index: gameIndex,
+            game_index: gameIdx, // index of the game in the series (0, 1, 2...)
+            step_index: stepIndex, // index of the action in the game (0-19)
             action_type: actionType,
             champion: draftedChamp,
             drafter_id: drafterId,
             side_of_action: sideOfAction,
             team_name: teams.find((t: any) => String(t.id) === drafterId)?.name || 'Unknown Team',
+            is_winner: teams.find((t: any) => String(t.id) === drafterId)?.won || false,
           };
 
           allDraftActions.push(draftInfo);

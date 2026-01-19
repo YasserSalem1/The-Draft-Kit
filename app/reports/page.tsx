@@ -56,7 +56,12 @@ export default function ReportsPage() {
         setLoading(true);
         setError(null);
         try {
-            const data = await getScoutingReport(teamId, tIds); // Fetch live data
+            const data = await getScoutingReport(
+                teamId, 
+                tIds, 
+                selectedLeague?.regionName, 
+                selectedLeague?.parentId
+            ); // Fetch live data
             if ('message' in data) {
                 setError(data.message);
                 setReportData(null);

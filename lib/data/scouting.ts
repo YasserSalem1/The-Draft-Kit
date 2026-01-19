@@ -1,7 +1,7 @@
 // drafting-and-reporting/lib/data/scouting.ts
 
 import { graphqlRequest, LIVE_DATA_FEED_URL } from '../api';
-import { getMatchIds, getSeriesState, getTeamsInTournament } from './drafts'; // Re-use from drafts data file
+import {getMatchIds, getSeriesState, getTeamsInTournament, getTeamDrafts, getTournaments} from './drafts'; // Re-use from drafts data file
 
 const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || '';
 const TARGET_TEAM_NAME = process.env.NEXT_PUBLIC_TARGET_TEAM_NAME || '';
@@ -41,16 +41,39 @@ export interface ScoutingReportData {
   tendencies?: { name: string; role: string; tendency: string }[];
   famousPicks?: { name: string; rate: number }[];
   popularBans?: { name: string; rate: number }[];
+  match_history?: any[];
   insight?: string;
   blind_pick_champions_frequency?: [string, number][];
   counter_pick_champions_frequency?: [string, number][];
 }
 
 // Main analysis function (mimicking run_analysis from Scouting.py)
-export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournamentIds: string | string[] = TOURNAMENT_ID): Promise<ScoutingReportData | { message: string }> {
+export async function getScoutingReport(
+  teamId: string = TARGET_TEAM_ID, 
+  tournamentIds: string | string[] = TOURNAMENT_ID,
+  regionName?: string,
+  parentId?: string
+): Promise<ScoutingReportData | { message: string }> {
+  let finalTournamentIds: string[] = [];
+
+  // Logic to match the requirement: Use getTournaments from drafts.ts
+  try {
+    if (regionName && parentId) {
+      const tournaments = await getTournaments(regionName, parentId);
+      if (tournaments.length > 0) {
+        // Pick the latest tournament (the last one)
+        finalTournamentIds = [tournaments[tournaments.length - 1].id];
+      }
+    }
+
+  } catch (error) {
+    console.error("[getScoutingReport] Error resolving latest tournament:", error);
+    finalTournamentIds = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
+  }
+
   let matchIds: string[] = [];
   try {
-    matchIds = await getMatchIds(teamId, tournamentIds);
+    matchIds = await getMatchIds(teamId, finalTournamentIds);
   } catch (error: any) {
     console.error(`[getScoutingReport] Error fetching match IDs:`, error);
     return { message: `Error fetching match IDs: ${error.message}` };
@@ -78,9 +101,8 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
 
   // Try to get team logo from tournament data
   try {
-    const tIds = Array.isArray(tournamentIds) ? tournamentIds : [tournamentIds];
     // Just use the first tournament to get the logo, assuming it's consistent
-    const teams = await getTeamsInTournament(tIds[0]);
+    const teams = await getTeamsInTournament(finalTournamentIds[0]);
     const team = teams.find(t => String(t.id) === String(teamId));
     if (team && (team as any).logoUrl) {
       fetchedTeamLogo = (team as any).logoUrl;
@@ -405,6 +427,8 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
 
+  const matchHistory = await getTeamDrafts(finalTournamentIds[0], teamId);
+
   const reportData: ScoutingReportData = {
     team_name: fetchedTeamName,
     team_logo: fetchedTeamLogo,
@@ -428,6 +452,7 @@ export async function getScoutingReport(teamId: string = TARGET_TEAM_ID, tournam
     },
     roster_stats: roster,
     champion_pools_by_player: championPoolsByPlayer,
+    match_history: Array.isArray(matchHistory) ? matchHistory : [],
     // Placeholder data for new fields in ReportDisplay
     overview: "This is a placeholder overview of the team's strategic identity and performance. Detailed analysis would go here.",
     strategies: ["Early Game Aggression", "Objective Control", "Scaling Compositions"],

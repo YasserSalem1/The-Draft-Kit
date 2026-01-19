@@ -3,15 +3,18 @@
 'use client';
 
 import React from 'react';
+import { ChampionIcon } from './ui/ChampionIcon';
 
 interface DraftAction {
   series_id: string;
   game_index: number;
+  step_index: number;
   action_type: 'pick' | 'ban';
   champion: string;
   drafter_id: string;
   side_of_action: string; // 'blue', 'red', 'unknown'
   team_name: string;
+  is_winner?: boolean;
 }
 
 interface DraftCardProps {
@@ -20,17 +23,25 @@ interface DraftCardProps {
 
 const DraftCard: React.FC<DraftCardProps> = ({ action }) => {
   const isPick = action.action_type === 'pick';
-  const cardClasses = isPick ? "bg-green-100 border-green-300" : "bg-red-100 border-red-300";
-  const iconUrl = `/placeholders/${action.champion.toLowerCase().replace(/[^a-z0-9]/g, '')}.png`; // Placeholder for champion icon
+  const cardClasses = isPick 
+    ? "bg-blue-50 border-blue-100 ring-1 ring-blue-200" 
+    : "bg-red-50 border-red-100 ring-1 ring-red-200 opacity-80 grayscale-[0.3]";
 
   return (
-    <div className={`flex items-center p-4 border rounded-lg shadow-sm ${cardClasses} mb-4`}>
-      <img src={iconUrl} alt={action.champion} className="w-10 h-10 rounded-full mr-4" onError={(e) => { e.currentTarget.src = '/placeholders/default.png'; }} />
-      <div>
-        <p className="text-lg font-semibold">{action.champion}</p>
-        <p className="text-sm text-gray-700">Action: <span className="font-medium">{action.action_type.toUpperCase()}</span></p>
-        <p className="text-sm text-gray-700">Team: <span className="font-medium">{action.team_name} ({action.side_of_action})</span></p>
-        {/* <p className="text-xs text-gray-500">Series: {action.series_id}, Game: {action.game_index}</p> */}
+    <div className={`flex items-center p-3 border rounded-xl shadow-sm ${cardClasses} transition-all hover:shadow-md`}>
+      <div className="mr-3">
+        <ChampionIcon name={action.champion} size={48} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between mb-0.5">
+          <p className="text-sm font-bold text-gray-900 truncate">{action.champion}</p>
+          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${isPick ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'}`}>
+            {action.action_type}
+          </span>
+        </div>
+        <p className="text-[10px] text-gray-500 font-medium truncate uppercase tracking-tighter">
+          {action.team_name}
+        </p>
       </div>
     </div>
   );

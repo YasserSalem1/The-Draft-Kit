@@ -9,7 +9,7 @@ export interface League {
 }
 
 export const LEAGUES: League[] = [
-  { id: 'lck', name: 'LCK', regionName: 'LCK', logoUrl: '/tournamentLogos/lck_logo.png', parentId: '757825' },
+  { id: 'lck', name: 'LCK', regionName: 'LCK', logoUrl: '/tournamentLogos/lck_logo.png', parentId: '757825'},
   { id: 'lpl', name: 'LPL', regionName: 'LPL', logoUrl: '/tournamentLogos/lpl_logo.png', parentId: '757828' },
   { id: 'lec', name: 'LEC', regionName: 'LEC', logoUrl: '/tournamentLogos/lec_logo.png', parentId: '757782' },
   { id: 'lcs', name: 'LCS', regionName: 'LCS', logoUrl: '/tournamentLogos/lcs_logo.png', parentId: '757843' },

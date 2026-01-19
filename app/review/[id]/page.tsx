@@ -158,12 +158,12 @@ export default function ReviewPage() {
 
                         {/* Blue 5 icons */}
                         <div className="flex items-center gap-3 md:gap-4">
-                            {blueTeam.players.map((p) => (
+                            {blueTeam.players?.map((p) => (
                                 <button
                                     key={p.id}
                                     onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color }); }}
                                     className="shrink-0 group flex flex-col items-center gap-1"
-                                    title={p.name}
+                                    title={(p as any).name || p.nickname}
                                 >
                                     {/* Icon (unselected champ look) */}
                                     <div
@@ -177,7 +177,7 @@ export default function ReviewPage() {
                                     </div>
                                     {/* Name */}
                                     <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                        {p.name}
+                                        {(p as any).name || p.nickname}
                                     </div>
                                 </button>
                             ))}
@@ -188,12 +188,12 @@ export default function ReviewPage() {
 
                         {/* Red 5 icons */}
                         <div className="flex items-center gap-3 md:gap-4">
-                            {redTeam.players.map((p) => (
+                            {redTeam.players?.map((p) => (
                                 <button
                                     key={p.id}
                                     onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color }); }}
                                     className="shrink-0 group flex flex-col items-center gap-1"
-                                    title={p.name}
+                                    title={(p as any).name || p.nickname}
                                 >
                                     <div
                                         className={
@@ -205,7 +205,7 @@ export default function ReviewPage() {
                                         —
                                     </div>
                                     <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                        {p.name}
+                                        {(p as any).name || p.nickname}
                                     </div>
                                 </button>
                             ))}

@@ -4,7 +4,8 @@ export type Region = 'LCK' | 'LPL' | 'LEC' | 'LTA North' | 'LTA South' | 'LCP' |
 
 export interface Player {
     id: string;
-    nickname: string;
+    nickname?: string;
+    name?: string;
     role: 'TOP' | 'JUNGLE' | 'MID' | 'ADC' | 'SUPPORT';
     photo?: string;
 }

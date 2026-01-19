@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { ScoutingReportData } from '@/lib/data/scouting';
 import { getLatestVersion, getChampionIconUrlByName } from '@/lib/api/ddragon';
 import { cn } from '@/lib/utils';
+import DraftHistoryDisplay from './DraftHistoryDisplay';
 
 interface ScoutingReportProps {
   report: ScoutingReportData;
@@ -28,7 +29,7 @@ const ChampionIcon = ({ name, version, size = 40 }: { name: string; version: str
 );
 
 const ReportDisplay: React.FC<ScoutingReportProps> = ({ report }) => {
-  const [version, setVersion] = useState<string>('14.23.1');
+  const [version, setVersion] = useState<string>('16.1.1');
 
   useEffect(() => {
     getLatestVersion().then(setVersion);
@@ -265,6 +266,21 @@ const ReportDisplay: React.FC<ScoutingReportProps> = ({ report }) => {
           </div>
         </section>
       </div>
+
+      {/* Match History Section */}
+      {report.match_history && report.match_history.length > 0 && (
+        <section className="space-y-6 pt-12 border-t border-white/10">
+          <h2 className="text-3xl font-black text-white flex items-center gap-4 uppercase tracking-tighter">
+            <span className="w-2 h-10 bg-primary rounded-full"></span>
+            Match History & Draft Analysis
+          </h2>
+          <div className="bg-surface-light/5 backdrop-blur-sm rounded-[40px] p-1 border border-white/5 shadow-2xl">
+             <div className="bg-background/40 rounded-[39px] p-8">
+                <DraftHistoryDisplay drafts={report.match_history} />
+             </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

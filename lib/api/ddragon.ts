@@ -26,11 +26,12 @@ export async function getLatestVersion(): Promise<string> {
     try {
         const res = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
         const versions = await res.json();
-        cachedVersion = versions[0];
-        return versions[0];
+        // Check if 16.1.1 or higher is available, otherwise take the latest
+        cachedVersion = versions.includes("16.1.1") ? "16.1.1" : versions[0];
+        return cachedVersion as string;
     } catch (e) {
         console.error("Failed to fetch DDragon version, falling back to recent", e);
-        return "14.23.1";
+        return "16.1.1";
     }
 }
 
@@ -63,7 +64,9 @@ export function getChampionIdFromName(name: string): string {
         .replace("VelKoz", "Velkoz")
         .replace("ChoGath", "Chogath")
         .replace("BelVeth", "Belveth")
-        .replace("KaiSa", "Kaisa");
+        .replace("KaiSa", "Kaisa")
+        .replace("RenataGlasc", "Renata")
+        .replace("Yunara", "Yunara"); // Yunara is correct as is in newer versions
 }
 
 export function getChampionIconUrlByName(version: string, name: string): string {
