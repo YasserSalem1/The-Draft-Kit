@@ -5,11 +5,15 @@ import { TEAMS, Player } from '@/lib/data/teams';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, Users } from 'lucide-react';
 import { getChampionIconUrl, getLatestVersion, Champion, getChampions } from '@/lib/api/ddragon';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { PlayerDetailsPanel } from '@/components/features/PlayerDetailsPanel';
+import { TeamDetailsPanel } from '@/components/features/TeamDetailsPanel';
+import { TeamLogo } from '@/components/ui/TeamLogo';
+import { Team } from '@/lib/data/teams';
+import { ScoutingReportData } from '@/lib/data/scouting';
 
 export default function ReviewPage() {
     const params = useParams();
@@ -19,7 +23,18 @@ export default function ReviewPage() {
     const [search, setSearch] = useState<string>('');
     const [pickerState, setPickerState] = useState<{ gameIndex: number; side: 'blue' | 'red'; kind: 'picks' | 'bans' } | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string; color: string } | null>(null);
+    const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string; color: string; report: ScoutingReportData | null } | null>(null);
+
+    // Team Report Panel State
+    const [selectedTeamForReport, setSelectedTeamForReport] = useState<Team | null>(null);
+    const [selectedTeamSide, setSelectedTeamSide] = useState<'blue' | 'red' | null>(null);
+    const [selectedTeamReportData, setSelectedTeamReportData] = useState<ScoutingReportData | null>(null);
+
+    const handleTeamClick = (team: Team, side: 'blue' | 'red', report: any) => {
+        setSelectedTeamForReport(team);
+        setSelectedTeamSide(side);
+        setSelectedTeamReportData(report);
+    };
 
     useEffect(() => {
         if (params.id) {
@@ -115,6 +130,14 @@ export default function ReviewPage() {
                     onClose={() => setSelectedPlayer(null)}
                     teamName={selectedTeamMeta?.name || ''}
                     teamColor={selectedTeamMeta?.color || ''}
+                    report={selectedTeamMeta?.report || null}
+                />
+
+                <TeamDetailsPanel
+                    team={selectedTeamForReport}
+                    side={selectedTeamSide || undefined}
+                    onClose={() => setSelectedTeamForReport(null)}
+                    report={selectedTeamReportData}
                 />
                 {/* Header */}
                 <div className="space-y-6 border-b border-white/5 pb-8">
@@ -124,11 +147,12 @@ export default function ReviewPage() {
 
                     <div className="flex flex-col md:flex-row items-center justify-center md:gap-24 gap-8">
                         {/* Blue Team */}
-                        <div className="text-center space-y-4">
-                            <div className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-3xl font-bold mx-auto shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                                {blueTeam.shortName}
-                            </div>
-                            {/* Scores removed per request */}
+                        <div 
+                            className="text-center space-y-4 cursor-pointer group"
+                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
+                        >
+                            <TeamLogo team={blueTeam} className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 shadow-[0_0_30px_rgba(59,130,246,0.2)] group-hover:scale-105 transition-transform" />
+                            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover:text-blue-400 transition-colors">{blueTeam.shortName}</h2>
                         </div>
 
                         {/* VS */}
@@ -139,11 +163,12 @@ export default function ReviewPage() {
                         </div>
 
                         {/* Red Team */}
-                        <div className="text-center space-y-4">
-                            <div className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-3xl font-bold mx-auto shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-                                {redTeam.shortName}
-                            </div>
-                            {/* Scores removed per request */}
+                        <div 
+                            className="text-center space-y-4 cursor-pointer group"
+                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
+                        >
+                            <TeamLogo team={redTeam} className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 shadow-[0_0_30px_rgba(239,68,68,0.2)] group-hover:scale-105 transition-transform" />
+                            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover:text-red-400 transition-colors">{redTeam.shortName}</h2>
                         </div>
                     </div>
                 </div>
@@ -158,29 +183,32 @@ export default function ReviewPage() {
 
                         {/* Blue 5 icons */}
                         <div className="flex items-center gap-3 md:gap-4">
-                            {blueTeam.players?.map((p) => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color }); }}
-                                    className="shrink-0 group flex flex-col items-center gap-1"
-                                    title={(p as any).name || p.nickname}
-                                >
-                                    {/* Icon (unselected champ look) */}
-                                    <div
-                                        className={
-                                            "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
-                                            "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
-                                            "transition-all group-hover:border-primary/50 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]"
-                                        }
+                            {blueTeam.players?.map((p, idx) => {
+                                const nickname = series.games[0]?.draftState?.bluePlayerNames?.[idx] || p.nickname || (p as any).name;
+                                return (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport }); }}
+                                        className="shrink-0 group flex flex-col items-center gap-1"
+                                        title={nickname}
                                     >
-                                        —
-                                    </div>
-                                    {/* Name */}
-                                    <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                        {(p as any).name || p.nickname}
-                                    </div>
-                                </button>
-                            ))}
+                                        {/* Icon (unselected champ look) */}
+                                        <div
+                                            className={
+                                                "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
+                                                "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
+                                                "transition-all group-hover:border-primary/50 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]"
+                                            }
+                                        >
+                                            —
+                                        </div>
+                                        {/* Name */}
+                                        <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
+                                            {nickname}
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         {/* VS divider */}
@@ -188,27 +216,30 @@ export default function ReviewPage() {
 
                         {/* Red 5 icons */}
                         <div className="flex items-center gap-3 md:gap-4">
-                            {redTeam.players?.map((p) => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color }); }}
-                                    className="shrink-0 group flex flex-col items-center gap-1"
-                                    title={(p as any).name || p.nickname}
-                                >
-                                    <div
-                                        className={
-                                            "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
-                                            "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
-                                            "transition-all group-hover:border-red-500/50 group-hover:shadow-[0_0_14px_rgba(239,68,68,0.35)]"
-                                        }
+                            {redTeam.players?.map((p, idx) => {
+                                const nickname = series.games[0]?.draftState?.redPlayerNames?.[idx] || p.nickname || (p as any).name;
+                                return (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport }); }}
+                                        className="shrink-0 group flex flex-col items-center gap-1"
+                                        title={nickname}
                                     >
-                                        —
-                                    </div>
-                                    <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                        {(p as any).name || p.nickname}
-                                    </div>
-                                </button>
-                            ))}
+                                        <div
+                                            className={
+                                                "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
+                                                "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
+                                                "transition-all group-hover:border-red-500/50 group-hover:shadow-[0_0_14px_rgba(239,68,68,0.35)]"
+                                            }
+                                        >
+                                            —
+                                        </div>
+                                        <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
+                                            {nickname}
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         {/* Red badge */}
@@ -231,14 +262,21 @@ export default function ReviewPage() {
                             >
                                 <div className="bg-white/5 px-6 py-3 flex items-center justify-between border-b border-white/5">
                                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Game {index + 1}</h3>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-500 uppercase tracking-widest">Winner:</span>
-                                        <span className={cn(
-                                            "font-bold text-xs uppercase tracking-widest px-2 py-1 rounded",
-                                            game.winner === 'blue' ? "bg-primary/20 text-primary" : "bg-red-500/20 text-red-500"
-                                        )}>
-                                            {game.winner === 'blue' ? blueTeam.shortName : redTeam.shortName}
-                                        </span>
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex items-center gap-2 cursor-pointer group/team"
+                                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
+                                        >
+                                            <TeamLogo team={blueTeam} className="w-6 h-6 group-hover/team:scale-110 transition-transform" />
+                                            <span className="text-xs font-bold text-gray-300 group-hover/team:text-blue-400 transition-colors">{blueTeam.shortName}</span>
+                                        </div>
+                                        <div className="w-px h-4 bg-white/10" />
+                                        <div 
+                                            className="flex items-center gap-2 cursor-pointer group/team-red"
+                                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
+                                        >
+                                            <TeamLogo team={redTeam} className="w-6 h-6 group-hover/team-red:scale-110 transition-transform" />
+                                            <span className="text-xs font-bold text-gray-300 group-hover/team-red:text-red-400 transition-colors">{redTeam.shortName}</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -247,6 +285,16 @@ export default function ReviewPage() {
                                 <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-12 relative">
                                     {/* Left Side (Blue) */}
                                     <div className="space-y-6">
+                                        <div 
+                                            className="flex items-center gap-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 cursor-pointer group/header"
+                                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
+                                        >
+                                            <TeamLogo team={blueTeam} className="w-12 h-12 rounded-lg group-hover/header:scale-105 transition-transform" />
+                                            <div>
+                                                <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover/header:text-blue-400 transition-colors">{blueTeam.shortName}</h4>
+                                                <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Blue Side</div>
+                                            </div>
+                                        </div>
                                         <TeamBuildSummary
                                             teamName={blueTeam.name}
                                             bans={game.draftState.blueBans}
@@ -292,6 +340,16 @@ export default function ReviewPage() {
 
                                     {/* Right Side (Red) */}
                                     <div className="space-y-6">
+                                        <div 
+                                            className="flex flex-row-reverse items-center gap-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10 cursor-pointer group/header-red"
+                                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
+                                        >
+                                            <TeamLogo team={redTeam} className="w-12 h-12 rounded-lg group-hover/header-red:scale-105 transition-transform" />
+                                            <div className="text-right">
+                                                <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover/header-red:text-red-400 transition-colors">{redTeam.shortName}</h4>
+                                                <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Red Side</div>
+                                            </div>
+                                        </div>
                                         <TeamBuildSummary
                                             teamName={redTeam.name}
                                             bans={game.draftState.redBans}

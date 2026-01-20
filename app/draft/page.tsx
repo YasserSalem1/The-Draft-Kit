@@ -7,6 +7,7 @@ import { LEAGUES } from '@/lib/data/leagues';
 import { PlayerCard } from '@/components/ui/PlayerCard';
 import { ChampionGrid } from '@/components/features/ChampionGrid';
 import { PlayerDetailsPanel } from '@/components/features/PlayerDetailsPanel';
+import { TeamDetailsPanel } from '@/components/features/TeamDetailsPanel';
 import { BanSlot } from '@/components/features/BanSlot';
 import { DraftControls } from '@/components/features/DraftControls';
 import { ScoutingReport } from '@/components/features/ScoutingReport';
@@ -297,6 +298,9 @@ function DraftPageContent() {
     const [showReport, setShowReport] = useState(false); // Report Modal State
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string, color: string, report: ScoutingReportData | null } | null>(null);
+    const [selectedTeamForReport, setSelectedTeamForReport] = useState<Team | null>(null);
+    const [selectedTeamSide, setSelectedTeamSide] = useState<'blue' | 'red' | null>(null);
+    const [selectedTeamReportData, setSelectedTeamReportData] = useState<ScoutingReportData | null>(null);
 
     useEffect(() => {
         const formatParam = searchParams.get('format');
@@ -405,6 +409,12 @@ function DraftPageContent() {
         setSelectedTeamMeta({ name: team.shortName, color: team.color, report: side === 'blue' ? blueReport : redReport });
     };
 
+    const handleTeamClick = (team: Team, side: 'blue' | 'red') => {
+        setSelectedTeamForReport(team);
+        setSelectedTeamSide(side);
+        setSelectedTeamReportData(side === 'blue' ? blueReport : redReport);
+    };
+
     const handleInitializeDraft = () => {
         setPlayersLocked(true);
         startDraft();
@@ -420,14 +430,16 @@ function DraftPageContent() {
     const currentPickIndex = currentStep?.index;
 
     // Helper to get current full draft state for saving
-    const getCurrentState = () => ({
+    const getCurrentState = (): any => ({
         isStarted: true,
         currentStepIndex: 20, // max
         blueBans: blueBans,
         redBans: redBans,
         bluePicks: bluePicks,
         redPicks: redPicks,
-        unavailableChampionIds: new Set([...blueBans, ...redBans, ...bluePicks, ...redPicks].filter(c => c).map(c => c!.id))
+        unavailableChampionIds: new Set([...blueBans, ...redBans, ...bluePicks, ...redPicks].filter(c => c).map(c => c!.id)),
+        bluePlayerNames: blueTeam.players?.map(p => p.nickname || p.name || ''),
+        redPlayerNames: redTeam.players?.map(p => p.nickname || p.name || '')
     });
 
     const handleSaveSeries = (pendingGame?: { draftState: any, winner: 'blue' | 'red' | null }) => {
@@ -443,6 +455,8 @@ function DraftPageContent() {
             redTeamId: redTeam.id,
             blueWins,
             redWins,
+            blueReport,
+            redReport,
             games: finalGames,
             folderId: (folderId && folderId !== 'unfiled') ? folderId : undefined
         };
@@ -484,6 +498,13 @@ function DraftPageContent() {
                 report={selectedTeamMeta?.report || null}
             />
 
+            <TeamDetailsPanel
+                team={selectedTeamForReport}
+                side={selectedTeamSide || undefined}
+                onClose={() => setSelectedTeamForReport(null)}
+                report={selectedTeamReportData}
+            />
+
 
 
             {/* Header */}
@@ -518,10 +539,15 @@ function DraftPageContent() {
                         style={{ borderColor: isBlueTurn ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)' }}
                     >
                         <div className="p-4 border-b border-white/5 flex items-center gap-4 bg-gradient-to-r from-blue-900/20 to-transparent">
-                            <TeamLogo team={blueTeam} className="w-12 h-12 rounded-xl shadow-lg" />
-                            <div>
-                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{blueTeam.shortName}</h2>
-                                <div className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em]">Blue Side</div>
+                            <div 
+                                className="flex items-center gap-4 cursor-pointer hover:scale-105 transition-transform active:scale-95 group"
+                                onClick={() => handleTeamClick(blueTeam, 'blue')}
+                            >
+                                <TeamLogo team={blueTeam} className="w-12 h-12 rounded-xl shadow-lg group-hover:shadow-blue-500/20" />
+                                <div>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white group-hover:text-blue-400 transition-colors">{blueTeam.shortName}</h2>
+                                    <div className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em]">Blue Side</div>
+                                </div>
                             </div>
 
                             <div className="flex-1" />
@@ -824,12 +850,15 @@ function DraftPageContent() {
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div 
+                                className="flex items-center gap-4 cursor-pointer hover:scale-105 transition-transform active:scale-95 group"
+                                onClick={() => handleTeamClick(redTeam, 'red')}
+                            >
                                 <div className="text-right">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">{redTeam.shortName}</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white group-hover:text-red-500 transition-colors">{redTeam.shortName}</h2>
                                     <div className="text-[10px] font-bold text-red-500 uppercase tracking-[0.3em]">Red Side</div>
                                 </div>
-                                <TeamLogo team={redTeam} className="w-12 h-12 rounded-xl shadow-lg" />
+                                <TeamLogo team={redTeam} className="w-12 h-12 rounded-xl shadow-lg group-hover:shadow-red-500/20" />
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5">

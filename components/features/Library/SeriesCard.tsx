@@ -14,12 +14,13 @@ export interface SeriesCardProps {
     onDelete: (id: string) => void;
     onRename: (id: string, newName: string) => void;
     onMove: (id: string, folderId: string | undefined) => void;
+    onTeamClick: (team: any, side: 'blue' | 'red', report: any) => void;
     availableFolders: DraftFolder[];
 }
 
 const ROLE_ICONS = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 
-export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove, availableFolders }: SeriesCardProps) {
+export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove, onTeamClick, availableFolders }: SeriesCardProps) {
     const [activeGameIndex, setActiveGameIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(series.name || '');
@@ -57,6 +58,8 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove,
     const redPicks = activeGame.draftState.redPicks || Array(5).fill(null);
     const blueBans = activeGame.draftState.blueBans || Array(5).fill(null);
     const redBans = activeGame.draftState.redBans || Array(5).fill(null);
+    const bluePlayerNames = activeGame.draftState.bluePlayerNames || [];
+    const redPlayerNames = activeGame.draftState.redPlayerNames || [];
 
     const isBlueWinner = activeGame.winner === 'blue';
     const isRedWinner = activeGame.winner === 'red';
@@ -193,10 +196,13 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove,
 
                     {/* Blue Team Column */}
                     <div className="flex-1 flex flex-col gap-3">
-                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                            <TeamLogo team={blueTeam} className="w-6 h-6" />
+                        <div 
+                            className="flex items-center gap-2 pb-2 border-b border-white/5 cursor-pointer hover:bg-white/5 rounded-t-lg transition-colors group/team"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTeamClick(blueTeam, 'blue', series.blueReport); }}
+                        >
+                            <TeamLogo key={blueTeam?.id} team={blueTeam} className="w-6 h-6 group-hover/team:scale-110 transition-transform" />
                             <div className="flex flex-col">
-                                <span className={cn("text-xs font-bold leading-none", isBlueWinner ? "text-blue-200" : "text-gray-300")}>{blueTeam.shortName}</span>
+                                <span className={cn("text-xs font-bold leading-none group-hover/team:text-blue-400 transition-colors", isBlueWinner ? "text-blue-200" : "text-gray-300")}>{blueTeam.shortName}</span>
                                 {isBlueWinner && <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider">Win</span>}
                             </div>
                         </div>
@@ -210,7 +216,10 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove,
                                             <img src={getChampionIconUrl(ddragonVersion, pick.image.full)} className="w-full h-full object-cover scale-110" />
                                         ) : <div className="w-full h-full bg-white/5" />}
                                     </div>
-                                    <span className="text-xs font-bold text-gray-300 truncate group-hover/pick:text-blue-200 transition-colors">{pick?.name || '-'}</span>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-xs font-bold text-gray-300 truncate group-hover/pick:text-blue-200 transition-colors">{pick?.name || '-'}</span>
+                                        {bluePlayerNames[i] && <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tight truncate leading-none">{bluePlayerNames[i]}</span>}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -233,10 +242,13 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove,
 
                     {/* Red Team Column */}
                     <div className="flex-1 flex flex-col gap-3">
-                        <div className="flex flex-row-reverse items-center gap-2 pb-1 border-b border-white/5">
-                            <TeamLogo team={redTeam} className="w-6 h-6" />
+                        <div 
+                            className="flex flex-row-reverse items-center gap-2 pb-2 border-b border-white/5 cursor-pointer hover:bg-white/5 rounded-t-lg transition-colors group/team-red"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTeamClick(redTeam, 'red', series.redReport); }}
+                        >
+                            <TeamLogo key={redTeam?.id} team={redTeam} className="w-6 h-6 group-hover/team-red:scale-110 transition-transform" />
                             <div className="flex flex-col items-end">
-                                <span className={cn("text-xs font-bold leading-none", isRedWinner ? "text-red-200" : "text-gray-300")}>{redTeam.shortName}</span>
+                                <span className={cn("text-xs font-bold leading-none group-hover/team-red:text-red-400 transition-colors", isRedWinner ? "text-red-200" : "text-gray-300")}>{redTeam.shortName}</span>
                                 {isRedWinner && <span className="text-[8px] font-bold text-red-500 uppercase tracking-wider">Win</span>}
                             </div>
                         </div>
@@ -250,7 +262,10 @@ export function SeriesCard({ series, ddragonVersion, onDelete, onRename, onMove,
                                             <img src={getChampionIconUrl(ddragonVersion, pick.image.full)} className="w-full h-full object-cover scale-110" />
                                         ) : <div className="w-full h-full bg-white/5" />}
                                     </div>
-                                    <span className="text-xs font-bold text-gray-300 truncate group-hover/pick:text-red-200 transition-colors">{pick?.name || '-'}</span>
+                                    <div className="flex flex-col min-w-0 items-end">
+                                        <span className="text-xs font-bold text-gray-300 truncate group-hover/pick:text-red-200 transition-colors">{pick?.name || '-'}</span>
+                                        {redPlayerNames[i] && <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tight truncate leading-none">{redPlayerNames[i]}</span>}
+                                    </div>
                                 </div>
                             ))}
                         </div>

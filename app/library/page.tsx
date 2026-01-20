@@ -31,6 +31,9 @@ import { TeamLogo } from '@/components/ui/TeamLogo';
 import { CreateFolderModal } from '@/components/features/CreateFolderModal';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { SeriesCard } from '@/components/features/Library/SeriesCard';
+import { TeamDetailsPanel } from '@/components/features/TeamDetailsPanel';
+import { ScoutingReportData } from '@/lib/data/scouting';
+import { Team } from '@/lib/data/teams';
 
 type SortOption = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
@@ -52,6 +55,11 @@ export default function LibraryPage() {
     const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState('');
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+    // Team Report Panel State
+    const [selectedTeamForReport, setSelectedTeamForReport] = useState<Team | null>(null);
+    const [selectedTeamSide, setSelectedTeamSide] = useState<'blue' | 'red' | null>(null);
+    const [selectedTeamReportData, setSelectedTeamReportData] = useState<ScoutingReportData | null>(null);
 
     const currentFolder = useMemo(() => folders.find(f => f.id === currentFolderId), [folders, currentFolderId]);
 
@@ -107,6 +115,12 @@ export default function LibraryPage() {
         updateSeries(id, { name: editingName });
         setEditingSeriesId(null);
         refreshData();
+    };
+
+    const handleTeamClick = (team: Team, side: 'blue' | 'red', report: ScoutingReportData) => {
+        setSelectedTeamForReport(team);
+        setSelectedTeamSide(side);
+        setSelectedTeamReportData(report);
     };
 
     const handleMoveSeries = (seriesId: string, folderId: string | undefined) => {
@@ -334,6 +348,12 @@ export default function LibraryPage() {
 
     return (
         <div className="min-h-screen bg-background text-white font-sans selection:bg-primary/30 flex flex-col relative overflow-hidden">
+            <TeamDetailsPanel
+                team={selectedTeamForReport}
+                side={selectedTeamSide || undefined}
+                onClose={() => setSelectedTeamForReport(null)}
+                report={selectedTeamReportData}
+            />
 
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 pointer-events-none">
@@ -500,6 +520,7 @@ export default function LibraryPage() {
                                                                 refreshData();
                                                             }}
                                                             onMove={handleMoveSeries}
+                                                            onTeamClick={handleTeamClick}
                                                             availableFolders={folders}
                                                         />
                                                     ))}

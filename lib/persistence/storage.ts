@@ -20,6 +20,8 @@ export interface SavedSeries {
     redWins: number;
     name?: string; // Custom user name
     folderId?: string; // Organization
+    blueReport?: any;
+    redReport?: any;
     games: {
         draftState: DraftState;
         winner: 'blue' | 'red' | null;
@@ -39,8 +41,8 @@ export const MOCK_SERIES: SavedSeries = {
     id: 'mock-series-001',
     timestamp: Date.now() - 86400000, // 1 day ago
     format: 'BO3',
-    blueTeamId: 't1',
-    redTeamId: 'geng',
+    blueTeamId: '47494',
+    redTeamId: '47558',
     blueWins: 2,
     redWins: 1,
     name: 'LCK Finals Rematch',
@@ -67,7 +69,9 @@ export const MOCK_SERIES: SavedSeries = {
                     { id: 'Maokai', name: 'Maokai', title: 'the Twisted Treant', tags: ['Tank'], image: { full: 'Maokai.png', sprite: '', group: '' } },
                     null, null, null
                 ],
-                unavailableChampionIds: new Set(['Vi', 'Azir', 'Jayce', 'Sejuani', 'KSante', 'Maokai'])
+                unavailableChampionIds: new Set(['Vi', 'Azir', 'Jayce', 'Sejuani', 'KSante', 'Maokai']),
+                bluePlayerNames: ['Zeus', 'Oner', 'Faker', 'Gumayusi', 'Keria'],
+                redPlayerNames: ['Kiin', 'Canyon', 'Chovy', 'Peyz', 'Lehends']
             },
             winner: 'blue'
         },
@@ -75,7 +79,9 @@ export const MOCK_SERIES: SavedSeries = {
             draftState: {
                 isStarted: true,
                 currentStepIndex: 20,
-                blueBans: [], redBans: [], bluePicks: [], redPicks: [], unavailableChampionIds: new Set()
+                blueBans: [], redBans: [], bluePicks: [], redPicks: [], unavailableChampionIds: new Set(),
+                bluePlayerNames: ['Zeus', 'Oner', 'Faker', 'Gumayusi', 'Keria'],
+                redPlayerNames: ['Kiin', 'Canyon', 'Chovy', 'Peyz', 'Lehends']
             },
             winner: 'red'
         },
@@ -83,7 +89,9 @@ export const MOCK_SERIES: SavedSeries = {
             draftState: {
                 isStarted: true,
                 currentStepIndex: 20,
-                blueBans: [], redBans: [], bluePicks: [], redPicks: [], unavailableChampionIds: new Set()
+                blueBans: [], redBans: [], bluePicks: [], redPicks: [], unavailableChampionIds: new Set(),
+                bluePlayerNames: ['Zeus', 'Oner', 'Faker', 'Gumayusi', 'Keria'],
+                redPlayerNames: ['Kiin', 'Canyon', 'Chovy', 'Peyz', 'Lehends']
             },
             winner: 'blue'
         }

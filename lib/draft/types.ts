@@ -22,6 +22,8 @@ export interface DraftState {
     redPicks: (Champion | null)[];
     // Helper to easily check availability
     unavailableChampionIds: Set<string>;
+    bluePlayerNames?: string[];
+    redPlayerNames?: string[];
 }
 
 // Standard Competitive Draft Order (Snake Draft)
