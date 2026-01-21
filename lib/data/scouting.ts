@@ -2,6 +2,8 @@
 
 import { graphqlRequest, LIVE_DATA_FEED_URL } from '../api';
 import {getMatchIds, getSeriesState, getTeamsInTournament, getTeamDrafts, getTournaments} from './drafts'; // Re-use from drafts data file
+import { getChampionRoles } from '../utils/flex-pick';
+import championRoles from '../../champion_role.json';
 
 const TARGET_TEAM_ID = process.env.NEXT_PUBLIC_TARGET_TEAM_ID || '';
 const TARGET_TEAM_NAME = process.env.NEXT_PUBLIC_TARGET_TEAM_NAME || '';
@@ -157,60 +159,66 @@ export async function getScoutingReport(
         }
       }
 
-      const champToRole: Record<string, { Player: string; isBlind: boolean; isCounter: boolean }> = {};
-
-      // Determine picks order for blind/counter pick detection
-      if (game.draftActions) {
-        const draftPicks = game.draftActions.filter((a: any) => a.type === 'pick');
-
-        // First pass: identify which side picked which champ at which step
-      }
-
-      // Re-map players to get champ mapping
-      const teamChampMap: Record<string, string> = {};
-      const enemyTeamObj = teams.find((t: any) => String(t.id) !== String(teamId));
-
-      for (const p of targetTeamObj.players) {
-        const charObj = p.character || p.hero || {};
-        if (charObj.name) teamChampMap[charObj.name] = p.name;
-      }
+      const champToRole: Record<string, { Player: string; isBlind: boolean; isCounter: boolean; assignedRole?: string }> = {};
 
       // Detect Blind/Counter picks
-      const champPickSteps: Record<string, { blueStep: number; redStep: number }> = {};
+      const blueRolesPicked: Set<string> = new Set();
+      const redRolesPicked: Set<string> = new Set();
+      const draftPicks: { champ: string; side: 'blue' | 'red'; drafterId: string }[] = [];
 
-      let stepCounter = 0;
       if (game.draftActions) {
         for (const action of game.draftActions) {
-          stepCounter++;
           if (action.type === 'pick' && action.draftable?.name) {
-            const champ = action.draftable.name;
-            const side = teamSideMap[String(action.drafter?.id)];
-            if (!champPickSteps[champ]) champPickSteps[champ] = { blueStep: 0, redStep: 0 };
-            if (side === 'blue') champPickSteps[champ].blueStep = stepCounter;
-            else champPickSteps[champ].redStep = stepCounter;
+            draftPicks.push({
+              champ: action.draftable.name,
+              side: teamSideMap[String(action.drafter?.id)] as 'blue' | 'red',
+              drafterId: String(action.drafter?.id)
+            });
           }
         }
       }
 
-      // Blind/Counter pick detection requires role/lane mapping which we are removing
-      // We'll simplify this to just store stats without blind/counter for now if roles are gone, 
-      // or we can try to guess based on match history but that's complex.
-      // The requirement is to REMOVE role from UI, not necessarily break analysis.
-      // But if we remove roles, "Blind" and "Counter" picks (which are lane-specific) lose some meaning.
-      // Let's keep the logic but remove it from the final result if it depends on roles.
+      // Assign roles to picks and detect blind/counter
+      for (const pick of draftPicks) {
+        let assignedRole = '';
+        const possibleRoles = getChampionRoles(pick.champ);
+
+        const sideRoles = pick.side === 'blue' ? blueRolesPicked : redRolesPicked;
+        const enemyRoles = pick.side === 'blue' ? redRolesPicked : blueRolesPicked;
+
+        for (const role of possibleRoles) {
+          if (!sideRoles.has(role)) {
+            assignedRole = role;
+            break;
+          }
+        }
+
+        if (!assignedRole && possibleRoles.length > 0) assignedRole = possibleRoles[0];
+
+        if (assignedRole) {
+          sideRoles.add(assignedRole);
+          const isBlind = !enemyRoles.has(assignedRole);
+          const isCounter = enemyRoles.has(assignedRole);
+
+          champToRole[pick.champ] = {
+            Player: '', 
+            isBlind,
+            isCounter,
+            assignedRole
+          };
+        } else {
+          champToRole[pick.champ] = { Player: '', isBlind: false, isCounter: false };
+        }
+      }
 
       for (const p of targetTeamObj.players) {
         const charObj = p.character || p.hero || {};
         const cName = charObj.name;
 
         if (cName) {
-          const side = teamSideMap[currentTargetTeamId];
-          const steps = champPickSteps[cName];
-          // Simplified blind/counter detection - might not be fully accurate without lane info
-          let isBlind = false;
-          let isCounter = false;
-
-          champToRole[cName] = { Player: p.name, isBlind, isCounter };
+          const info = champToRole[cName] || { isBlind: false, isCounter: false };
+          info.Player = p.name;
+          
           targetStats.push({
             Player: p.name,
             Champion: cName,
@@ -218,8 +226,8 @@ export async function getScoutingReport(
             Kills: p.kills || 0,
             Deaths: p.deaths || 0,
             Assists: p.killAssistsGiven || 0,
-            isBlind,
-            isCounter
+            isBlind: info.isBlind,
+            isCounter: info.isCounter
           });
         }
       }

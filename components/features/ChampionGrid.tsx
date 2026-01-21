@@ -9,8 +9,9 @@ import Image from 'next/image';
 import { useDraft } from '@/lib/draft/draft-context';
 import { useSeries } from '@/lib/draft/series-context';
 import { isFlexPick } from '@/lib/utils/flex-pick';
+import championRoles from '@/champion_role.json';
 
-const ROLES = ['All', 'Assassin', 'Fighter', 'Mage', 'Marksman', 'Support', 'Tank'];
+const ROLES = ['All', ...Object.keys(championRoles)];
 
 export function ChampionGrid({
     altAddSide,
@@ -57,7 +58,8 @@ export function ChampionGrid({
             
             let matchesRole = activeRole === 'All';
             if (!matchesRole) {
-                matchesRole = c.tags.includes(activeRole);
+                const roleChamps = (championRoles as Record<string, string[]>)[activeRole] || [];
+                matchesRole = roleChamps.includes(c.name);
             }
 
             if (altAddSide) {
