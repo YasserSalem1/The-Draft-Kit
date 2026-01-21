@@ -673,7 +673,7 @@ def get_predictions_logic(data):
                 c_name = item
             elif isinstance(item, dict):
                 c_name = item.get('name')
-                conf = float(item.get('confidence', 5.0))
+                conf = 5.0 # Fixed nudge to 5 as per request
             
             if not c_name: continue
 

@@ -2,12 +2,12 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Team } from '@/lib/data/teams';
-import { X, Users, Activity, Shield, Sword, BarChart3, PieChart, TrendingUp } from 'lucide-react';
+import { X, Users, Activity, Shield, Sword, BarChart3, PieChart, TrendingUp, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScoutingReportData } from '@/lib/data/scouting';
 import { ChampionIcon } from '@/components/ui/ChampionIcon';
 import { useEffect, useState } from 'react';
-import { getLatestVersion } from '@/lib/api/ddragon';
+import { getLatestVersion, getChampionIconUrl } from '@/lib/api/ddragon';
 
 interface TeamDetailsPanelProps {
     team: Team | null;
@@ -25,12 +25,12 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
 
     if (!team) return null;
 
-    const winRate = report?.roster_stats?.reduce((acc, curr) => acc + curr.WinRate, 0) / (report?.roster_stats?.length || 1);
+    const winRate = (report?.roster_stats || []).reduce((acc, curr) => acc + curr.WinRate, 0) / ((report?.roster_stats || []).length || 1);
 
     // Calculate side-specific win rates if available in roster_stats or games
     // Assuming roster_stats might not have side info, let's look at most_picked_champions_by_slot as a proxy for side preference
     // Actually, scouting.ts has most_picked_champions_by_slot: { blue1: [], red1_red2: [] }
-    
+
     const blueBansCount = report?.most_banned_champions?.by_blue_side?.length || 0;
     const redBansCount = report?.most_banned_champions?.by_red_side?.length || 0;
 
@@ -112,7 +112,7 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar pb-24">
                             {report ? (
                                 <>
                                     {/* Stats Grid */}
@@ -137,15 +137,17 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
 
                                     {/* Side Strategy */}
                                     <div>
-                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Side Strategy</h3>
+                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <TrendingUp className="w-4 h-4" /> Draft Priorities
+                                        </h3>
                                         <div className="grid grid-cols-1 gap-4">
-                                            {side === 'blue' ? (
+                                            {side === 'blue' || !side ? (
                                                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 space-y-3">
                                                     <div className="flex justify-between items-center">
-                                                        <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Blue Side</div>
+                                                        <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Blue Side Priority</div>
                                                     </div>
                                                     <div className="space-y-3">
-                                                        <div className="text-xs text-gray-400 font-medium">B1 Priority</div>
+                                                        <div className="text-xs text-gray-400 font-medium">B1 / Power Picks</div>
                                                         <div className="space-y-2">
                                                             {report.most_picked_champions_by_slot?.blue1?.length > 0 ? (
                                                                 report.most_picked_champions_by_slot.blue1.slice(0, 5).map((item: [string, number], idx: number) => (
@@ -163,13 +165,15 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ) : (
+                                            ) : null}
+
+                                            {side === 'red' || !side ? (
                                                 <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 space-y-3">
                                                     <div className="flex justify-between items-center">
-                                                        <div className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Red Side</div>
+                                                        <div className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Red Side Priority</div>
                                                     </div>
                                                     <div className="space-y-3">
-                                                        <div className="text-xs text-gray-400 font-medium">R1/R2 Priority</div>
+                                                        <div className="text-xs text-gray-400 font-medium">R1 / R2 Response</div>
                                                         <div className="space-y-2">
                                                             {report.most_picked_champions_by_slot?.red1_red2?.length > 0 ? (
                                                                 report.most_picked_champions_by_slot.red1_red2.slice(0, 5).map((item: [string, number], idx: number) => (
@@ -187,9 +191,51 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )}
+                                            ) : null}
                                         </div>
                                     </div>
+
+                                    {/* Player Tendencies */}
+                                    {report.tendencies && report.tendencies.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <Users className="w-4 h-4" /> Player Tendencies
+                                            </h3>
+                                            <div className="space-y-2">
+                                                {report.tendencies.map((t, idx) => (
+                                                    <div key={idx} className="p-3 bg-white/5 border border-white/5 rounded-lg flex flex-col gap-1">
+                                                        <span className="text-xs font-black text-primary uppercase tracking-wider">{t.name}</span>
+                                                        <p className="text-sm text-gray-300 leading-snug">{t.tendency}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Comfort Picks */}
+                                    {report.famousPicks && report.famousPicks.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <Trophy className="w-4 h-4" /> Comfort Picks
+                                            </h3>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {report.famousPicks.map((pick, idx) => (
+                                                    <div key={idx} className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/5">
+                                                        <ChampionIcon name={pick.name} version={version} size={32} />
+                                                        <div className="flex-1">
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <span className="text-sm font-bold text-white">{pick.name}</span>
+                                                                <span className="text-xs font-bold text-green-400">{pick.rate}% PRES</span>
+                                                            </div>
+                                                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-green-500" style={{ width: `${pick.rate}%` }} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Bans Section */}
                                     <div className="space-y-6">
@@ -209,8 +255,8 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                                             </div>
                                                             <div className="flex gap-2 mt-1">
                                                                 <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
-                                                                    <div 
-                                                                        className="h-full bg-amber-500/50" 
+                                                                    <div
+                                                                        className="h-full bg-amber-500/50"
                                                                         style={{ width: `${(ban.count / report.games_count) * 100}%` }}
                                                                     />
                                                                 </div>
@@ -241,8 +287,8 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                                             </div>
                                                             <div className="flex gap-2 mt-1">
                                                                 <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
-                                                                    <div 
-                                                                        className="h-full bg-red-500/50" 
+                                                                    <div
+                                                                        className="h-full bg-red-500/50"
                                                                         style={{ width: `${(ban.count / report.games_count) * 100}%` }}
                                                                     />
                                                                 </div>
@@ -257,6 +303,36 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Player Pools */}
+                                    {report.champion_pools_by_player && Object.keys(report.champion_pools_by_player).length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <PieChart className="w-4 h-4" /> Champion Pools
+                                            </h3>
+                                            <div className="space-y-6">
+                                                {Object.entries(report.champion_pools_by_player).map(([player, champs]) => (
+                                                    <div key={player} className="space-y-2">
+                                                        <span className="text-xs font-black text-white px-2 py-1 rounded bg-white/10 uppercase">{player}</span>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {champs.slice(0, 5).map((c, i) => (
+                                                                <div key={i} className="flex items-center gap-2 p-1 pr-3 bg-black/40 border border-white/5 rounded-full" title={`${c.Games} Games, ${c.WinRate}% WR`}>
+                                                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
+                                                                        <img src={getChampionIconUrl(version, c.Champion)} className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[10px] font-bold text-gray-300 leading-none">{c.Champion}</span>
+                                                                        <span className="text-[9px] font-bold text-gray-500 leading-none">{c.WinRate}% WR</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">

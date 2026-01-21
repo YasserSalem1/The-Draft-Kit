@@ -356,7 +356,7 @@ export default function LibraryPage() {
             />
 
             {/* Background Ambience */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none">
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 z-0">
                     <img
@@ -364,11 +364,11 @@ export default function LibraryPage() {
                         alt="Background"
                         className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
                     />
-                    <div className="absolute inset-0 bg-background/80" />
+                    <div className="absolute inset-0 bg-background/80" /> {/* Reduced overlay for better visibility */}
                 </div>
 
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[150px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[150px] z-0" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px] z-0" />
             </div>
 
             <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 z-10">

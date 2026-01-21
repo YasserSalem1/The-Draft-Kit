@@ -2,21 +2,21 @@
 
 import { getSeriesById, SavedSeries, updateSeries } from '@/lib/persistence/storage';
 import { TEAMS, Player } from '@/lib/data/teams';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, Trophy, Users, Sword, Shield } from 'lucide-react';
 import { getChampionIconUrl, getLatestVersion, Champion, getChampions } from '@/lib/api/ddragon';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { PlayerDetailsPanel } from '@/components/features/PlayerDetailsPanel';
-import { TeamDetailsPanel } from '@/components/features/TeamDetailsPanel';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { Team } from '@/lib/data/teams';
 import { ScoutingReportData } from '@/lib/data/scouting';
 
 export default function ReviewPage() {
     const params = useParams();
+    const router = useRouter();
     const [series, setSeries] = useState<SavedSeries | null>(null);
     const [version, setVersion] = useState<string>('');
     const [champions, setChampions] = useState<Champion[]>([]);
@@ -25,15 +25,8 @@ export default function ReviewPage() {
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedTeamMeta, setSelectedTeamMeta] = useState<{ name: string; color: string; report: ScoutingReportData | null } | null>(null);
 
-    // Team Report Panel State
-    const [selectedTeamForReport, setSelectedTeamForReport] = useState<Team | null>(null);
-    const [selectedTeamSide, setSelectedTeamSide] = useState<'blue' | 'red' | null>(null);
-    const [selectedTeamReportData, setSelectedTeamReportData] = useState<ScoutingReportData | null>(null);
-
-    const handleTeamClick = (team: Team, side: 'blue' | 'red', report: any) => {
-        setSelectedTeamForReport(team);
-        setSelectedTeamSide(side);
-        setSelectedTeamReportData(report);
+    const handleTeamClick = (team: Team) => {
+        router.push(`/reports?teamId=${team.id}&teamName=${encodeURIComponent(team.name)}&region=${team.region}`);
     };
 
     useEffect(() => {
@@ -122,8 +115,24 @@ export default function ReviewPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#090A0F] text-white p-6 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-12">
+        <main className="min-h-screen bg-background text-white p-6 md:p-8 relative overflow-hidden">
+            {/* Background Ambience */}
+            <div className="absolute inset-0 pointer-events-none">
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/esport.png"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-background/80" /> {/* Reduced overlay for better visibility */}
+                </div>
+
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[150px] z-0" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px] z-0" />
+            </div>
+
+            <div className="max-w-7xl mx-auto space-y-12 relative z-10">
                 {/* Player Details Side Panel (reused from Draft) */}
                 <PlayerDetailsPanel
                     player={selectedPlayer}
@@ -133,266 +142,301 @@ export default function ReviewPage() {
                     report={selectedTeamMeta?.report || null}
                 />
 
-                <TeamDetailsPanel
-                    team={selectedTeamForReport}
-                    side={selectedTeamSide || undefined}
-                    onClose={() => setSelectedTeamForReport(null)}
-                    report={selectedTeamReportData}
-                />
-                {/* Header */}
-                <div className="space-y-6 border-b border-white/5 pb-8">
-                    <Link href="/library" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest">
-                        <ArrowLeft className="w-4 h-4" /> Back to Library
-                    </Link>
-
-                    <div className="flex flex-col md:flex-row items-center justify-center md:gap-24 gap-8">
-                        {/* Blue Team */}
-                        <div 
-                            className="text-center space-y-4 cursor-pointer group"
-                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
-                        >
-                            <TeamLogo team={blueTeam} className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 shadow-[0_0_30px_rgba(59,130,246,0.2)] group-hover:scale-105 transition-transform" />
-                            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover:text-blue-400 transition-colors">{blueTeam.shortName}</h2>
-                        </div>
-
-                        {/* VS */}
-                        <div className="text-center space-y-2">
-                            <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.3em]">Series</div>
-                            <div className="text-5xl font-black italic tracking-tighter text-gray-700">VS</div>
-                            <div className="text-xs font-mono text-primary uppercase">{series.format} match</div>
-                        </div>
-
-                        {/* Red Team */}
-                        <div 
-                            className="text-center space-y-4 cursor-pointer group"
-                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
-                        >
-                            <TeamLogo team={redTeam} className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 shadow-[0_0_30px_rgba(239,68,68,0.2)] group-hover:scale-105 transition-transform" />
-                            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white group-hover:text-red-400 transition-colors">{redTeam.shortName}</h2>
+                {/* Header Section */}
+                <header className="space-y-8">
+                    {/* Breadcrumbs / Nav */}
+                    <div className="flex items-center justify-between">
+                        <Link href="/library" className="group flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all">
+                            <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                            <span className="text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">Back to Library</span>
+                        </Link>
+                        <div className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
+                            {series.format} Series
                         </div>
                     </div>
-                </div>
 
-                {/* One-time 5v5 Players strip for the series (single horizontal row, even alignment) */}
-                <div className="bg-black/20 border border-white/5 rounded-xl p-4">
-                    <div className="flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
-                        {/* Blue badge */}
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded bg-primary flex items-center justify-center font-bold text-black text-[10px] shrink-0">
-                            {blueTeam.shortName}
+                    {/* Matchup Banner */}
+                    <div className="relative p-12 rounded-[2rem] bg-black/40 border border-white/10 overflow-hidden backdrop-blur-sm">
+
+                        {/* Background Splashes */}
+                        <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                            <div className="absolute -left-20 -top-20 w-96 h-96 bg-blue-500/20 blur-[100px] rounded-full" />
+                            <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-red-500/20 blur-[100px] rounded-full" />
                         </div>
 
-                        {/* Blue 5 icons */}
-                        <div className="flex items-center gap-3 md:gap-4">
-                            {blueTeam.players?.map((p, idx) => {
-                                const nickname = series.games[0]?.draftState?.bluePlayerNames?.[idx] || p.nickname || (p as any).name;
-                                return (
-                                    <button
-                                        key={p.id}
-                                        onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport }); }}
-                                        className="shrink-0 group flex flex-col items-center gap-1"
-                                        title={nickname}
-                                    >
-                                        {/* Icon (unselected champ look) */}
-                                        <div
-                                            className={
-                                                "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
-                                                "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
-                                                "transition-all group-hover:border-primary/50 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]"
-                                            }
-                                        >
-                                            —
-                                        </div>
-                                        {/* Name */}
-                                        <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                            {nickname}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* VS divider */}
-                        <div className="px-2 md:px-4 text-sm md:text-base font-black italic text-gray-600 select-none">VS</div>
-
-                        {/* Red 5 icons */}
-                        <div className="flex items-center gap-3 md:gap-4">
-                            {redTeam.players?.map((p, idx) => {
-                                const nickname = series.games[0]?.draftState?.redPlayerNames?.[idx] || p.nickname || (p as any).name;
-                                return (
-                                    <button
-                                        key={p.id}
-                                        onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport }); }}
-                                        className="shrink-0 group flex flex-col items-center gap-1"
-                                        title={nickname}
-                                    >
-                                        <div
-                                            className={
-                                                "w-14 h-14 md:w-16 md:h-16 rounded-md border border-white/10 bg-black/60 " +
-                                                "flex items-center justify-center text-[14px] text-gray-500 font-mono " +
-                                                "transition-all group-hover:border-red-500/50 group-hover:shadow-[0_0_14px_rgba(239,68,68,0.35)]"
-                                            }
-                                        >
-                                            —
-                                        </div>
-                                        <div className="w-14 md:w-16 text-[10px] md:text-xs text-gray-300 text-center leading-tight truncate">
-                                            {nickname}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Red badge */}
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded bg-red-600 flex items-center justify-center font-bold text-white text-[10px] shrink-0">
-                            {redTeam.shortName}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Game List */}
-                <div className="space-y-12">
-                    {series.games.map((game, index) => {
-                        return (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                key={index}
-                                className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden"
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+                            {/* Blue Team */}
+                            <div
+                                className="flex-1 flex flex-col items-center gap-6 group cursor-pointer"
+                                onClick={() => handleTeamClick(blueTeam)}
                             >
-                                <div className="bg-white/5 px-6 py-3 flex items-center justify-between border-b border-white/5">
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Game {index + 1}</h3>
-                                    <div className="flex items-center gap-6">
-                                        <div className="flex items-center gap-2 cursor-pointer group/team"
-                                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
-                                        >
-                                            <TeamLogo team={blueTeam} className="w-6 h-6 group-hover/team:scale-110 transition-transform" />
-                                            <span className="text-xs font-bold text-gray-300 group-hover/team:text-blue-400 transition-colors">{blueTeam.shortName}</span>
-                                        </div>
-                                        <div className="w-px h-4 bg-white/10" />
-                                        <div 
-                                            className="flex items-center gap-2 cursor-pointer group/team-red"
-                                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
-                                        >
-                                            <TeamLogo team={redTeam} className="w-6 h-6 group-hover/team-red:scale-110 transition-transform" />
-                                            <span className="text-xs font-bold text-gray-300 group-hover/team-red:text-red-400 transition-colors">{redTeam.shortName}</span>
-                                        </div>
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/20 blur-2xl rounded-full transition-all duration-500" />
+                                    <TeamLogo team={blueTeam} className="w-32 h-32 relative z-10 drop-shadow-2xl group-hover:scale-110 transition-transform duration-300" />
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <h2 className="text-5xl font-black italic tracking-tighter text-white group-hover:text-blue-400 transition-colors uppercase">{blueTeam.shortName}</h2>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest">
+                                        <Users className="w-3 h-3" />
+                                        Blue Side
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Removed per-game 5v5 section per request */}
+                            {/* VS Badge */}
+                            <div className="flex flex-col items-center justify-center shrink-0">
+                                <div className="text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-400 to-gray-600 tracking-tighter mix-blend-overlay opacity-50 select-none">
+                                    VS
+                                </div>
+                            </div>
 
-                                <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-12 relative">
-                                    {/* Left Side (Blue) */}
-                                    <div className="space-y-6">
-                                        <div 
-                                            className="flex items-center gap-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 cursor-pointer group/header"
-                                            onClick={() => handleTeamClick(blueTeam, 'blue', series.blueReport)}
-                                        >
-                                            <TeamLogo team={blueTeam} className="w-12 h-12 rounded-lg group-hover/header:scale-105 transition-transform" />
-                                            <div>
-                                                <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover/header:text-blue-400 transition-colors">{blueTeam.shortName}</h4>
-                                                <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Blue Side</div>
-                                            </div>
-                                        </div>
-                                        <TeamBuildSummary
-                                            teamName={blueTeam.name}
-                                            bans={game.draftState.blueBans}
-                                            picks={game.draftState.bluePicks}
-                                            side="blue"
-                                            version={version}
-                                        />
-                                        {/* Alternatives Editor - Picks */}
-                                        <AlternativesEditor
-                                            side="blue"
-                                            kind="picks"
-                                            gameIndex={index}
-                                            game={game}
-                                            champions={champions}
-                                            version={version}
-                                            open={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'picks'}
-                                            search={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'picks' ? search : ''}
-                                            onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'blue', kind: 'picks' }); setSearch(''); }}
-                                            onClosePicker={() => setPickerState(null)}
-                                            onSearch={setSearch}
-                                            onRemove={(champId) => handleRemoveAlt(index, 'blue', 'picks', champId)}
-                                            onAdd={(champ) => handleAddAlt(index, 'blue', 'picks', champ)}
-                                        />
-                                        {/* Alternatives Editor - Bans */}
-                                        <AlternativesEditor
-                                            side="blue"
-                                            kind="bans"
-                                            gameIndex={index}
-                                            game={game}
-                                            champions={champions}
-                                            version={version}
-                                            open={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'bans'}
-                                            search={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'bans' ? search : ''}
-                                            onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'blue', kind: 'bans' }); setSearch(''); }}
-                                            onClosePicker={() => setPickerState(null)}
-                                            onSearch={setSearch}
-                                            onRemove={(champId) => handleRemoveAlt(index, 'blue', 'bans', champId)}
-                                            onAdd={(champ) => handleAddAlt(index, 'blue', 'bans', champ)}
-                                        />
-                                    </div>
-
-                                    <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-white/5" />
-
-                                    {/* Right Side (Red) */}
-                                    <div className="space-y-6">
-                                        <div 
-                                            className="flex flex-row-reverse items-center gap-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10 cursor-pointer group/header-red"
-                                            onClick={() => handleTeamClick(redTeam, 'red', series.redReport)}
-                                        >
-                                            <TeamLogo team={redTeam} className="w-12 h-12 rounded-lg group-hover/header-red:scale-105 transition-transform" />
-                                            <div className="text-right">
-                                                <h4 className="text-xl font-black uppercase italic tracking-tighter text-white group-hover/header-red:text-red-400 transition-colors">{redTeam.shortName}</h4>
-                                                <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Red Side</div>
-                                            </div>
-                                        </div>
-                                        <TeamBuildSummary
-                                            teamName={redTeam.name}
-                                            bans={game.draftState.redBans}
-                                            picks={game.draftState.redPicks}
-                                            side="red"
-                                            version={version}
-                                        />
-                                        <AlternativesEditor
-                                            side="red"
-                                            kind="picks"
-                                            gameIndex={index}
-                                            game={game}
-                                            champions={champions}
-                                            version={version}
-                                            open={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'picks'}
-                                            search={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'picks' ? search : ''}
-                                            onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'red', kind: 'picks' }); setSearch(''); }}
-                                            onClosePicker={() => setPickerState(null)}
-                                            onSearch={setSearch}
-                                            onRemove={(champId) => handleRemoveAlt(index, 'red', 'picks', champId)}
-                                            onAdd={(champ) => handleAddAlt(index, 'red', 'picks', champ)}
-                                        />
-                                        <AlternativesEditor
-                                            side="red"
-                                            kind="bans"
-                                            gameIndex={index}
-                                            game={game}
-                                            champions={champions}
-                                            version={version}
-                                            open={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'bans'}
-                                            search={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'bans' ? search : ''}
-                                            onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'red', kind: 'bans' }); setSearch(''); }}
-                                            onClosePicker={() => setPickerState(null)}
-                                            onSearch={setSearch}
-                                            onRemove={(champId) => handleRemoveAlt(index, 'red', 'bans', champId)}
-                                            onAdd={(champ) => handleAddAlt(index, 'red', 'bans', champ)}
-                                        />
+                            {/* Red Team */}
+                            <div
+                                className="flex-1 flex flex-col items-center gap-6 group cursor-pointer"
+                                onClick={() => handleTeamClick(redTeam)}
+                            >
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 blur-2xl rounded-full transition-all duration-500" />
+                                    <TeamLogo team={redTeam} className="w-32 h-32 relative z-10 drop-shadow-2xl group-hover:scale-110 transition-transform duration-300" />
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <h2 className="text-5xl font-black italic tracking-tighter text-white group-hover:text-red-400 transition-colors uppercase">{redTeam.shortName}</h2>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-widest">
+                                        Red Side
+                                        <Users className="w-3 h-3" />
                                     </div>
                                 </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Rosters Section - REFINED */}
+                <section className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-px bg-white/10 flex-1" />
+                        <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-500">Active Rosters</h3>
+                        <div className="h-px bg-white/10 flex-1" />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Blue Roster */}
+                        <div className="bg-gradient-to-br from-blue-950/20 to-black/20 border border-white/5 rounded-2xl p-6 relative overflow-hidden group/panel">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/50" />
+                            <div className="flex justify-between items-center mb-6">
+                                <h4 className="text-xl font-bold text-blue-100">{blueTeam.name}</h4>
+                                <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider">Blue Team</span>
+                            </div>
+
+                            <div className="grid grid-cols-5 gap-4">
+                                {blueTeam.players?.map((p, idx) => {
+                                    const nickname = series.games[0]?.draftState?.bluePlayerNames?.[idx] || p.nickname || (p as any).name;
+                                    return (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport }); }}
+                                            className="group/player flex flex-col items-center gap-3 relative"
+                                            title="View Player Report"
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10 group-hover/player:border-blue-400/50 flex items-center justify-center transition-all group-hover/player:shadow-[0_0_20px_rgba(59,130,246,0.2)] group-hover/player:-translate-y-1 relative overflow-hidden">
+                                                <Users className="w-6 h-6 text-gray-600 group-hover/player:text-blue-400 transition-colors" />
+                                                {/* Hover overlay hint */}
+                                                <div className="absolute inset-0 bg-blue-500/80 flex items-center justify-center opacity-0 group-hover/player:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                                    <span className="text-[8px] font-black text-white uppercase tracking-widest">View Stats</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-400 group-hover/player:text-white transition-colors truncate w-full text-center">{nickname}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Red Roster */}
+                        <div className="bg-gradient-to-bl from-red-950/20 to-black/20 border border-white/5 rounded-2xl p-6 relative overflow-hidden group/panel">
+                            <div className="absolute top-0 right-0 w-1 h-full bg-red-500/50" />
+                            <div className="flex justify-between items-center mb-6 flex-row-reverse">
+                                <h4 className="text-xl font-bold text-red-100">{redTeam.name}</h4>
+                                <span className="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider">Red Team</span>
+                            </div>
+
+                            <div className="grid grid-cols-5 gap-4">
+                                {redTeam.players?.map((p, idx) => {
+                                    const nickname = series.games[0]?.draftState?.redPlayerNames?.[idx] || p.nickname || (p as any).name;
+                                    return (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport }); }}
+                                            className="group/player flex flex-col items-center gap-3 relative"
+                                            title="View Player Report"
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10 group-hover/player:border-red-400/50 flex items-center justify-center transition-all group-hover/player:shadow-[0_0_20px_rgba(239,68,68,0.2)] group-hover/player:-translate-y-1 relative overflow-hidden">
+                                                <Users className="w-6 h-6 text-gray-600 group-hover/player:text-red-400 transition-colors" />
+                                                {/* Hover overlay hint */}
+                                                <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover/player:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                                    <span className="text-[8px] font-black text-white uppercase tracking-widest">View Stats</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-400 group-hover/player:text-white transition-colors truncate w-full text-center">{nickname}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Games Timeline */}
+                <section className="space-y-8">
+                    <div className="flex items-center gap-4">
+                        <div className="h-px bg-white/10 flex-1" />
+                        <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-500">Match Timeline</h3>
+                        <div className="h-px bg-white/10 flex-1" />
+                    </div>
+
+                    <div className="space-y-16">
+                        {series.games.map((game, index) => {
+                            return (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5 }}
+                                    key={index}
+                                    className="relative"
+                                >
+                                    {/* Game Header */}
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 font-black text-xl text-white shadow-lg">
+                                            {index + 1}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-white">Game {index + 1}</h3>
+                                            <p className="text-sm text-gray-500">Draft Analysis & Alternatives</p>
+                                        </div>
+                                        <div className="h-px bg-white/10 flex-1 ml-4" />
+                                    </div>
+
+                                    {/* Game Card */}
+                                    <div className="bg-[#0C0E14]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+
+                                        {/* Draft Area */}
+                                        <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-16 relative">
+
+                                            {/* Divider for Desktop */}
+                                            <div className="hidden lg:block absolute left-1/2 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+
+                                            {/* Left Side (Blue) */}
+                                            <div className="space-y-8">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                                                        <Sword className="w-5 h-5" />
+                                                    </div>
+                                                    <h4 className="text-lg font-bold uppercase tracking-widest text-blue-200">Blue Side Draft</h4>
+                                                </div>
+
+                                                <TeamBuildSummary
+                                                    teamName={blueTeam.name}
+                                                    bans={game.draftState.blueBans}
+                                                    picks={game.draftState.bluePicks}
+                                                    side="blue"
+                                                    version={version}
+                                                />
+
+                                                <div className="pt-6 border-t border-white/5 space-y-4">
+                                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Scenarios & Alternatives</p>
+                                                    <AlternativesEditor
+                                                        side="blue"
+                                                        kind="picks"
+                                                        gameIndex={index}
+                                                        game={game}
+                                                        champions={champions}
+                                                        version={version}
+                                                        open={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'picks'}
+                                                        search={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'picks' ? search : ''}
+                                                        onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'blue', kind: 'picks' }); setSearch(''); }}
+                                                        onClosePicker={() => setPickerState(null)}
+                                                        onSearch={setSearch}
+                                                        onRemove={(champId) => handleRemoveAlt(index, 'blue', 'picks', champId)}
+                                                        onAdd={(champ) => handleAddAlt(index, 'blue', 'picks', champ)}
+                                                    />
+                                                    <AlternativesEditor
+                                                        side="blue"
+                                                        kind="bans"
+                                                        gameIndex={index}
+                                                        game={game}
+                                                        champions={champions}
+                                                        version={version}
+                                                        open={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'bans'}
+                                                        search={pickerState?.gameIndex === index && pickerState.side === 'blue' && pickerState.kind === 'bans' ? search : ''}
+                                                        onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'blue', kind: 'bans' }); setSearch(''); }}
+                                                        onClosePicker={() => setPickerState(null)}
+                                                        onSearch={setSearch}
+                                                        onRemove={(champId) => handleRemoveAlt(index, 'blue', 'bans', champId)}
+                                                        onAdd={(champ) => handleAddAlt(index, 'blue', 'bans', champ)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Right Side (Red) */}
+                                            <div className="space-y-8">
+                                                <div className="flex items-center justify-end gap-4">
+                                                    <h4 className="text-lg font-bold uppercase tracking-widest text-red-200">Red Side Draft</h4>
+                                                    <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
+                                                        <Shield className="w-5 h-5" />
+                                                    </div>
+                                                </div>
+
+                                                <TeamBuildSummary
+                                                    teamName={redTeam.name}
+                                                    bans={game.draftState.redBans}
+                                                    picks={game.draftState.redPicks}
+                                                    side="red"
+                                                    version={version}
+                                                />
+
+                                                <div className="pt-6 border-t border-white/5 space-y-4">
+                                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Scenarios & Alternatives</p>
+                                                    <AlternativesEditor
+                                                        side="red"
+                                                        kind="picks"
+                                                        gameIndex={index}
+                                                        game={game}
+                                                        champions={champions}
+                                                        version={version}
+                                                        open={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'picks'}
+                                                        search={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'picks' ? search : ''}
+                                                        onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'red', kind: 'picks' }); setSearch(''); }}
+                                                        onClosePicker={() => setPickerState(null)}
+                                                        onSearch={setSearch}
+                                                        onRemove={(champId) => handleRemoveAlt(index, 'red', 'picks', champId)}
+                                                        onAdd={(champ) => handleAddAlt(index, 'red', 'picks', champ)}
+                                                    />
+                                                    <AlternativesEditor
+                                                        side="red"
+                                                        kind="bans"
+                                                        gameIndex={index}
+                                                        game={game}
+                                                        champions={champions}
+                                                        version={version}
+                                                        open={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'bans'}
+                                                        search={pickerState?.gameIndex === index && pickerState.side === 'red' && pickerState.kind === 'bans' ? search : ''}
+                                                        onOpenPicker={() => { setPickerState({ gameIndex: index, side: 'red', kind: 'bans' }); setSearch(''); }}
+                                                        onClosePicker={() => setPickerState(null)}
+                                                        onSearch={setSearch}
+                                                        onRemove={(champId) => handleRemoveAlt(index, 'red', 'bans', champId)}
+                                                        onAdd={(champ) => handleAddAlt(index, 'red', 'bans', champ)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </section>
             </div>
         </main>
     )

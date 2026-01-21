@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getScoutingReport, ScoutingReportData } from '@/lib/data/scouting';
 import { getTournaments } from '@/lib/data/drafts';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Download, FileText, TrendingUp, Target, Shield, Zap, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import sideData from '@/lib/data/side_preference_report_FULL.json';
@@ -23,6 +24,57 @@ export default function ReportsPage() {
     const [reportData, setReportData] = useState<ScoutingReportData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const searchParams = useSearchParams();
+
+    // Auto-select from URL
+    useEffect(() => {
+        const tId = searchParams.get('teamId');
+        const tName = searchParams.get('teamName');
+        const reg = searchParams.get('region');
+
+        if (tId && tName && reg) {
+            const league = LEAGUES.find(l => l.regionName === reg || l.name === reg);
+            if (league) {
+                // Determine league safely
+                setSelectedLeague(league);
+
+                // Fetch tournaments for this league to populate the filter, then select team
+                setLoading(true);
+                getTournaments(league.regionName, league.parentId)
+                    .then(tournaments => {
+                        setAvailableTournaments(tournaments);
+                        let tIds: string[] = [];
+                        if (tournaments.length > 0) {
+                            const lastTournament = tournaments[tournaments.length - 1];
+                            tIds = [lastTournament.id];
+                            setSelectedTournamentIds(tIds);
+                        }
+
+                        // Set team selection
+                        setSelectedTeamId(tId);
+                        setSelectedTeamName(tName);
+
+                        // Fetch report
+                        return getScoutingReport(tId, tIds, league.regionName, league.parentId);
+                    })
+                    .then(data => {
+                        if ('message' in data) {
+                            setError(data.message);
+                            setReportData(null);
+                        } else {
+                            setReportData(data);
+                        }
+                    })
+                    .catch(err => {
+                        setError(err.message || 'Failed to initialize report');
+                    })
+                    .finally(() => {
+                        setLoading(false);
+                    });
+            }
+        }
+    }, [searchParams]);
 
     const handleSelectLeague = async (league: League) => {
         setSelectedLeague(league);
@@ -57,9 +109,9 @@ export default function ReportsPage() {
         setError(null);
         try {
             const data = await getScoutingReport(
-                teamId, 
-                tIds, 
-                selectedLeague?.regionName, 
+                teamId,
+                tIds,
+                selectedLeague?.regionName,
                 selectedLeague?.parentId
             ); // Fetch live data
             if ('message' in data) {
@@ -83,7 +135,7 @@ export default function ReportsPage() {
         } else {
             newSelection = [...selectedTournamentIds, tournamentId];
         }
-        
+
         if (newSelection.length === 0) return; // Must have at least one
 
         setSelectedTournamentIds(newSelection);
@@ -272,7 +324,7 @@ export default function ReportsPage() {
                                                 <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-black uppercase tracking-widest rounded-full border border-green-500/10">Active Analysis</span>
                                             </div>
                                             <h2 className="text-4xl font-black text-white tracking-tight">{selectedTeamName}</h2>
-                                            
+
                                             {/* Tournament Toggle Buttons */}
                                             <div className="mt-6">
                                                 <p className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Include Tournaments:</p>
