@@ -144,6 +144,10 @@ export default function ReportsPage() {
         }
     };
 
+    const handleExport = () => {
+        window.print();
+    };
+
     const currentSelectionStage = !selectedLeague
         ? 'league'
         : !selectedTeamId
@@ -191,7 +195,7 @@ export default function ReportsPage() {
         <main className="min-h-screen bg-background text-foreground flex flex-col p-6 md:p-12 relative overflow-hidden">
 
             {/* Back to Hub */}
-            <Link href="/" className="absolute top-8 left-8 text-gray-500 hover:text-white flex items-center gap-2 transition-colors z-20">
+            <Link href="/" className="absolute top-8 left-8 text-gray-500 hover:text-white flex items-center gap-2 transition-colors z-20 print:hidden">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-widest">Back to Hub</span>
             </Link>
@@ -201,17 +205,17 @@ export default function ReportsPage() {
                 {/* Header Section */}
                 <div className="border-b border-white/5 pb-8 mb-8">
                     <div className="mb-8">
-                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-3">
+                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-3 print:hidden">
                             <span className="text-primary">Team</span> Intelligence
                         </h1>
-                        <p className="text-gray-400 max-w-2xl text-lg">
+                        <p className="text-gray-400 max-w-2xl text-lg print:hidden">
                             Generate deep-dive analytical reports on team performance, draft tendencies, and strategic priorities.
                         </p>
                     </div>
 
                     {/* Breadcrumb Navigation */}
                     {(selectedLeague || selectedTeamName) && (
-                        <div className="flex items-center gap-2 mb-4 flex-wrap">
+                        <div className="flex items-center gap-2 mb-4 flex-wrap print:hidden">
                             {selectedLeague && (
                                 <>
                                     <button
@@ -326,7 +330,7 @@ export default function ReportsPage() {
                                             <h2 className="text-4xl font-black text-white tracking-tight">{selectedTeamName}</h2>
 
                                             {/* Tournament Toggle Buttons */}
-                                            <div className="mt-6">
+                                            <div className="mt-6 print:hidden">
                                                 <p className="text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Include Tournaments:</p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {availableTournaments.map(t => (
@@ -349,8 +353,11 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-4">
-                                        <button className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-black transition-all border border-white/10 hover:scale-105 active:scale-95 shadow-lg">
+                                    <div className="flex gap-4 print:hidden">
+                                        <button 
+                                            onClick={handleExport}
+                                            className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-black transition-all border border-white/10 hover:scale-105 active:scale-95 shadow-lg"
+                                        >
                                             <FileText className="w-4 h-4" /> Export
                                         </button>
                                         <Link href={`/drafts?teamId=${selectedTeamId}&tournamentId=${selectedTournamentIds[0]}`} className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-black transition-all shadow-xl shadow-primary/20 hover:scale-105 active:scale-95">
@@ -393,7 +400,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Background Ambience */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 z-0 pointer-events-none print:hidden">
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 z-0">
                     <img

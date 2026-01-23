@@ -195,47 +195,6 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                         </div>
                                     </div>
 
-                                    {/* Player Tendencies */}
-                                    {report.tendencies && report.tendencies.length > 0 && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                <Users className="w-4 h-4" /> Player Tendencies
-                                            </h3>
-                                            <div className="space-y-2">
-                                                {report.tendencies.map((t, idx) => (
-                                                    <div key={idx} className="p-3 bg-white/5 border border-white/5 rounded-lg flex flex-col gap-1">
-                                                        <span className="text-xs font-black text-primary uppercase tracking-wider">{t.name}</span>
-                                                        <p className="text-sm text-gray-300 leading-snug">{t.tendency}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Comfort Picks */}
-                                    {report.famousPicks && report.famousPicks.length > 0 && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                <Trophy className="w-4 h-4" /> Comfort Picks
-                                            </h3>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {report.famousPicks.map((pick, idx) => (
-                                                    <div key={idx} className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/5">
-                                                        <ChampionIcon name={pick.name} version={version} size={32} />
-                                                        <div className="flex-1">
-                                                            <div className="flex justify-between items-center mb-1">
-                                                                <span className="text-sm font-bold text-white">{pick.name}</span>
-                                                                <span className="text-xs font-bold text-green-400">{pick.rate}% PRES</span>
-                                                            </div>
-                                                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-green-500" style={{ width: `${pick.rate}%` }} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* Bans Section */}
                                     <div className="space-y-6">
@@ -304,34 +263,6 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
                                         </div>
                                     </div>
 
-                                    {/* Player Pools */}
-                                    {report.champion_pools_by_player && Object.keys(report.champion_pools_by_player).length > 0 && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                <PieChart className="w-4 h-4" /> Champion Pools
-                                            </h3>
-                                            <div className="space-y-6">
-                                                {Object.entries(report.champion_pools_by_player).map(([player, champs]) => (
-                                                    <div key={player} className="space-y-2">
-                                                        <span className="text-xs font-black text-white px-2 py-1 rounded bg-white/10 uppercase">{player}</span>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {champs.slice(0, 5).map((c, i) => (
-                                                                <div key={i} className="flex items-center gap-2 p-1 pr-3 bg-black/40 border border-white/5 rounded-full" title={`${c.Games} Games, ${c.WinRate}% WR`}>
-                                                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
-                                                                        <img src={getChampionIconUrl(version, c.Champion)} className="w-full h-full object-cover" />
-                                                                    </div>
-                                                                    <div className="flex flex-col">
-                                                                        <span className="text-[10px] font-bold text-gray-300 leading-none">{c.Champion}</span>
-                                                                        <span className="text-[9px] font-bold text-gray-500 leading-none">{c.WinRate}% WR</span>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
 
                                 </>
                             ) : (

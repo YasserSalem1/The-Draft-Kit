@@ -201,46 +201,13 @@ const ReportDisplay: React.FC<ScoutingReportProps> = ({ report }) => {
         </section>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-4">
-        {/* Roster Stats */}
-        <section className="space-y-6 col-span-1">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="w-1.5 h-8 bg-purple-500 rounded-full"></span>
-            Roster
-          </h2>
-          <div className="bg-surface-light/30 border border-white/10 rounded-2xl overflow-hidden shadow-sm">
-            <table className="min-w-full text-sm">
-              <thead className="bg-surface/80 border-b border-white/10 text-gray-400 font-black uppercase tracking-widest">
-                <tr>
-                  <th className="px-4 py-3 text-left">Player</th>
-                  <th className="px-4 py-3 text-center">G</th>
-                  <th className="px-4 py-3 text-right">WR</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {report.roster_stats.map((stat) => (
-                  <tr key={stat.Player} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 font-bold text-white">{stat.Player}</td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-gray-300">{stat.Games}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={cn("font-black", stat.WinRate >= 50 ? 'text-green-400' : 'text-red-400')}>
-                        {stat.WinRate.toFixed(0)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Champion Pools */}
-        <section className="space-y-6 col-span-2">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="w-1.5 h-8 bg-yellow-500 rounded-full"></span>
-            Player Champion Pools
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      {/* Champion Pools
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+          <span className="w-1.5 h-8 bg-yellow-500 rounded-full"></span>
+          Player Champion Pools
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {Object.entries(report.champion_pools_by_player).map(([player, champions]) => (
               <div key={player} className="bg-surface-light/30 border border-white/10 rounded-2xl p-4 shadow-sm">
                 <h3 className="text-xs font-black text-gray-300 mb-4 uppercase tracking-[0.2em] border-b border-white/10 pb-2">{player}</h3>
@@ -261,10 +228,9 @@ const ReportDisplay: React.FC<ScoutingReportProps> = ({ report }) => {
                 </div>
               </div>
             ))}
-          </div>
-        </section>
-      </div>
-
+        </div>
+      </section>
+*/}
       {/* Match History Section */}
       {report.match_history && report.match_history.length > 0 && (
         <section className="space-y-6 pt-12 border-t border-white/10">
