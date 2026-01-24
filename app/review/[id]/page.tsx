@@ -234,7 +234,11 @@ export default function ReviewPage() {
                                     return (
                                         <button
                                             key={p.id}
-                                            onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport }); }}
+                                            onClick={() => {
+                                                const playerName = series.games[0]?.draftState?.bluePlayerNames?.[idx] || p.nickname || (p as any).name;
+                                                setSelectedPlayer({ ...p, nickname: playerName });
+                                                setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport });
+                                            }}
                                             className="group/player flex flex-col items-center gap-3 relative"
                                             title="View Player Report"
                                         >
@@ -266,7 +270,11 @@ export default function ReviewPage() {
                                     return (
                                         <button
                                             key={p.id}
-                                            onClick={() => { setSelectedPlayer(p); setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport }); }}
+                                            onClick={() => {
+                                                const playerName = series.games[0]?.draftState?.redPlayerNames?.[idx] || p.nickname || (p as any).name;
+                                                setSelectedPlayer({ ...p, nickname: playerName });
+                                                setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport });
+                                            }}
                                             className="group/player flex flex-col items-center gap-3 relative"
                                             title="View Player Report"
                                         >
@@ -341,6 +349,12 @@ export default function ReviewPage() {
                                                     picks={game.draftState.bluePicks}
                                                     side="blue"
                                                     version={version}
+                                                    playerNames={game.draftState.bluePlayerNames || []}
+                                                    onPlayerClick={(playerName) => {
+                                                        const p = blueTeam.players?.find(pl => pl.nickname === playerName) || { id: playerName, nickname: playerName } as Player;
+                                                        setSelectedPlayer({ ...p, nickname: playerName });
+                                                        setSelectedTeamMeta({ name: blueTeam.name, color: blueTeam.color, report: series.blueReport });
+                                                    }}
                                                 />
 
                                                 <div className="pt-6 border-t border-white/5 space-y-4">
@@ -393,6 +407,12 @@ export default function ReviewPage() {
                                                     picks={game.draftState.redPicks}
                                                     side="red"
                                                     version={version}
+                                                    playerNames={game.draftState.redPlayerNames || []}
+                                                    onPlayerClick={(playerName) => {
+                                                        const p = redTeam.players?.find(pl => pl.nickname === playerName) || { id: playerName, nickname: playerName } as Player;
+                                                        setSelectedPlayer({ ...p, nickname: playerName });
+                                                        setSelectedTeamMeta({ name: redTeam.name, color: redTeam.color, report: series.redReport });
+                                                    }}
                                                 />
 
                                                 <div className="pt-6 border-t border-white/5 space-y-4">
@@ -442,7 +462,15 @@ export default function ReviewPage() {
     )
 }
 
-function TeamBuildSummary({ teamName, bans, picks, side, version }: { teamName: string, bans: (Champion | null)[], picks: (Champion | null)[], side: 'blue' | 'red', version: string }) {
+function TeamBuildSummary({ teamName, bans, picks, side, version, playerNames, onPlayerClick }: {
+    teamName: string,
+    bans: (Champion | null)[],
+    picks: (Champion | null)[],
+    side: 'blue' | 'red',
+    version: string,
+    playerNames: string[],
+    onPlayerClick: (playerName: string) => void
+}) {
     const isBlue = side === 'blue';
     return (
         <div className="space-y-4">
@@ -452,27 +480,41 @@ function TeamBuildSummary({ teamName, bans, picks, side, version }: { teamName: 
 
             {/* Picks */}
             <div className="flex gap-2">
-                {picks.map((pick, i) => (
-                    <div key={i} className="flex-1 space-y-2">
-                        <div className="aspect-[3/4] rounded-lg border border-white/10 overflow-hidden bg-black/50 relative group">
-                            {pick ? (
-                                <>
-                                    <img
-                                        src={getChampionIconUrl(version, pick.image.full)}
-                                        className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all"
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/80 text-[10px] text-center font-bold truncate">
-                                        {pick.name}
+                {picks.map((pick, i) => {
+                    const playerName = playerNames[i];
+                    return (
+                        <div key={i} className="flex-1 space-y-2">
+                            <button
+                                onClick={() => playerName && onPlayerClick(playerName)}
+                                className="w-full aspect-[3/4] rounded-lg border border-white/10 overflow-hidden bg-black/50 relative group"
+                            >
+                                {pick ? (
+                                    <>
+                                        <img
+                                            src={getChampionIconUrl(version, pick.image.full)}
+                                            className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all"
+                                        />
+                                        <div className={cn("absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]", isBlue ? "bg-blue-500/40" : "bg-red-500/40")}>
+                                            <span className="text-[8px] font-black text-white uppercase tracking-widest">View Stats</span>
+                                        </div>
+                                        <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/80 text-[10px] text-center font-bold truncate">
+                                            {pick.name}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-700 font-mono">
+                                        EMPTY
                                     </div>
-                                </>
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-700 font-mono">
-                                    EMPTY
+                                )}
+                            </button>
+                            {playerName && (
+                                <div className="text-[10px] font-bold text-gray-500 text-center truncate px-1">
+                                    {playerName}
                                 </div>
                             )}
                         </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Bans */}

@@ -93,7 +93,7 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
 
                             <button
                                 onClick={onClose}
-                                className="absolute top-6 right-6 p-2 rounded-full bg-black/40 hover:bg-white/10 text-white transition-colors z-20"
+                                className="absolute top-12 right-6 p-2 rounded-full bg-black/40 hover:bg-white/10 text-white transition-colors z-20"
                             >
                                 <X className="w-6 h-6" />
                             </button>
