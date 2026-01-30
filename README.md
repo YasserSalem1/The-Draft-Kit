@@ -7,7 +7,7 @@
 *   **Next-Gen Scouting Reports:** Forget manual data entry. Get instant, deep insights into **player champion pools**, **side-specific draft preferences**, and **priority picks**. Know your opponent better than they know themselves.
 *   **Hybrid AI Architecture:** Our state-of-the-art AI doesn't just crunch numbers. It balances statistical win rates with **player comfort and preferences**, delivering recommendations that are both mathematically optimal and roster-realistic.
 
-![AI Architecture](./AI_Architecture.png)
+![AI Architecture](AI%20Architecture.png)
 
 This README focuses on a clear, comprehensive feature list first, followed by quick setup and technical notes.
 **Important note:** Zip file including the .env file with all api keys is attached in the submission on Devpost.
