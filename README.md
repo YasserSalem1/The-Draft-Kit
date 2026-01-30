@@ -1,8 +1,16 @@
-### Cloud9 Draft — Competitive Drafting Simulator
+### The Draft Kit — The Ultimate Pro-Play Drafting Weapon
 
-Cloud9 Draft is a Next.js app for simulating competitive League of Legends drafts with a smooth UI, multi‑game series flow, fearless bans tracking, and a built‑in Library to save, organize, and review drafts.
+**The Draft Kit** is the definitive tool for simulating competitive League of Legends drafts. We combine a tournament-grade UI with a revolutionary AI engine to give coaches the edge they need to win.
+
+**🚀 Why The Draft Kit?**
+
+*   **Next-Gen Scouting Reports:** Forget manual data entry. Get instant, deep insights into **player champion pools**, **side-specific draft preferences**, and **priority picks**. Know your opponent better than they know themselves.
+*   **Hybrid AI Architecture:** Our state-of-the-art AI doesn't just crunch numbers. It balances statistical win rates with **player comfort and preferences**, delivering recommendations that are both mathematically optimal and roster-realistic.
+
+![AI Architecture](./AI_Architecture.png)
 
 This README focuses on a clear, comprehensive feature list first, followed by quick setup and technical notes.
+**Important note:** Zip file including the .env file with all api keys is attached in the submission on Devpost.
 
 ---
 
@@ -53,25 +61,84 @@ This README focuses on a clear, comprehensive feature list first, followed by qu
 
 ---
 
-### Quick Start
+### Development Setup
 
-Prerequisites: Node 18+ recommended.
+Follow these steps to run the full stack (Frontend + Draft Prediction AI).
 
-Install dependencies and run dev server:
+#### 1. Backend Setup (Draft Predictor)
 
-```bash
-npm install
-npm run dev
-```
+The backend runs a Flask server with PyTorch and LLM integration (Gemini + Groq).
 
-Open http://localhost:3000 and start by selecting teams and a match format.
+1.  **Environment Variables**:
+    Create a `.env` file in the `DraftPredictor` directory:
+    ```env
+    GOOGLE_API_KEY=your_gemini_api_key
+    GROQ_API_KEY=your_groq_api_key
+    ```
 
-Production build:
+2.  **Install Dependencies**:
+    ```bash
+    # Navigate to backend directory
+    cd DraftPredictor
+    
+    # Create and activate virtual environment
+    python -m venv venv
+    # Windows: venv\Scripts\activate
+    # Mac/Linux: source venv/bin/activate
+    
+    # Install required packages
+    pip install flask flask-cors torch python-dotenv google-generativeai groq requests beautifulsoup4
+    ```
 
-```bash
-npm run build
-npm start
-```
+3.  **Run Server**:
+    ```bash
+    python server.py
+    ```
+    The server will start on `http://localhost:5001`.
+
+#### 2. Frontend Setup
+
+The frontend is a Next.js application.
+
+1.  **Install & Run**:
+    ```bash
+    # From the project root
+    npm install
+    npm run dev
+    ```
+    Open http://localhost:3000 in your browser.
+
+#### 3. AI Coach Setup (TheDraftingAgent)
+
+The AI Coach provides voice/text interaction and strategic advice, running on a separate Flask server.
+
+1.  **Environment Variables**:
+    Create a `.env` file in the `TheDraftingAgent` directory:
+    ```env
+    GROQ_API_KEY=your_groq_api_key
+    ```
+
+2.  **Install Dependencies**:
+    ```bash
+    # Navigate to agent directory
+    cd TheDraftingAgent
+    
+    # Create and activate virtual environment (optional but recommended)
+    python -m venv venv
+    # Windows: venv\Scripts\activate
+    # Mac/Linux: source venv/bin/activate
+    
+    # Install required packages
+    pip install flask flask-cors python-dotenv groq requests
+    ```
+
+3.  **Run Server**:
+    ```bash
+    python server.py
+    ```
+    The server will start on `http://localhost:5002`.
+
+
 
 ---
 
@@ -131,50 +198,63 @@ npm start
 
 ### Roadmap Ideas
 
-- Export/import drafts (JSON) for sharing across devices.
+- Allowing teams to upload their internal scrim data, allowing the AI to "nudge" predictions based on confidential practice meta that isn't yet visible in public GRID data.
 - Role‑aware Alternatives (optional per‑lane suggestion buckets).
-- Keyboard shortcuts for faster drafting.
 - Better team assets and branding.
 - Server‑side persistence or user accounts.
 
 ---
 
-### Scripts
-
-```bash
-npm run dev    # start development server
-npm run build  # production build
-npm start      # run production build
-npm run lint   # lint the project
-```
-
----
-
 ### License
 
-Internal prototype for hackathon/demo use. Replace with your chosen license if open‑sourcing.
+This project is licensed under the MIT License - see the LICENSE file for details
 
-### Startup Commands
+### Development Setup
 
-```bash
- source /Users/yassersalem/skyisthelimithackathon/venv/bin/activate
-```
+Follow these steps to run the full stack (Frontend + Draft Prediction AI).
 
-**1. Frontend Application:**
-```bash
-npm run dev
-```
+#### 1. Backend Setup (Draft Predictor)
 
-**2. Drafting Agent Backend:**
-```bash
-source venv/bin/activate
-python TheDraftingAgent/server.py
-```
+The backend runs a Flask server with PyTorch and LLM integration (Gemini + Groq).
 
-**3. Draft Predictor Backend:**
-```bash
-source venv/bin/activate
-python DraftPredictor/server.py
+1.  **Environment Variables**:
+    Create a `.env` file in the `DraftPredictor` directory:
+    ```env
+    GOOGLE_API_KEY=your_gemini_api_key
+    GROQ_API_KEY=your_groq_api_key
+    ```
+
+2.  **Install Dependencies**:
+    ```bash
+    # Navigate to backend directory
+    cd DraftPredictor
+    
+    # Create and activate virtual environment
+    python -m venv venv
+    # Windows: venv\Scripts\activate
+    # Mac/Linux: source venv/bin/activate
+    
+    # Install required packages
+    pip install flask flask-cors torch python-dotenv google-generativeai groq requests beautifulsoup4
+    ```
+
+3.  **Run Server**:
+    ```bash
+    python server.py
+    ```
+    The server will start on `http://localhost:5001`.
+
+#### 2. Frontend Setup
+
+The frontend is a Next.js application.
+
+1.  **Install & Run**:
+    ```bash
+    # From the project root
+    npm install
+    npm run dev
+    ```
+    Open http://localhost:3000 in your browser.
 
 
 
