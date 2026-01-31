@@ -41,14 +41,14 @@
 **Note:** A single `.env` file in the project root with all API keys is required for both the Frontend and Backend services. For the submission, it is included in the attached zip file on Devpost.
 
 #### 1. Backend Setup (Draft Predictor)
-The backend runs a Flask server with PyTorch and LLM integration (Gemini + Groq).
+The backend runs a Flask server with PyTorch and LLM integration (Gemini/Groq).
 1.  **Install & Run**:
     ```bash
     cd DraftPredictor
     python -m venv venv
     # Windows: venv\Scripts\activate | Mac: source venv/bin/activate
     pip install -r requirements.txt
-    python server.py
+    python serverv3.py
     ```
     Starts on `http://localhost:5001`.
 
