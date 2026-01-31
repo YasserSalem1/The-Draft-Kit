@@ -21,9 +21,8 @@ CORS(app)
 # -------------------------------------------------------------------
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Load env vars from .env file in the same directory
-# Load env vars from .env file in the same directory
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+# Load env vars from .env file in the root directory
+load_dotenv(os.path.join(BASE_DIR, '..', '.env'))
 
 if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
     print("✅ API Key loaded successfully.")
@@ -373,6 +372,7 @@ class StrategyManager:
         r_picks = draft_state.get('red_picks', [])
         b_bans = draft_state.get('blue_bans', [])
         r_bans = draft_state.get('red_bans', [])
+        f_bans = draft_state.get('fearless_bans', [])
         
         # Format Reports
         blue_report = self.format_team_report(blue_team)
@@ -388,6 +388,7 @@ class StrategyManager:
         Red Bans: {r_bans}
         Blue Picks: {b_picks}
         Red Picks: {r_picks}
+        Fearless Bans (Restricted due to previous games in series): {f_bans}
         
         Team Reports & Analysis:
         === BLUE TEAM ===
@@ -539,8 +540,8 @@ draft_state = {}
 ROLE_RECOMMENDATIONS = {
     'TOP': ['Garen', 'Darius', 'Aatrox', 'Camille', 'Jax', 'Fiora', 'Ornn', "K'Sante", 'Renekton', 'Gnar'],
     'JUNGLE': ['Lee Sin', 'Vi', 'Jarvan IV', 'Elise', 'Viego', "Rek'Sai", 'Xin Zhao', 'Hecarim', 'Graves', 'Nidalee'],
-    'MID': ['Ahri', 'Syndra', 'Orianna', 'Azir', 'Viktor', 'LeBlanc', 'Akali', 'Zed', 'Sylas', 'Corki'],
-    'ADC': ['Jinx', "Kai'Sa", 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn'],
+    'MID': ['Ahri', 'Syndra', 'Orianna', 'Azir', 'Viktor', 'LeBlanc', 'Akali', 'Zed', 'Sylas', 'Corki', 'Aurelion Sol'],
+    'ADC': ['Jinx', "Kai'Sa", 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn', 'Miss Fortune'],
     'SUPPORT': ['Thresh', 'Nautilus', 'Leona', 'Lulu', 'Karma', 'Renata Glasc', 'Braum', 'Rakan', 'Alistar', 'Milio', 'Yunara']
 }
 
@@ -555,6 +556,35 @@ def get_predictions_logic(data):
         # 1. Reconstruct History
         history_list = []
         seen_champs = set()
+        
+        # Add Fearless Bans to seen_champs if provided
+        fearless_bans = data.get('fearlessBans', [])
+        mapping = {
+            'MonkeyKing': 'Wukong',
+            'KSante': "K'Sante",
+            'XinZhao': 'Xin Zhao',
+            'DrMundo': 'Dr Mundo',
+            'AurelionSol': 'Aurelion Sol',
+            'Kaisa': "Kai'Sa",
+            'MissFortune': 'Miss Fortune',
+            'Renata': 'Renata Glasc',
+            'JarvanIV': 'Jarvan IV',
+            'LeeSin': 'Lee Sin',
+            'Reksai': "Rek'Sai"
+        }
+        fearless_bans = [mapping.get(fb, fb) for fb in fearless_bans]
+
+        for fb_name in fearless_bans:
+            cid = tokenizer.vocab.get(fb_name)
+            if cid is None:
+                for k, v in tokenizer.vocab.items():
+                    if k.upper() == fb_name.upper():
+                        cid = v
+                        break
+            if cid is not None:
+                seen_champs.add(cid)
+            else:
+                print(f"DEBUG: Could not find CID for fearless ban: {fb_name}")
         
         b_bans = data.get('blueBans', [])
         r_bans = data.get('redBans', [])
@@ -608,12 +638,12 @@ def get_predictions_logic(data):
                 })
                 
                 cid = tokenizer.vocab.get(c_name)
-                if not cid:
+                if cid is None: 
                     for k,v in tokenizer.vocab.items():
                         if k.upper() == c_name.upper():
                             cid = v
                             break
-                if cid: 
+                if cid is not None: 
                     seen_champs.add(cid)
                 
                 steps_processed += 1
@@ -633,11 +663,41 @@ def get_predictions_logic(data):
             "blue_bans": [get_champ_name(b_bans, i) for i in range(len(b_bans)) if get_champ_name(b_bans, i)],
             "red_bans": [get_champ_name(r_bans, i) for i in range(len(r_bans)) if get_champ_name(r_bans, i)],
             "blue_picks": [get_champ_name(b_picks, i) for i in range(len(b_picks)) if get_champ_name(b_picks, i)],
-            "red_picks": [get_champ_name(r_picks, i) for i in range(len(r_picks)) if get_champ_name(r_picks, i)]
+            "red_picks": [get_champ_name(r_picks, i) for i in range(len(r_picks)) if get_champ_name(r_picks, i)],
+            "fearless_bans": fearless_bans
         }
         
         candidate_result = strategy_manager.generate_phase_candidates(blue_team_data, red_team_data, draft_state_dict, current_idx)
         
+        # Filter candidate result to remove seen/banned champs (Fearless Bans etc)
+        if candidate_result:
+            filtered_blue = []
+            for c in candidate_result.get('blue', []):
+                name = c.get('name')
+                cid = tokenizer.vocab.get(name)
+                if cid is None:
+                    for k, v in tokenizer.vocab.items():
+                        if k.upper() == name.upper():
+                            cid = v
+                            break
+                if cid is not None and cid not in seen_champs:
+                    filtered_blue.append(c)
+            
+            filtered_red = []
+            for c in candidate_result.get('red', []):
+                name = c.get('name')
+                cid = tokenizer.vocab.get(name)
+                if cid is None:
+                    for k, v in tokenizer.vocab.items():
+                        if k.upper() == name.upper():
+                            cid = v
+                            break
+                if cid is not None and cid not in seen_champs:
+                    filtered_red.append(c)
+            
+            candidate_result['blue'] = filtered_blue
+            candidate_result['red'] = filtered_red
+
         # Determine which team's candidates to use based on whose turn it is
         acting_side = 'blue'  # default
         if current_step_info:
@@ -678,12 +738,12 @@ def get_predictions_logic(data):
             if not c_name: continue
 
             cid = tokenizer.vocab.get(c_name)
-            if not cid:
+            if cid is None:
                 for k,v in tokenizer.vocab.items():
                     if k.upper() == c_name.upper():
                         cid = v
                         break
-            if cid:
+            if cid is not None:
                 # Final Boost = Confidence * Decay
                 final_boost = conf * decay_factor
                 strategy_boost_map[cid] = final_boost
@@ -785,12 +845,12 @@ def get_predictions_logic(data):
                     if not c_name: continue
                     
                     cid = tokenizer.vocab.get(c_name)
-                    if not cid:
+                    if cid is None:
                         for k,v in tokenizer.vocab.items():
                             if k.upper() == c_name.upper():
                                 cid = v
                                 break
-                    if cid:
+                    if cid is not None:
                         opp_boost_map[cid] = conf * decay_factor
 
                 # Run model inference for opponent's next move

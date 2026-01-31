@@ -20,7 +20,8 @@ DRAFT_PREDICTOR_URL = "http://localhost:5001"
 # -------------------------------------------------------------------
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+# Load env vars from .env file in the root directory
+load_dotenv(os.path.join(BASE_DIR, '..', '.env'))
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -53,10 +54,10 @@ ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']
 # Common champion recommendations by role
 # Common champion recommendations by role (fallback)
 ROLE_RECOMMENDATIONS = {
-    'TOP': ['Garen', 'Darius', 'Aatrox', 'Camille', 'Jax', 'Fiora', 'Ornn', 'K\'Sante', 'Renekton', 'Gnar'],
-    'JUNGLE': ['Lee Sin', 'Vi', 'Jarvan IV', 'Elise', 'Viego', 'Rek\'Sai', 'Xin Zhao', 'Hecarim', 'Graves', 'Nidalee'],
-    'MID': ['Ahri', 'Syndra', 'Orianna', 'Azir', 'Viktor', 'LeBlanc', 'Akali', 'Zed', 'Sylas', 'Corki'],
-    'ADC': ['Jinx', 'Kai\'Sa', 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn'],
+    'TOP': ['Garen', 'Darius', 'Aatrox', 'Camille', 'Jax', 'Fiora', 'Ornn', "K'Sante", 'Renekton', 'Gnar'],
+    'JUNGLE': ['Lee Sin', 'Vi', 'Jarvan IV', 'Elise', 'Viego', "Rek'Sai", 'Xin Zhao', 'Hecarim', 'Graves', 'Nidalee'],
+    'MID': ['Ahri', 'Syndra', 'Orianna', 'Azir', 'Viktor', 'LeBlanc', 'Akali', 'Zed', 'Sylas', 'Corki', 'Aurelion Sol'],
+    'ADC': ['Jinx', "Kai'Sa", 'Aphelios', 'Xayah', 'Ezreal', 'Jhin', 'Varus', 'Ashe', 'Sivir', 'Caitlyn', 'Miss Fortune'],
     'SUPPORT': ['Thresh', 'Nautilus', 'Leona', 'Lulu', 'Karma', 'Renata Glasc', 'Braum', 'Rakan', 'Alistar', 'Milio']
 }
 
@@ -142,6 +143,7 @@ def get_initial_draft_state():
         "current_step": 0,
         "phase": "setup",  # setup, comp_select, ban_1, pick_1, ban_2, pick_2, complete
         "team_comp": "",  # Dive, Poke, Teamfight, Split, Pick
+        "fearless_bans": [],
         "thinking": [],
         "conversation": []
     }
@@ -630,6 +632,33 @@ def chat():
                 if p: invalid_champions.add(p.lower())
             for b in draft_state[team]['bans']:
                 if b: invalid_champions.add(b.lower())
+
+        # Add fearless bans from current state
+        fearless_mapping = {
+            'MonkeyKing': 'Wukong',
+            'KSante': "K'Sante",
+            'XinZhao': 'Xin Zhao',
+            'DrMundo': 'Dr Mundo',
+            'AurelionSol': 'Aurelion Sol',
+            'Kaisa': "Kai'Sa",
+            'MissFortune': 'Miss Fortune',
+            'Renata': 'Renata Glasc',
+            'JarvanIV': 'Jarvan IV',
+            'LeeSin': 'Lee Sin',
+            'Reksai': "Rek'Sai"
+        }
+        for f in draft_state.get('fearless_bans', []):
+            if f:
+                name = fearless_mapping.get(f, f)
+                invalid_champions.add(name.lower())
+
+        # Add fearless bans to invalid champions from request if provided
+        req_fearless = data.get('fearless_bans', []) or data.get('fearlessBans', [])
+        req_fearless = [fearless_mapping.get(fb, fb) for fb in req_fearless]
+        
+        for champ in req_fearless:
+            if champ:
+                invalid_champions.add(champ.lower())
                 
         if context_champion:
             invalid_champions.add(context_champion.lower())
@@ -699,6 +728,7 @@ def load_draft():
         draft_state['current_step'] = data.get('current_step', 0)
         draft_state['phase'] = data.get('phase', 'setup')
         draft_state['team_comp'] = data.get('team_comp', '')
+        draft_state['fearless_bans'] = data.get('fearless_bans', []) or data.get('fearlessBans', [])
         
         # Add a system message to history to indicate load
         blue_name = draft_state['blue_team']['name']

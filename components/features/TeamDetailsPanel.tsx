@@ -35,32 +35,54 @@ export function TeamDetailsPanel({ team, side, onClose, report }: TeamDetailsPan
     const redBansCount = report?.most_banned_champions?.by_red_side?.length || 0;
 
     // Aggregate top bans by the team (Bans this team makes)
-    const topBansByTeam = [
-        ...(report?.most_banned_champions?.by_blue_side || []),
-        ...(report?.most_banned_champions?.by_red_side || [])
-    ].reduce((acc, curr) => {
-        const existing = acc.find(b => b.champion === curr.champion);
-        if (existing) {
-            existing.count += curr.count;
+    const topBansByTeam = (() => {
+        let rawBans: BanStats[] = [];
+        if (side === 'blue') {
+            rawBans = report?.most_banned_champions?.by_blue_side || [];
+        } else if (side === 'red') {
+            rawBans = report?.most_banned_champions?.by_red_side || [];
         } else {
-            acc.push({ ...curr });
+            rawBans = [
+                ...(report?.most_banned_champions?.by_blue_side || []),
+                ...(report?.most_banned_champions?.by_red_side || [])
+            ];
         }
-        return acc;
-    }, [] as any[]).sort((a, b) => b.count - a.count).slice(0, 5);
+
+        return rawBans.reduce((acc, curr) => {
+            const existing = acc.find(b => b.champion === curr.champion);
+            if (existing) {
+                existing.count += curr.count;
+            } else {
+                acc.push({ ...curr });
+            }
+            return acc;
+        }, [] as any[]).sort((a, b) => b.count - a.count).slice(0, 5);
+    })();
 
     // Aggregate top bans against this team
-    const topBansAgainstTeam = [
-        ...(report?.most_banned_champions?.against_blue_side || []),
-        ...(report?.most_banned_champions?.against_red_side || [])
-    ].reduce((acc, curr) => {
-        const existing = acc.find(b => b.champion === curr.champion);
-        if (existing) {
-            existing.count += curr.count;
+    const topBansAgainstTeam = (() => {
+        let rawBans: BanStats[] = [];
+        if (side === 'blue') {
+            rawBans = report?.most_banned_champions?.against_blue_side || [];
+        } else if (side === 'red') {
+            rawBans = report?.most_banned_champions?.against_red_side || [];
         } else {
-            acc.push({ ...curr });
+            rawBans = [
+                ...(report?.most_banned_champions?.against_blue_side || []),
+                ...(report?.most_banned_champions?.against_red_side || [])
+            ];
         }
-        return acc;
-    }, [] as any[]).sort((a, b) => b.count - a.count).slice(0, 5);
+
+        return rawBans.reduce((acc, curr) => {
+            const existing = acc.find(b => b.champion === curr.champion);
+            if (existing) {
+                existing.count += curr.count;
+            } else {
+                acc.push({ ...curr });
+            }
+            return acc;
+        }, [] as any[]).sort((a, b) => b.count - a.count).slice(0, 5);
+    })();
 
     return (
         <AnimatePresence>

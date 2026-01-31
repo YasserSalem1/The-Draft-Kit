@@ -41,10 +41,34 @@ const initialSeriesState: SeriesState = {
 
 function calcFearlessBans(games: GameRecord[]): Set<string> {
   const bans = new Set<string>();
+  const mapping: Record<string, string> = {
+    'MonkeyKing': 'Wukong',
+    'KSante': "K'Sante",
+    'XinZhao': 'Xin Zhao',
+    'DrMundo': 'Dr Mundo',
+    'AurelionSol': 'Aurelion Sol',
+    'Kaisa': "Kai'Sa",
+    'MissFortune': 'Miss Fortune',
+    'Renata': 'Renata Glasc',
+    'JarvanIV': 'Jarvan IV',
+    'LeeSin': 'Lee Sin',
+    'Reksai': "Rek'Sai"
+  };
+
   for (const g of games) {
     // Standard Fearless: All champions picked in previous games are banned
-    g.draftState.bluePicks.forEach(c => c && bans.add(c.id));
-    g.draftState.redPicks.forEach(c => c && bans.add(c.id));
+    g.draftState.bluePicks.forEach(c => {
+      if (c) {
+        const id = mapping[c.id] || c.id;
+        bans.add(id);
+      }
+    });
+    g.draftState.redPicks.forEach(c => {
+      if (c) {
+        const id = mapping[c.id] || c.id;
+        bans.add(id);
+      }
+    });
   }
   return bans;
 }

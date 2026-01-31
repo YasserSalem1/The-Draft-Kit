@@ -12,10 +12,10 @@ import { BanSlot } from '@/components/features/BanSlot';
 import { DraftControls } from '@/components/features/DraftControls';
 import { ScoutingReport } from '@/components/features/ScoutingReport';
 import { ScoutingStats } from '@/components/features/ScoutingStats';
+import { FearlessBanStrip } from '@/components/features/FearlessBanStrip';
 import { DraftProvider, useDraft } from '@/lib/draft/draft-context';
 import { SeriesProvider, useSeries } from '@/lib/draft/series-context';
 import { saveSeries } from '@/lib/persistence/storage';
-import { FearlessBanStrip } from '@/components/features/FearlessBanStrip';
 import { AIAssistantButton } from '@/components/features/AIAssistantButton';
 import { AIFocusMode } from '@/components/features/AIFocusMode';
 import Link from 'next/link';
@@ -116,6 +116,7 @@ function DraftPageContent() {
         currentAlternatives,
         addAlternative,
         removeAlternative,
+        fearlessBans,
     } = useSeries();
 
     const [viewMode, setViewMode] = useState<ViewMode>('SCOUTING');
@@ -210,6 +211,7 @@ function DraftPageContent() {
                 redBans,
                 bluePicks,
                 redPicks,
+                fearlessBans: Array.from(fearlessBans),
                 blueTeam: {
                     name: blueTeam.shortName || blueTeam.name,
                     players: blueTeam.players,
@@ -644,8 +646,6 @@ function DraftPageContent() {
                                 </div>
                             </div>
 
-                            {/* Fearless Ban Strip - Relocated below current bans */}
-                            <FearlessBanStrip />
                         </div>
 
                         {/* 2. Main Content Area */}
@@ -804,6 +804,7 @@ function DraftPageContent() {
                                                     }}
                                                 />
                                             </div>
+                                            <FearlessBanStrip />
                                         </div>
                                     )
                                 )}

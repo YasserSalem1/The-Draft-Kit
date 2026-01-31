@@ -38,16 +38,11 @@
 ---
 
 ### Development Setup
-**Note:** A `.env` file with all API keys is required. For the submission, it is included in the attached zip file on Devpost.
+**Note:** A single `.env` file in the project root with all API keys is required for both the Frontend and Backend services. For the submission, it is included in the attached zip file on Devpost.
 
 #### 1. Backend Setup (Draft Predictor)
 The backend runs a Flask server with PyTorch and LLM integration (Gemini + Groq).
-1.  **Environment Variables**: Create `.env` in `DraftPredictor/`:
-    ```env
-    GOOGLE_API_KEY=your_gemini_api_key
-    GROQ_API_KEY=your_groq_api_key
-    ```
-2.  **Install & Run**:
+1.  **Install & Run**:
     ```bash
     cd DraftPredictor
     python -m venv venv
@@ -59,11 +54,7 @@ The backend runs a Flask server with PyTorch and LLM integration (Gemini + Groq)
 
 #### 2. AI Coach Setup (TheDraftingAgent)
 The AI Coach provides voice/text interaction and strategic advice.
-1.  **Environment Variables**: Create `.env` in `TheDraftingAgent/`:
-    ```env
-    GROQ_API_KEY=your_groq_api_key
-    ```
-2.  **Install & Run**:
+1.  **Install & Run**:
     ```bash
     cd TheDraftingAgent
     python -m venv venv

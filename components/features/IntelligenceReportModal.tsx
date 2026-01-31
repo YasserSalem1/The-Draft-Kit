@@ -140,7 +140,7 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam, blueReport
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                            Most Banned By Them
+                                            Bans By Them (Blue Side)
                                         </h4>
                                         <div className="grid grid-cols-3 gap-3">
                                             {blueReport?.most_banned_champions?.by_blue_side?.slice(0, 6).map((ban: any, i: number) => (
@@ -153,7 +153,7 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam, blueReport
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
-                                            Target Bans
+                                            Bans Against Them (Blue Side)
                                         </h4>
                                         <div className="grid grid-cols-3 gap-3">
                                             {blueReport?.most_banned_champions?.against_blue_side?.slice(0, 6).map((ban: any, i: number) => (
@@ -227,7 +227,7 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam, blueReport
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                            Most Banned By Them
+                                            Bans By Them (Red Side)
                                         </h4>
                                         <div className="grid grid-cols-3 gap-3">
                                             {redReport?.most_banned_champions?.by_red_side?.slice(0, 6).map((ban: any, i: number) => (
@@ -240,7 +240,7 @@ export function IntelligenceReportModal({ onClose, blueTeam, redTeam, blueReport
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                                            Target Bans
+                                            Bans Against Them (Red Side)
                                         </h4>
                                         <div className="grid grid-cols-3 gap-3">
                                             {redReport?.most_banned_champions?.against_red_side?.slice(0, 6).map((ban: any, i: number) => (

@@ -38,8 +38,25 @@ export function ChampionGrid({
         init();
     }, []);
 
-    const { selectChampion, unavailableChampionIds, isStarted, currentStep } = useDraft();
+    const { selectChampion, unavailableChampionIds, isStarted } = useDraft();
     const { fearlessBans } = useSeries();
+
+    const getMappedId = (id: string) => {
+        const mapping: Record<string, string> = {
+            'MonkeyKing': 'Wukong',
+            'KSante': "K'Sante",
+            'XinZhao': 'Xin Zhao',
+            'DrMundo': 'Dr Mundo',
+            'AurelionSol': 'Aurelion Sol',
+            'Kaisa': "Kai'Sa",
+            'MissFortune': 'Miss Fortune',
+            'Renata': 'Renata Glasc',
+            'JarvanIV': 'Jarvan IV',
+            'LeeSin': 'Lee Sin',
+            'Reksai': "Rek'Sai"
+        };
+        return mapping[id] || id;
+    };
 
     const handleChampionClick = (champion: Champion) => {
         // Alternative add mode overrides draft behavior
@@ -47,8 +64,11 @@ export function ChampionGrid({
             onAddAlternative(champion);
             return;
         }
+        
+        const mappedId = getMappedId(champion.id);
+        
         // If draft not started, or champion taken, or fearless banned, do nothing
-        if (!isStarted || unavailableChampionIds.has(champion.id) || fearlessBans.has(champion.id)) return;
+        if (!isStarted || unavailableChampionIds.has(champion.id) || fearlessBans.has(mappedId)) return;
         selectChampion(champion);
     };
 
@@ -145,7 +165,8 @@ export function ChampionGrid({
                     <AnimatePresence>
                         {filteredChampions.map((champ) => {
                             const isUnavailable = unavailableChampionIds.has(champ.id);
-                            const isFearlessBanned = fearlessBans.has(champ.id);
+                            const mappedId = getMappedId(champ.id);
+                            const isFearlessBanned = fearlessBans.has(mappedId);
                             const isDisabled = altAddSide ? false : (isUnavailable || isFearlessBanned);
 
                             return (

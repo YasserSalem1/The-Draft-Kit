@@ -4,8 +4,8 @@ import os
 from dotenv import load_dotenv
 import time
 
-# Load env from parent directory
-env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+# Load env from root directory
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
 load_dotenv(env_path)
 
 URL = "https://api-op.grid.gg/central-data/graphql"
